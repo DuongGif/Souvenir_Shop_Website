@@ -1,0 +1,579 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|d:\\nam4\\ki2\\\u0111\u1ED3 \u00E1n\\source\\souvenir_shop_website_backend\\souvenir_shop_website\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|solutionrelative:souvenir_shop_website\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|d:\\nam4\\ki2\\\u0111\u1ED3 \u00E1n\\source\\souvenir_shop_website_backend\\souvenir_shop_website\\controllers\\api\\user\\couponscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|solutionrelative:souvenir_shop_website\\controllers\\api\\user\\couponscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|d:\\nam4\\ki2\\\u0111\u1ED3 \u00E1n\\source\\souvenir_shop_website_backend\\souvenir_shop_website\\controllers\\api\\debug\\debugtokencontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|solutionrelative:souvenir_shop_website\\controllers\\api\\debug\\debugtokencontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|d:\\nam4\\ki2\\\u0111\u1ED3 \u00E1n\\source\\souvenir_shop_website_backend\\souvenir_shop_website\\controllers\\api\\user\\productscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|solutionrelative:souvenir_shop_website\\controllers\\api\\user\\productscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|d:\\nam4\\ki2\\\u0111\u1ED3 \u00E1n\\source\\souvenir_shop_website_backend\\souvenir_shop_website\\dtos\\product\\productsearchdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|solutionrelative:souvenir_shop_website\\dtos\\product\\productsearchdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|d:\\nam4\\ki2\\\u0111\u1ED3 \u00E1n\\source\\souvenir_shop_website_backend\\souvenir_shop_website\\controllers\\api\\user\\reviewscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|solutionrelative:souvenir_shop_website\\controllers\\api\\user\\reviewscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|d:\\nam4\\ki2\\\u0111\u1ED3 \u00E1n\\source\\souvenir_shop_website_backend\\souvenir_shop_website\\controllers\\api\\admin\\adminreviewscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|solutionrelative:souvenir_shop_website\\controllers\\api\\admin\\adminreviewscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|d:\\nam4\\ki2\\\u0111\u1ED3 \u00E1n\\source\\souvenir_shop_website_backend\\souvenir_shop_website\\models\\souvenirshopcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|solutionrelative:souvenir_shop_website\\models\\souvenirshopcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|d:\\nam4\\ki2\\\u0111\u1ED3 \u00E1n\\source\\souvenir_shop_website_backend\\souvenir_shop_website\\controllers\\api\\admin\\admincouponscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|solutionrelative:souvenir_shop_website\\controllers\\api\\admin\\admincouponscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|d:\\nam4\\ki2\\\u0111\u1ED3 \u00E1n\\source\\souvenir_shop_website_backend\\souvenir_shop_website\\dtos\\review\\reviewdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|solutionrelative:souvenir_shop_website\\dtos\\review\\reviewdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|d:\\nam4\\ki2\\\u0111\u1ED3 \u00E1n\\source\\souvenir_shop_website_backend\\souvenir_shop_website\\dtos\\review\\reviewreplyrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|solutionrelative:souvenir_shop_website\\dtos\\review\\reviewreplyrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|d:\\nam4\\ki2\\\u0111\u1ED3 \u00E1n\\source\\souvenir_shop_website_backend\\souvenir_shop_website\\dtos\\review\\createreviewrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|solutionrelative:souvenir_shop_website\\dtos\\review\\createreviewrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|d:\\nam4\\ki2\\\u0111\u1ED3 \u00E1n\\source\\souvenir_shop_website_backend\\souvenir_shop_website\\controllers\\api\\user\\orderscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|solutionrelative:souvenir_shop_website\\controllers\\api\\user\\orderscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|d:\\nam4\\ki2\\\u0111\u1ED3 \u00E1n\\source\\souvenir_shop_website_backend\\souvenir_shop_website\\dtos\\order\\createorderrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|solutionrelative:souvenir_shop_website\\dtos\\order\\createorderrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|d:\\nam4\\ki2\\\u0111\u1ED3 \u00E1n\\source\\souvenir_shop_website_backend\\souvenir_shop_website\\dtos\\coupon\\validatecouponresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|solutionrelative:souvenir_shop_website\\dtos\\coupon\\validatecouponresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|d:\\nam4\\ki2\\\u0111\u1ED3 \u00E1n\\source\\souvenir_shop_website_backend\\souvenir_shop_website\\dtos\\coupon\\validatecouponrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|solutionrelative:souvenir_shop_website\\dtos\\coupon\\validatecouponrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|d:\\nam4\\ki2\\\u0111\u1ED3 \u00E1n\\source\\souvenir_shop_website_backend\\souvenir_shop_website\\dtos\\coupon\\updatecouponrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|solutionrelative:souvenir_shop_website\\dtos\\coupon\\updatecouponrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|d:\\nam4\\ki2\\\u0111\u1ED3 \u00E1n\\source\\souvenir_shop_website_backend\\souvenir_shop_website\\dtos\\coupon\\createcouponrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|solutionrelative:souvenir_shop_website\\dtos\\coupon\\createcouponrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|d:\\nam4\\ki2\\\u0111\u1ED3 \u00E1n\\source\\souvenir_shop_website_backend\\souvenir_shop_website\\dtos\\coupon\\coupondto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|solutionrelative:souvenir_shop_website\\dtos\\coupon\\coupondto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|d:\\nam4\\ki2\\\u0111\u1ED3 \u00E1n\\source\\souvenir_shop_website_backend\\souvenir_shop_website\\controllers\\api\\user\\cartcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|solutionrelative:souvenir_shop_website\\controllers\\api\\user\\cartcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|d:\\nam4\\ki2\\\u0111\u1ED3 \u00E1n\\source\\souvenir_shop_website_backend\\souvenir_shop_website\\controllers\\api\\user\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|solutionrelative:souvenir_shop_website\\controllers\\api\\user\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|d:\\nam4\\ki2\\\u0111\u1ED3 \u00E1n\\source\\souvenir_shop_website_backend\\souvenir_shop_website\\controllers\\api\\admin\\adminuserscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|solutionrelative:souvenir_shop_website\\controllers\\api\\admin\\adminuserscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|d:\\nam4\\ki2\\\u0111\u1ED3 \u00E1n\\source\\souvenir_shop_website_backend\\souvenir_shop_website\\controllers\\api\\admin\\adminproductscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|solutionrelative:souvenir_shop_website\\controllers\\api\\admin\\adminproductscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|d:\\nam4\\ki2\\\u0111\u1ED3 \u00E1n\\source\\souvenir_shop_website_backend\\souvenir_shop_website\\controllers\\api\\admin\\adminorderscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|solutionrelative:souvenir_shop_website\\controllers\\api\\admin\\adminorderscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|d:\\nam4\\ki2\\\u0111\u1ED3 \u00E1n\\source\\souvenir_shop_website_backend\\souvenir_shop_website\\controllers\\api\\user\\paymentscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|solutionrelative:souvenir_shop_website\\controllers\\api\\user\\paymentscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|d:\\nam4\\ki2\\\u0111\u1ED3 \u00E1n\\source\\souvenir_shop_website_backend\\souvenir_shop_website\\dtos\\payment\\confirmpaymentrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|solutionrelative:souvenir_shop_website\\dtos\\payment\\confirmpaymentrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|d:\\nam4\\ki2\\\u0111\u1ED3 \u00E1n\\source\\souvenir_shop_website_backend\\souvenir_shop_website\\dtos\\payment\\createpaymentrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|solutionrelative:souvenir_shop_website\\dtos\\payment\\createpaymentrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|d:\\nam4\\ki2\\\u0111\u1ED3 \u00E1n\\source\\souvenir_shop_website_backend\\souvenir_shop_website\\dtos\\payment\\paymentdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|solutionrelative:souvenir_shop_website\\dtos\\payment\\paymentdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|d:\\nam4\\ki2\\\u0111\u1ED3 \u00E1n\\source\\souvenir_shop_website_backend\\souvenir_shop_website\\dtos\\cart\\addcartitemrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|solutionrelative:souvenir_shop_website\\dtos\\cart\\addcartitemrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|d:\\nam4\\ki2\\\u0111\u1ED3 \u00E1n\\source\\souvenir_shop_website_backend\\souvenir_shop_website\\helpers\\currentuser.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|solutionrelative:souvenir_shop_website\\helpers\\currentuser.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|d:\\nam4\\ki2\\\u0111\u1ED3 \u00E1n\\source\\souvenir_shop_website_backend\\souvenir_shop_website\\services\\jwttokenservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|solutionrelative:souvenir_shop_website\\services\\jwttokenservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|d:\\nam4\\ki2\\\u0111\u1ED3 \u00E1n\\source\\souvenir_shop_website_backend\\souvenir_shop_website\\controllers\\api\\user\\categoriescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7903414F-1398-413C-B166-0DA855A6968F}|Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj|solutionrelative:souvenir_shop_website\\controllers\\api\\user\\categoriescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 161,
+          "SelectedChildIndex": 9,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{eefa5220-e298-11d0-8f78-00a0c9110057}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{b1e99781-ab81-11d0-b683-00aa00a3ee26}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:5:0:{d212f56b-c48a-434c-a121-1c5d80b59b9f}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:6:0:{d212f56b-c48a-434c-a121-1c5d80b59b9f}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:4:0:{e8034f19-ab72-4f06-83fd-f6832b41aa63}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{d78612c7-9962-4b83-95d9-268046dad23a}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{0ad07096-bba9-4900-a651-0598d26f6d24}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Program.cs",
+              "DocumentMoniker": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Program.cs",
+              "RelativeDocumentMoniker": "Souvenir_Shop_Website\\Program.cs",
+              "ToolTip": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Program.cs",
+              "RelativeToolTip": "Souvenir_Shop_Website\\Program.cs",
+              "ViewState": "AgIAAGgAAAAAAAAAAAAgwHsAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-10T02:56:37.569Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "CouponsController.cs",
+              "DocumentMoniker": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Controllers\\API\\User\\CouponsController.cs",
+              "RelativeDocumentMoniker": "Souvenir_Shop_Website\\Controllers\\API\\User\\CouponsController.cs",
+              "ToolTip": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Controllers\\API\\User\\CouponsController.cs",
+              "RelativeToolTip": "Souvenir_Shop_Website\\Controllers\\API\\User\\CouponsController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAF8AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-08T13:53:21.42Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "ProductSearchDto.cs",
+              "DocumentMoniker": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\DTOs\\Product\\ProductSearchDto.cs",
+              "RelativeDocumentMoniker": "Souvenir_Shop_Website\\DTOs\\Product\\ProductSearchDto.cs",
+              "ToolTip": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\DTOs\\Product\\ProductSearchDto.cs",
+              "RelativeToolTip": "Souvenir_Shop_Website\\DTOs\\Product\\ProductSearchDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-08T15:00:57.316Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "ProductsController.cs",
+              "DocumentMoniker": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Controllers\\API\\User\\ProductsController.cs",
+              "RelativeDocumentMoniker": "Souvenir_Shop_Website\\Controllers\\API\\User\\ProductsController.cs",
+              "ToolTip": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Controllers\\API\\User\\ProductsController.cs",
+              "RelativeToolTip": "Souvenir_Shop_Website\\Controllers\\API\\User\\ProductsController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAswKgAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-05T03:45:24.959Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "DebugTokenController.cs",
+              "DocumentMoniker": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Controllers\\API\\Debug\\DebugTokenController.cs",
+              "RelativeDocumentMoniker": "Souvenir_Shop_Website\\Controllers\\API\\Debug\\DebugTokenController.cs",
+              "ToolTip": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Controllers\\API\\Debug\\DebugTokenController.cs",
+              "RelativeToolTip": "Souvenir_Shop_Website\\Controllers\\API\\Debug\\DebugTokenController.cs",
+              "ViewState": "AgIAAAQAAAAAAAAAAAAAACsAAAACAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-08T15:08:23.787Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "AdminCouponsController.cs",
+              "DocumentMoniker": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Controllers\\API\\Admin\\AdminCouponsController.cs",
+              "RelativeDocumentMoniker": "Souvenir_Shop_Website\\Controllers\\API\\Admin\\AdminCouponsController.cs",
+              "ToolTip": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Controllers\\API\\Admin\\AdminCouponsController.cs",
+              "RelativeToolTip": "Souvenir_Shop_Website\\Controllers\\API\\Admin\\AdminCouponsController.cs",
+              "ViewState": "AgIAAFMAAAAAAAAAAAAwwI8AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-08T13:52:22.655Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "AdminReviewsController.cs",
+              "DocumentMoniker": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Controllers\\API\\Admin\\AdminReviewsController.cs",
+              "RelativeDocumentMoniker": "Souvenir_Shop_Website\\Controllers\\API\\Admin\\AdminReviewsController.cs",
+              "ToolTip": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Controllers\\API\\Admin\\AdminReviewsController.cs",
+              "RelativeToolTip": "Souvenir_Shop_Website\\Controllers\\API\\Admin\\AdminReviewsController.cs",
+              "ViewState": "AgIAADYAAAAAAAAAAAAwwFsAAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-08T14:24:51.387Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "ReviewsController.cs",
+              "DocumentMoniker": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Controllers\\API\\User\\ReviewsController.cs",
+              "RelativeDocumentMoniker": "Souvenir_Shop_Website\\Controllers\\API\\User\\ReviewsController.cs",
+              "ToolTip": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Controllers\\API\\User\\ReviewsController.cs",
+              "RelativeToolTip": "Souvenir_Shop_Website\\Controllers\\API\\User\\ReviewsController.cs",
+              "ViewState": "AgIAABUAAAAAAAAAAAAAADIAAAA4AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-08T14:23:56.45Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "SouvenirShopContext.cs",
+              "DocumentMoniker": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Models\\SouvenirShopContext.cs",
+              "RelativeDocumentMoniker": "Souvenir_Shop_Website\\Models\\SouvenirShopContext.cs",
+              "ToolTip": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Models\\SouvenirShopContext.cs",
+              "RelativeToolTip": "Souvenir_Shop_Website\\Models\\SouvenirShopContext.cs",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-08T14:39:16.227Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "ReviewDto.cs",
+              "DocumentMoniker": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\DTOs\\Review\\ReviewDto.cs",
+              "RelativeDocumentMoniker": "Souvenir_Shop_Website\\DTOs\\Review\\ReviewDto.cs",
+              "ToolTip": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\DTOs\\Review\\ReviewDto.cs",
+              "RelativeToolTip": "Souvenir_Shop_Website\\DTOs\\Review\\ReviewDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-08T14:22:26.942Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "ReviewReplyRequest.cs",
+              "DocumentMoniker": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\DTOs\\Review\\ReviewReplyRequest.cs",
+              "RelativeDocumentMoniker": "Souvenir_Shop_Website\\DTOs\\Review\\ReviewReplyRequest.cs",
+              "ToolTip": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\DTOs\\Review\\ReviewReplyRequest.cs",
+              "RelativeToolTip": "Souvenir_Shop_Website\\DTOs\\Review\\ReviewReplyRequest.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-08T14:21:59.639Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "CreateReviewRequest.cs",
+              "DocumentMoniker": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\DTOs\\Review\\CreateReviewRequest.cs",
+              "RelativeDocumentMoniker": "Souvenir_Shop_Website\\DTOs\\Review\\CreateReviewRequest.cs",
+              "ToolTip": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\DTOs\\Review\\CreateReviewRequest.cs",
+              "RelativeToolTip": "Souvenir_Shop_Website\\DTOs\\Review\\CreateReviewRequest.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-08T14:21:26.129Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "CreateOrderRequest.cs",
+              "DocumentMoniker": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\DTOs\\Order\\CreateOrderRequest.cs",
+              "RelativeDocumentMoniker": "Souvenir_Shop_Website\\DTOs\\Order\\CreateOrderRequest.cs",
+              "ToolTip": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\DTOs\\Order\\CreateOrderRequest.cs",
+              "RelativeToolTip": "Souvenir_Shop_Website\\DTOs\\Order\\CreateOrderRequest.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAoAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-05T04:47:21.72Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "OrdersController.cs",
+              "DocumentMoniker": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Controllers\\API\\User\\OrdersController.cs",
+              "RelativeDocumentMoniker": "Souvenir_Shop_Website\\Controllers\\API\\User\\OrdersController.cs",
+              "ToolTip": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Controllers\\API\\User\\OrdersController.cs",
+              "RelativeToolTip": "Souvenir_Shop_Website\\Controllers\\API\\User\\OrdersController.cs",
+              "ViewState": "AgIAAOIAAAAAAAAAAAAwwAYBAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-05T03:43:21.258Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "ValidateCouponResponse.cs",
+              "DocumentMoniker": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\DTOs\\Coupon\\ValidateCouponResponse.cs",
+              "RelativeDocumentMoniker": "Souvenir_Shop_Website\\DTOs\\Coupon\\ValidateCouponResponse.cs",
+              "ToolTip": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\DTOs\\Coupon\\ValidateCouponResponse.cs",
+              "RelativeToolTip": "Souvenir_Shop_Website\\DTOs\\Coupon\\ValidateCouponResponse.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-08T13:51:02.317Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "ValidateCouponRequest.cs",
+              "DocumentMoniker": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\DTOs\\Coupon\\ValidateCouponRequest.cs",
+              "RelativeDocumentMoniker": "Souvenir_Shop_Website\\DTOs\\Coupon\\ValidateCouponRequest.cs",
+              "ToolTip": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\DTOs\\Coupon\\ValidateCouponRequest.cs",
+              "RelativeToolTip": "Souvenir_Shop_Website\\DTOs\\Coupon\\ValidateCouponRequest.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-08T13:50:30.398Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "UpdateCouponRequest.cs",
+              "DocumentMoniker": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\DTOs\\Coupon\\UpdateCouponRequest.cs",
+              "RelativeDocumentMoniker": "Souvenir_Shop_Website\\DTOs\\Coupon\\UpdateCouponRequest.cs",
+              "ToolTip": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\DTOs\\Coupon\\UpdateCouponRequest.cs",
+              "RelativeToolTip": "Souvenir_Shop_Website\\DTOs\\Coupon\\UpdateCouponRequest.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-08T13:49:54.168Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "CreateCouponRequest.cs",
+              "DocumentMoniker": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\DTOs\\Coupon\\CreateCouponRequest.cs",
+              "RelativeDocumentMoniker": "Souvenir_Shop_Website\\DTOs\\Coupon\\CreateCouponRequest.cs",
+              "ToolTip": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\DTOs\\Coupon\\CreateCouponRequest.cs",
+              "RelativeToolTip": "Souvenir_Shop_Website\\DTOs\\Coupon\\CreateCouponRequest.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-08T13:49:21.624Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "CouponDto.cs",
+              "DocumentMoniker": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\DTOs\\Coupon\\CouponDto.cs",
+              "RelativeDocumentMoniker": "Souvenir_Shop_Website\\DTOs\\Coupon\\CouponDto.cs",
+              "ToolTip": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\DTOs\\Coupon\\CouponDto.cs",
+              "RelativeToolTip": "Souvenir_Shop_Website\\DTOs\\Coupon\\CouponDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-08T13:48:16.23Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "AuthController.cs",
+              "DocumentMoniker": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Controllers\\API\\User\\AuthController.cs",
+              "RelativeDocumentMoniker": "Souvenir_Shop_Website\\Controllers\\API\\User\\AuthController.cs",
+              "ToolTip": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Controllers\\API\\User\\AuthController.cs",
+              "RelativeToolTip": "Souvenir_Shop_Website\\Controllers\\API\\User\\AuthController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAEgAAAADAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-25T09:30:26.584Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 23,
+              "Title": "AdminOrdersController.cs",
+              "DocumentMoniker": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Controllers\\API\\Admin\\AdminOrdersController.cs",
+              "RelativeDocumentMoniker": "Souvenir_Shop_Website\\Controllers\\API\\Admin\\AdminOrdersController.cs",
+              "ToolTip": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Controllers\\API\\Admin\\AdminOrdersController.cs",
+              "RelativeToolTip": "Souvenir_Shop_Website\\Controllers\\API\\Admin\\AdminOrdersController.cs",
+              "ViewState": "AgIAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-05T09:53:28.324Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "CartController.cs",
+              "DocumentMoniker": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Controllers\\API\\User\\CartController.cs",
+              "RelativeDocumentMoniker": "Souvenir_Shop_Website\\Controllers\\API\\User\\CartController.cs",
+              "ToolTip": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Controllers\\API\\User\\CartController.cs",
+              "RelativeToolTip": "Souvenir_Shop_Website\\Controllers\\API\\User\\CartController.cs",
+              "ViewState": "AgIAAEsAAAAAAAAAAAAAAFwAAAACAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-05T03:39:18.442Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 22,
+              "Title": "AdminProductsController.cs",
+              "DocumentMoniker": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Controllers\\API\\Admin\\AdminProductsController.cs",
+              "RelativeDocumentMoniker": "Souvenir_Shop_Website\\Controllers\\API\\Admin\\AdminProductsController.cs",
+              "ToolTip": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Controllers\\API\\Admin\\AdminProductsController.cs",
+              "RelativeToolTip": "Souvenir_Shop_Website\\Controllers\\API\\Admin\\AdminProductsController.cs",
+              "ViewState": "AgIAAB4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-05T09:53:32.434Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 21,
+              "Title": "AdminUsersController.cs",
+              "DocumentMoniker": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Controllers\\API\\Admin\\AdminUsersController.cs",
+              "RelativeDocumentMoniker": "Souvenir_Shop_Website\\Controllers\\API\\Admin\\AdminUsersController.cs",
+              "ToolTip": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Controllers\\API\\Admin\\AdminUsersController.cs",
+              "RelativeToolTip": "Souvenir_Shop_Website\\Controllers\\API\\Admin\\AdminUsersController.cs",
+              "ViewState": "AgIAADoAAAAAAAAAAAAAwEkAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-26T04:01:03.757Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 26,
+              "Title": "CreatePaymentRequest.cs",
+              "DocumentMoniker": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\DTOs\\Payment\\CreatePaymentRequest.cs",
+              "RelativeDocumentMoniker": "Souvenir_Shop_Website\\DTOs\\Payment\\CreatePaymentRequest.cs",
+              "ToolTip": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\DTOs\\Payment\\CreatePaymentRequest.cs",
+              "RelativeToolTip": "Souvenir_Shop_Website\\DTOs\\Payment\\CreatePaymentRequest.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-05T04:58:00.749Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 24,
+              "Title": "PaymentsController.cs",
+              "DocumentMoniker": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Controllers\\API\\User\\PaymentsController.cs",
+              "RelativeDocumentMoniker": "Souvenir_Shop_Website\\Controllers\\API\\User\\PaymentsController.cs",
+              "ToolTip": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Controllers\\API\\User\\PaymentsController.cs",
+              "RelativeToolTip": "Souvenir_Shop_Website\\Controllers\\API\\User\\PaymentsController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAgAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-05T04:48:25.367Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 27,
+              "Title": "PaymentDto.cs",
+              "DocumentMoniker": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\DTOs\\Payment\\PaymentDto.cs",
+              "RelativeDocumentMoniker": "Souvenir_Shop_Website\\DTOs\\Payment\\PaymentDto.cs",
+              "ToolTip": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\DTOs\\Payment\\PaymentDto.cs",
+              "RelativeToolTip": "Souvenir_Shop_Website\\DTOs\\Payment\\PaymentDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-05T05:24:16.914Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 25,
+              "Title": "ConfirmPaymentRequest.cs",
+              "DocumentMoniker": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\DTOs\\Payment\\ConfirmPaymentRequest.cs",
+              "RelativeDocumentMoniker": "Souvenir_Shop_Website\\DTOs\\Payment\\ConfirmPaymentRequest.cs",
+              "ToolTip": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\DTOs\\Payment\\ConfirmPaymentRequest.cs",
+              "RelativeToolTip": "Souvenir_Shop_Website\\DTOs\\Payment\\ConfirmPaymentRequest.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAtAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-05T05:25:00.907Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 30,
+              "Title": "JwtTokenService.cs",
+              "DocumentMoniker": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Services\\JwtTokenService.cs",
+              "RelativeDocumentMoniker": "Souvenir_Shop_Website\\Services\\JwtTokenService.cs",
+              "ToolTip": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Services\\JwtTokenService.cs",
+              "RelativeToolTip": "Souvenir_Shop_Website\\Services\\JwtTokenService.cs",
+              "ViewState": "AgIAAA8AAAAAAAAAAAAAABIAAAAmAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-05T04:08:18.662Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 31,
+              "Title": "CategoriesController.cs",
+              "DocumentMoniker": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Controllers\\API\\User\\CategoriesController.cs",
+              "RelativeDocumentMoniker": "Souvenir_Shop_Website\\Controllers\\API\\User\\CategoriesController.cs",
+              "ToolTip": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Controllers\\API\\User\\CategoriesController.cs",
+              "RelativeToolTip": "Souvenir_Shop_Website\\Controllers\\API\\User\\CategoriesController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-05T03:43:18.276Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 29,
+              "Title": "CurrentUser.cs",
+              "DocumentMoniker": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Helpers\\CurrentUser.cs",
+              "RelativeDocumentMoniker": "Souvenir_Shop_Website\\Helpers\\CurrentUser.cs",
+              "ToolTip": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Helpers\\CurrentUser.cs",
+              "RelativeToolTip": "Souvenir_Shop_Website\\Helpers\\CurrentUser.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-05T04:13:23.783Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 28,
+              "Title": "AddCartItemRequest.cs",
+              "DocumentMoniker": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\DTOs\\Cart\\AddCartItemRequest.cs",
+              "RelativeDocumentMoniker": "Souvenir_Shop_Website\\DTOs\\Cart\\AddCartItemRequest.cs",
+              "ToolTip": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\DTOs\\Cart\\AddCartItemRequest.cs",
+              "RelativeToolTip": "Souvenir_Shop_Website\\DTOs\\Cart\\AddCartItemRequest.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-05T04:14:25.093Z"
+            }
+          ]
+        },
+        {
+          "DockedWidth": 239,
+          "SelectedChildIndex": -1,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
