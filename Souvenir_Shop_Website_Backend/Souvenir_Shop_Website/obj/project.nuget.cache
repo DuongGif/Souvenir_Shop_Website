@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "xn+raRBNuv0=",
+  "dgSpecHash": "maDgwKn5Y1k=",
   "success": true,
-  "projectFilePath": "D:\\Nam4\\ki2\\Đồ án\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj",
+  "projectFilePath": "D:\\Nam4\\ki2\\Đồ án\\Git\\Souvenir_Shop_Website\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\xx3du\\.nuget\\packages\\azure.core\\1.25.0\\azure.core.1.25.0.nupkg.sha512",
     "C:\\Users\\xx3du\\.nuget\\packages\\azure.identity\\1.7.0\\azure.identity.1.7.0.nupkg.sha512",

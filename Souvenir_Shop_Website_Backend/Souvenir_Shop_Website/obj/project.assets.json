@@ -4047,11 +4047,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Nam4\\ki2\\Đồ án\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj",
+      "projectUniqueName": "D:\\Nam4\\ki2\\Đồ án\\Git\\Souvenir_Shop_Website\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj",
       "projectName": "Souvenir_Shop_Website",
-      "projectPath": "D:\\Nam4\\ki2\\Đồ án\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj",
+      "projectPath": "D:\\Nam4\\ki2\\Đồ án\\Git\\Souvenir_Shop_Website\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Souvenir_Shop_Website.csproj",
       "packagesPath": "C:\\Users\\xx3du\\.nuget\\packages\\",
-      "outputPath": "D:\\Nam4\\ki2\\Đồ án\\Source\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\obj\\",
+      "outputPath": "D:\\Nam4\\ki2\\Đồ án\\Git\\Souvenir_Shop_Website\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\xx3du\\AppData\\Roaming\\NuGet\\NuGet.Config",
