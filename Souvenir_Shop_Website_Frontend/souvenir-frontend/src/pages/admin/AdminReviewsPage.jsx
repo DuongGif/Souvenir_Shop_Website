@@ -1,87 +1,330 @@
 import React, { useEffect, useState } from "react";
 import { adminReviewsService } from "../../services/admin/adminReviewsService";
 
+const getErrorMessage = (ex, fallback) => {
+  const data = ex?.response?.data;
+  if (typeof data === "string") return data;
+  if (data?.message) return data.message;
+  if (data?.title) return data.title;
+  if (data?.errors) {
+    const firstError = Object.values(data.errors)?.flat?.()[0];
+    if (firstError) return firstError;
+  }
+  return fallback;
+};
+
+const getStatusBadge = (status) => {
+  const s = String(status || "").toLowerCase();
+
+  if (s === "pending") {
+    return { text: "Chờ duyệt", bg: "#fef3c7", color: "#92400e" };
+  }
+  if (s === "approved") {
+    return { text: "Đã duyệt", bg: "#dcfce7", color: "#166534" };
+  }
+  if (s === "rejected") {
+    return { text: "Từ chối", bg: "#fee2e2", color: "#991b1b" };
+  }
+
+  return { text: status || "Không xác định", bg: "#e5e7eb", color: "#374151" };
+};
+
 export default function AdminReviewsPage() {
   const [status, setStatus] = useState("pending");
   const [list, setList] = useState([]);
   const [replyText, setReplyText] = useState({});
   const [err, setErr] = useState("");
   const [msg, setMsg] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const load = async () => {
-    const res = await adminReviewsService.getAll(status);
-    setList(res.data || []);
+    setLoading(true);
+    setErr("");
+
+    try {
+      const res = await adminReviewsService.getAll(status);
+      setList(res.data || []);
+    } catch (ex) {
+      setErr(getErrorMessage(ex, "Không thể tải danh sách đánh giá"));
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { load().catch(ex => setErr(ex?.response?.data ?? "Load failed")); }, [status]);
+  useEffect(() => {
+    load();
+  }, [status]);
 
   const approve = async (id) => {
-    setErr(""); setMsg("");
+    setErr("");
+    setMsg("");
+
     try {
       await adminReviewsService.approve(id);
-      setMsg("Approved " + id);
+      setMsg("Đã duyệt đánh giá #" + id);
       await load();
-    } catch (ex) { setErr(ex?.response?.data ?? "Approve failed"); }
+    } catch (ex) {
+      setErr(getErrorMessage(ex, "Duyệt đánh giá thất bại"));
+    }
   };
 
   const reject = async (id) => {
-    setErr(""); setMsg("");
+    setErr("");
+    setMsg("");
+
     try {
       await adminReviewsService.reject(id);
-      setMsg("Rejected " + id);
+      setMsg("Đã từ chối đánh giá #" + id);
       await load();
-    } catch (ex) { setErr(ex?.response?.data ?? "Reject failed"); }
+    } catch (ex) {
+      setErr(getErrorMessage(ex, "Từ chối đánh giá thất bại"));
+    }
   };
 
   const reply = async (id) => {
-    setErr(""); setMsg("");
+    setErr("");
+    setMsg("");
+
     try {
       await adminReviewsService.reply(id, { content: replyText[id] || "" });
-      setMsg("Replied " + id);
-    } catch (ex) { setErr(ex?.response?.data ?? "Reply failed"); }
+      setMsg("Đã phản hồi đánh giá #" + id);
+      await load();
+    } catch (ex) {
+      setErr(getErrorMessage(ex, "Phản hồi đánh giá thất bại"));
+    }
   };
 
   return (
     <div>
-      <h2>Admin Reviews</h2>
-      {err && <div style={{ color:"red" }}>{String(err)}</div>}
-      {msg && <div style={{ color:"green" }}>{msg}</div>}
+      <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+        <div>
+          <h2
+            style={{
+              marginBottom: 6,
+              color: "#0f172a",
+              fontWeight: 700,
+            }}
+          >
+            Quản lý đánh giá
+          </h2>
+          <p style={{ marginBottom: 0, color: "#64748b" }}>
+            Duyệt, từ chối và phản hồi các đánh giá sản phẩm từ người dùng.
+          </p>
+        </div>
 
-      <div style={{ display:"flex", gap: 8, alignItems:"center" }}>
-        <span>Status:</span>
-        <select value={status} onChange={(e)=>setStatus(e.target.value)}>
-          <option value="pending">pending</option>
-          <option value="approved">approved</option>
-          <option value="rejected">rejected</option>
-        </select>
-        <button onClick={load}>Reload</button>
+        <div className="d-flex gap-2 align-items-center flex-wrap">
+          <span style={{ color: "#334155", fontWeight: 600 }}>Trạng thái:</span>
+          <select
+            className="form-select"
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            style={{
+              width: 180,
+              height: 42,
+              borderRadius: 12,
+              color: "#111827",
+            }}
+          >
+            <option value="pending">pending</option>
+            <option value="approved">approved</option>
+            <option value="rejected">rejected</option>
+          </select>
+
+          <button
+            onClick={load}
+            className="btn btn-outline-primary"
+            style={{ borderRadius: 12, height: 42 }}
+          >
+            Reload
+          </button>
+        </div>
       </div>
 
-      <div style={{ marginTop: 12 }}>
-        {list.map(r => (
-          <div key={r.id} style={{ border:"1px solid #ddd", padding: 12, marginBottom: 10 }}>
-            <div><b>Review #{r.id}</b> productId: {r.productId} userId: {r.userId}</div>
-            <div>Rating: {r.rating}</div>
-            <div>Title: {r.title}</div>
-            <div>Content: {r.content}</div>
+      {err && (
+        <div className="alert alert-danger" role="alert">
+          {err}
+        </div>
+      )}
 
-            <div style={{ marginTop: 8, display:"flex", gap: 8 }}>
-              <button onClick={()=>approve(r.id)}>Approve</button>
-              <button onClick={()=>reject(r.id)}>Reject</button>
-            </div>
+      {msg && (
+        <div className="alert alert-success" role="alert">
+          {msg}
+        </div>
+      )}
 
-            <div style={{ marginTop: 8 }}>
-              <textarea
-                placeholder="Reply content..."
-                value={replyText[r.id] || ""}
-                onChange={(e)=>setReplyText({ ...replyText, [r.id]: e.target.value })}
-                style={{ width:"100%", minHeight: 60 }}
-              />
-              <button onClick={()=>reply(r.id)}>Reply</button>
-            </div>
-          </div>
-        ))}
-      </div>
+      {loading ? (
+        <div className="text-center py-5">
+          <div className="spinner-border text-info" role="status"></div>
+          <p className="mt-3 mb-0">Đang tải danh sách đánh giá...</p>
+        </div>
+      ) : list.length === 0 ? (
+        <div
+          style={{
+            background: "#fff",
+            borderRadius: 20,
+            padding: 28,
+            boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
+            color: "#475569",
+          }}
+        >
+          Không có đánh giá nào ở trạng thái này.
+        </div>
+      ) : (
+        <div className="d-grid gap-3">
+          {list.map((r) => {
+            const badge = getStatusBadge(r.status);
+
+            return (
+              <div
+                key={r.id}
+                style={{
+                  background: "#fff",
+                  borderRadius: 20,
+                  padding: 22,
+                  boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
+                }}
+              >
+                <div className="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
+                  <div>
+                    <h5
+                      style={{
+                        marginBottom: 8,
+                        color: "#0f172a",
+                        fontWeight: 700,
+                      }}
+                    >
+                      Review #{r.id}
+                    </h5>
+
+                    <div style={{ color: "#475569", lineHeight: 1.8 }}>
+                      <div>
+                        <strong>Product Id:</strong> {r.productId}
+                      </div>
+                      <div>
+                        <strong>User Id:</strong> {r.userId}
+                      </div>
+                      <div>
+                        <strong>Rating:</strong> {r.rating}
+                      </div>
+                    </div>
+                  </div>
+
+                  <span
+                    style={{
+                      background: badge.bg,
+                      color: badge.color,
+                      padding: "6px 12px",
+                      borderRadius: 999,
+                      fontSize: 13,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {badge.text}
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    background: "#f8fafc",
+                    borderRadius: 16,
+                    padding: 16,
+                    marginBottom: 16,
+                  }}
+                >
+                  <div
+                    style={{
+                      color: "#0f172a",
+                      fontWeight: 700,
+                      marginBottom: 8,
+                    }}
+                  >
+                    {r.title || "Không có tiêu đề"}
+                  </div>
+
+                  <div style={{ color: "#475569", lineHeight: 1.7 }}>
+                    {r.content || "Không có nội dung"}
+                  </div>
+                </div>
+
+                {r.replyContent && (
+                  <div
+                    style={{
+                      background: "#eef6ff",
+                      borderRadius: 16,
+                      padding: 16,
+                      marginBottom: 16,
+                      border: "1px solid #dbeafe",
+                    }}
+                  >
+                    <div
+                      style={{
+                        color: "#1d4ed8",
+                        fontWeight: 700,
+                        marginBottom: 8,
+                      }}
+                    >
+                      Phản hồi hiện tại
+                    </div>
+                    <div style={{ color: "#334155", lineHeight: 1.7 }}>
+                      {r.replyContent}
+                    </div>
+                  </div>
+                )}
+
+                <div className="d-flex gap-2 flex-wrap mb-3">
+                  <button
+                    onClick={() => approve(r.id)}
+                    className="btn btn-outline-success btn-sm"
+                    style={{ borderRadius: 10, fontWeight: 600 }}
+                  >
+                    Approve
+                  </button>
+
+                  <button
+                    onClick={() => reject(r.id)}
+                    className="btn btn-outline-danger btn-sm"
+                    style={{ borderRadius: 10, fontWeight: 600 }}
+                  >
+                    Reject
+                  </button>
+                </div>
+
+                <div>
+                  <label
+                    className="form-label"
+                    style={{ color: "#111827", fontWeight: 600 }}
+                  >
+                    Phản hồi đánh giá
+                  </label>
+
+                  <textarea
+                    className="form-control"
+                    placeholder="Nhập nội dung phản hồi..."
+                    value={replyText[r.id] || ""}
+                    onChange={(e) =>
+                      setReplyText({ ...replyText, [r.id]: e.target.value })
+                    }
+                    rows={4}
+                    style={{
+                      borderRadius: 12,
+                      color: "#111827",
+                      marginBottom: 12,
+                    }}
+                  />
+
+                  <button
+                    onClick={() => reply(r.id)}
+                    className="btn btn-primary"
+                    style={{ borderRadius: 12, fontWeight: 600 }}
+                  >
+                    Gửi phản hồi
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

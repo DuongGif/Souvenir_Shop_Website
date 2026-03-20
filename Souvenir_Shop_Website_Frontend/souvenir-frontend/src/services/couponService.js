@@ -1,5 +1,5 @@
-import { api } from "./apiClient";
+import apiClient from "./apiClient";
 
 export const couponService = {
-  validate: (data) => api.post("/api/coupons/validate", data), // { code, subtotal }
+  validate: (data) => apiClient.post("/api/coupons/validate", data), // { code, subtotal }
 };

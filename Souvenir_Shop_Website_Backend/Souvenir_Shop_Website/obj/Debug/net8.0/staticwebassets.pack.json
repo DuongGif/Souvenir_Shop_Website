@@ -13,6 +13,22 @@
       "PackagePath": "staticwebassets\\favicon.ico"
     },
     {
+      "Id": "D:\\Nam4\\ki2\\Đồ án\\Git\\Souvenir_Shop_Website\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\wwwroot\\images\\products\\875b71753d36416cb8ce99fb838e89ae.jpg",
+      "PackagePath": "staticwebassets\\images\\products\\875b71753d36416cb8ce99fb838e89ae.jpg"
+    },
+    {
+      "Id": "D:\\Nam4\\ki2\\Đồ án\\Git\\Souvenir_Shop_Website\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\wwwroot\\images\\products\\9acfe84e518d45a097b0dcbefa92905d.jpg",
+      "PackagePath": "staticwebassets\\images\\products\\9acfe84e518d45a097b0dcbefa92905d.jpg"
+    },
+    {
+      "Id": "D:\\Nam4\\ki2\\Đồ án\\Git\\Souvenir_Shop_Website\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\wwwroot\\images\\products\\b09d01d00b0e4b76a3fb4d0d8d6aeb19.jpg",
+      "PackagePath": "staticwebassets\\images\\products\\b09d01d00b0e4b76a3fb4d0d8d6aeb19.jpg"
+    },
+    {
+      "Id": "D:\\Nam4\\ki2\\Đồ án\\Git\\Souvenir_Shop_Website\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\wwwroot\\images\\products\\e6e6d0df0c9948a79b4189d35c15b227.jpg",
+      "PackagePath": "staticwebassets\\images\\products\\e6e6d0df0c9948a79b4189d35c15b227.jpg"
+    },
+    {
       "Id": "D:\\Nam4\\ki2\\Đồ án\\Git\\Souvenir_Shop_Website\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\wwwroot\\js\\site.js",
       "PackagePath": "staticwebassets\\js\\site.js"
     },

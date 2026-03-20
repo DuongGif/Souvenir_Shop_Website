@@ -1,7 +1,19 @@
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useMemo } from "react";
 import logo from "../assets/img/logo.png";
 
 export default function Header() {
+  const navigate = useNavigate();
+
+  const token = localStorage.getItem("token");
+  const isLoggedIn = useMemo(() => !!token, [token]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/login");
+    window.location.reload();
+  };
+
   return (
     <header
       id="header"
@@ -25,17 +37,23 @@ export default function Header() {
               <NavLink to="/products">Sản phẩm</NavLink>
             </li>
 
-            <li>
-              <NavLink to="/wishlist">Yêu thích</NavLink>
-            </li>
+            {isLoggedIn && (
+              <li>
+                <NavLink to="/wishlist">Yêu thích</NavLink>
+              </li>
+            )}
 
-            <li>
-              <NavLink to="/cart">Giỏ hàng</NavLink>
-            </li>
+            {isLoggedIn && (
+              <li>
+                <NavLink to="/cart">Giỏ hàng</NavLink>
+              </li>
+            )}
 
-            <li>
-              <NavLink to="/orders">Đơn hàng</NavLink>
-            </li>
+            {isLoggedIn && (
+              <li>
+                <NavLink to="/orders">Đơn hàng</NavLink>
+              </li>
+            )}
 
             <li className="dropdown">
               <a href="#">
@@ -43,12 +61,38 @@ export default function Header() {
                 <i className="bi bi-chevron-down toggle-dropdown"></i>
               </a>
               <ul>
-                <li>
-                  <NavLink to="/login">Đăng nhập</NavLink>
-                </li>
-                <li>
-                  <NavLink to="/account">Đăng ký</NavLink>
-                </li>
+                {isLoggedIn ? (
+                  <>
+                    <li>
+                      <NavLink to="/account">Thông tin tài khoản</NavLink>
+                    </li>
+                    <li>
+                      <button
+                        type="button"
+                        onClick={handleLogout}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          padding: "10px 20px",
+                          width: "100%",
+                          textAlign: "left",
+                          color: "inherit",
+                        }}
+                      >
+                        Đăng xuất
+                      </button>
+                    </li>
+                  </>
+                ) : (
+                  <>
+                    <li>
+                      <NavLink to="/login">Đăng nhập</NavLink>
+                    </li>
+                    <li>
+                      <NavLink to="/register">Đăng ký</NavLink>
+                    </li>
+                  </>
+                )}
               </ul>
             </li>
 

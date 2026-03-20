@@ -84,6 +84,7 @@ namespace Souvenir_Shop_Website
 			builder.Services.AddAuthorization();
 
 			var app = builder.Build();
+				app.UseStaticFiles();
 
 			if (app.Environment.IsDevelopment())
 			{

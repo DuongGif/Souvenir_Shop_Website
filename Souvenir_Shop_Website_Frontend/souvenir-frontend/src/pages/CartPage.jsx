@@ -1,107 +1,530 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import MainLayout from "../layouts/MainLayout";
 import { cartService } from "../services/cartService";
 import { couponService } from "../services/couponService";
 import { orderService } from "../services/orderService";
-import { useNavigate } from "react-router-dom";
+import { accountService } from "../services/accountService";
+
+const formatPrice = (value) => {
+  if (value === null || value === undefined) return "0 ₫";
+  return Number(value).toLocaleString("vi-VN") + " ₫";
+};
+
+const getErrorMessage = (ex, fallback) => {
+  const data = ex?.response?.data;
+  if (typeof data === "string") return data;
+  if (data?.message) return data.message;
+  if (data?.title) return data.title;
+  if (data?.errors) {
+    const firstError = Object.values(data.errors)?.flat?.()[0];
+    if (firstError) return firstError;
+  }
+  return fallback;
+};
 
 export default function CartPage() {
   const nav = useNavigate();
+
   const [cart, setCart] = useState({ items: [], subtotal: 0, cartId: 0 });
+  const [addresses, setAddresses] = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState("");
+
   const [couponCode, setCouponCode] = useState("");
   const [couponInfo, setCouponInfo] = useState(null);
+
+  const [loading, setLoading] = useState(true);
+  const [checkingCoupon, setCheckingCoupon] = useState(false);
+  const [checkingOut, setCheckingOut] = useState(false);
+
   const [err, setErr] = useState("");
   const [msg, setMsg] = useState("");
 
   const load = async () => {
-    const res = await cartService.get();
-    setCart(res.data);
+    setLoading(true);
+    setErr("");
+
+    try {
+      const [cartRes, addressRes] = await Promise.all([
+        cartService.get(),
+        accountService.getAddresses(),
+      ]);
+
+      const cartData = cartRes.data || { items: [], subtotal: 0, cartId: 0 };
+      const addressData = addressRes.data || [];
+
+      setCart(cartData);
+      setAddresses(addressData);
+
+      const defaultAddress = addressData.find((a) => a.isDefault);
+      if (defaultAddress) {
+        setSelectedAddressId(String(defaultAddress.id));
+      } else if (addressData.length > 0) {
+        setSelectedAddressId(String(addressData[0].id));
+      } else {
+        setSelectedAddressId("");
+      }
+    } catch (ex) {
+      setErr(getErrorMessage(ex, "Không thể tải giỏ hàng"));
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { load().catch(() => setErr("Load cart failed")); }, []);
+  useEffect(() => {
+    load();
+  }, []);
+
+  const discountAmount = couponInfo?.isValid ? Number(couponInfo.discountAmount || 0) : 0;
+
+  const finalTotal = useMemo(() => {
+    return Math.max(0, Number(cart.subtotal || 0) - discountAmount);
+  }, [cart.subtotal, discountAmount]);
 
   const updateQty = async (itemId, quantity) => {
-    setErr(""); setMsg("");
+    setErr("");
+    setMsg("");
+
+    const safeQty = Math.max(1, Number(quantity || 1));
+
     try {
-      await cartService.updateItem(itemId, { quantity });
+      await cartService.updateItem(itemId, { quantity: safeQty });
       await load();
-    } catch (ex) { setErr(ex?.response?.data ?? "Update failed"); }
+      setMsg("Đã cập nhật số lượng sản phẩm");
+    } catch (ex) {
+      setErr(getErrorMessage(ex, "Cập nhật số lượng thất bại"));
+    }
   };
 
   const removeItem = async (itemId) => {
-    setErr(""); setMsg("");
+    setErr("");
+    setMsg("");
+
     try {
       await cartService.deleteItem(itemId);
       await load();
-    } catch (ex) { setErr(ex?.response?.data ?? "Delete failed"); }
+      setMsg("Đã xóa sản phẩm khỏi giỏ hàng");
+    } catch (ex) {
+      setErr(getErrorMessage(ex, "Xóa sản phẩm thất bại"));
+    }
   };
 
   const validateCoupon = async () => {
-    setErr(""); setMsg(""); setCouponInfo(null);
+    setErr("");
+    setMsg("");
+    setCouponInfo(null);
+
+    if (!couponCode.trim()) {
+      setErr("Vui lòng nhập mã giảm giá");
+      return;
+    }
+
     try {
-      const res = await couponService.validate({ code: couponCode, subtotal: cart.subtotal });
+      setCheckingCoupon(true);
+      const res = await couponService.validate({
+        code: couponCode.trim(),
+        subtotal: cart.subtotal,
+      });
       setCouponInfo(res.data);
+
+      if (res.data?.isValid) {
+        setMsg("Mã giảm giá hợp lệ");
+      } else {
+        setErr(res.data?.message || "Mã giảm giá không hợp lệ");
+      }
     } catch (ex) {
-      setErr(ex?.response?.data ?? "Validate coupon failed");
+      setErr(getErrorMessage(ex, "Kiểm tra mã giảm giá thất bại"));
+    } finally {
+      setCheckingCoupon(false);
     }
   };
 
   const checkout = async () => {
-    setErr(""); setMsg("");
+    setErr("");
+    setMsg("");
+
+    if ((cart.items || []).length === 0) {
+      setErr("Giỏ hàng đang trống");
+      return;
+    }
+
+    if (!selectedAddressId) {
+      setErr("Vui lòng chọn địa chỉ giao hàng");
+      return;
+    }
+
     try {
-      // ✅ shippingAddressId bạn cần có địa chỉ của user (hiện demo: 1)
+      setCheckingOut(true);
+
       const payload = {
-        shippingAddressId: 1,
-        fulfillmentType: "delivery"
+        shippingAddressId: Number(selectedAddressId),
+        fulfillmentType: "delivery",
       };
-      if (couponCode.trim()) payload.couponCode = couponCode.trim();
+
+      if (couponCode.trim()) {
+        payload.couponCode = couponCode.trim();
+      }
 
       const res = await orderService.create(payload);
       const orderCode = res.data.orderCode;
       nav(`/payment/${orderCode}`);
     } catch (ex) {
-      setErr(ex?.response?.data ?? "Create order failed");
+      setErr(getErrorMessage(ex, "Tạo đơn hàng thất bại"));
+    } finally {
+      setCheckingOut(false);
     }
   };
 
   return (
-    <div>
-      <h2>Cart</h2>
-      {err && <div style={{ color:"red" }}>{String(err)}</div>}
-      {msg && <div style={{ color:"green" }}>{msg}</div>}
-
-      {(cart.items || []).map(it => (
-        <div key={it.id} style={{ border:"1px solid #ddd", padding: 10, marginBottom: 8 }}>
-          <b>{it.variantName}</b>
-          <div>Price: {it.price} | Qty: {it.quantity} | Line: {it.lineTotal}</div>
-
-          <div style={{ display:"flex", gap: 8, alignItems:"center" }}>
-            <input type="number" min={1} defaultValue={it.quantity}
-              onBlur={(e)=>updateQty(it.id, Number(e.target.value))}
-              style={{ width: 80 }} />
-            <button onClick={()=>removeItem(it.id)}>Remove</button>
+    <MainLayout>
+      <section className="section">
+        <div className="container" data-aos="fade-up">
+          <div className="section-title">
+            <h2>Giỏ hàng của bạn</h2>
+            <p>
+              Kiểm tra sản phẩm đã chọn, cập nhật số lượng, áp dụng mã giảm giá
+              và tiến hành đặt hàng.
+            </p>
           </div>
-          <small>Tip: đổi số lượng rồi click ra ngoài để update</small>
+
+          {err && (
+            <div className="alert alert-danger" role="alert">
+              {err}
+            </div>
+          )}
+
+          {msg && (
+            <div className="alert alert-success" role="alert">
+              {msg}
+            </div>
+          )}
+
+          {loading ? (
+            <div className="text-center py-5">
+              <div className="spinner-border text-info" role="status"></div>
+              <p className="mt-3 mb-0">Đang tải giỏ hàng...</p>
+            </div>
+          ) : (cart.items || []).length === 0 ? (
+            <div
+              style={{
+                background: "#fff",
+                borderRadius: 24,
+                padding: 36,
+                boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
+                textAlign: "center",
+              }}
+            >
+              <h4 style={{ color: "#0f172a", fontWeight: 700 }}>
+                Giỏ hàng đang trống
+              </h4>
+              <p style={{ color: "#64748b" }}>
+                Bạn chưa thêm sản phẩm nào vào giỏ hàng.
+              </p>
+              <Link
+                to="/products"
+                className="btn btn-primary"
+                style={{ borderRadius: 12, padding: "10px 22px" }}
+              >
+                Tiếp tục mua sắm
+              </Link>
+            </div>
+          ) : (
+            <div className="row g-4">
+              <div className="col-lg-8">
+                <div className="d-grid gap-3">
+                  {(cart.items || []).map((it) => (
+                    <div
+                      key={it.id}
+                      style={{
+                        background: "#fff",
+                        borderRadius: 22,
+                        padding: 20,
+                        boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
+                      }}
+                    >
+                      <div className="row g-3 align-items-center">
+                        <div className="col-md-3">
+                          <div
+                            style={{
+                              background: "#f8fafc",
+                              borderRadius: 18,
+                              overflow: "hidden",
+                              minHeight: 140,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            <img
+                              src={
+                                it.imageUrl ||
+                                "https://via.placeholder.com/400x300?text=Souvenir"
+                              }
+                              alt={it.variantName}
+                              style={{
+                                width: "100%",
+                                height: 140,
+                                objectFit: "cover",
+                              }}
+                              onError={(e) => {
+                                e.currentTarget.src =
+                                  "https://via.placeholder.com/400x300?text=No+Image";
+                              }}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="col-md-5">
+                          <h5
+                            style={{
+                              color: "#0f172a",
+                              fontWeight: 700,
+                              marginBottom: 8,
+                            }}
+                          >
+                            {it.variantName}
+                          </h5>
+
+                          <div style={{ color: "#475569", marginBottom: 6 }}>
+                            Đơn giá: <strong>{formatPrice(it.price)}</strong>
+                          </div>
+
+                          <div style={{ color: "#475569" }}>
+                            Thành tiền:{" "}
+                            <strong>{formatPrice(it.lineTotal)}</strong>
+                          </div>
+                        </div>
+
+                        <div className="col-md-4">
+                          <label
+                            className="form-label"
+                            style={{ color: "#111827", fontWeight: 600 }}
+                          >
+                            Số lượng
+                          </label>
+
+                          <div className="d-flex align-items-center gap-2">
+                            <button
+                              type="button"
+                              className="btn btn-outline-secondary"
+                              style={{ borderRadius: 10 }}
+                              onClick={() => updateQty(it.id, Number(it.quantity) - 1)}
+                              disabled={Number(it.quantity) <= 1}
+                            >
+                              -
+                            </button>
+
+                            <input
+                              type="number"
+                              min={1}
+                              value={it.quantity}
+                              onChange={(e) =>
+                                updateQty(it.id, Number(e.target.value || 1))
+                              }
+                              className="form-control"
+                              style={{
+                                width: 90,
+                                color: "#111827",
+                                borderRadius: 10,
+                                textAlign: "center",
+                              }}
+                            />
+
+                            <button
+                              type="button"
+                              className="btn btn-outline-secondary"
+                              style={{ borderRadius: 10 }}
+                              onClick={() => updateQty(it.id, Number(it.quantity) + 1)}
+                            >
+                              +
+                            </button>
+                          </div>
+
+                          <button
+                            onClick={() => removeItem(it.id)}
+                            className="btn btn-outline-danger btn-sm mt-3"
+                            style={{ borderRadius: 10 }}
+                          >
+                            Xóa sản phẩm
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="col-lg-4">
+                <div
+                  style={{
+                    background: "#fff",
+                    borderRadius: 24,
+                    padding: 24,
+                    boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
+                    marginBottom: 20,
+                  }}
+                >
+                  <h4 style={{ color: "#0f172a", fontWeight: 700, marginBottom: 16 }}>
+                    Mã giảm giá
+                  </h4>
+
+                  <div className="d-grid gap-3">
+                    <input
+                      className="form-control"
+                      placeholder="Nhập mã giảm giá"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value)}
+                      style={{ height: 46, borderRadius: 12, color: "#111827" }}
+                    />
+
+                    <button
+                      onClick={validateCoupon}
+                      className="btn btn-outline-primary"
+                      disabled={checkingCoupon}
+                      style={{ borderRadius: 12, height: 46 }}
+                    >
+                      {checkingCoupon ? "Đang kiểm tra..." : "Áp dụng mã"}
+                    </button>
+                  </div>
+
+                  {couponInfo && (
+                    <div
+                      className="mt-3"
+                      style={{
+                        background: "#f8fafc",
+                        borderRadius: 16,
+                        padding: 16,
+                        color: "#334155",
+                      }}
+                    >
+                      <div>
+                        <strong>Hợp lệ:</strong> {String(couponInfo.isValid)}
+                      </div>
+                      <div>
+                        <strong>Thông báo:</strong> {couponInfo.message}
+                      </div>
+                      <div>
+                        <strong>Giảm giá:</strong> {formatPrice(couponInfo.discountAmount)}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div
+                  style={{
+                    background: "#fff",
+                    borderRadius: 24,
+                    padding: 24,
+                    boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
+                    marginBottom: 20,
+                  }}
+                >
+                  <h4 style={{ color: "#0f172a", fontWeight: 700, marginBottom: 16 }}>
+                    Địa chỉ giao hàng
+                  </h4>
+
+                  {addresses.length === 0 ? (
+                    <div
+                      style={{
+                        background: "#f8fafc",
+                        borderRadius: 16,
+                        padding: 16,
+                        color: "#475569",
+                      }}
+                    >
+                      Bạn chưa có địa chỉ giao hàng.{" "}
+                      <Link to="/account" style={{ fontWeight: 600 }}>
+                        Thêm địa chỉ ngay
+                      </Link>
+                    </div>
+                  ) : (
+                    <select
+                      className="form-select"
+                      value={selectedAddressId}
+                      onChange={(e) => setSelectedAddressId(e.target.value)}
+                      style={{ height: 48, borderRadius: 12, color: "#111827" }}
+                    >
+                      <option value="">Chọn địa chỉ giao hàng</option>
+                      {addresses.map((addr) => (
+                        <option key={addr.id} value={addr.id}>
+                          {addr.recipientName} - {addr.recipientPhone} -{" "}
+                          {[addr.addressLine1, addr.district, addr.province]
+                            .filter(Boolean)
+                            .join(", ")}
+                          {addr.isDefault ? " (Mặc định)" : ""}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+
+                <div
+                  style={{
+                    background: "#fff",
+                    borderRadius: 24,
+                    padding: 24,
+                    boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
+                  }}
+                >
+                  <h4 style={{ color: "#0f172a", fontWeight: 700, marginBottom: 16 }}>
+                    Tóm tắt đơn hàng
+                  </h4>
+
+                  <div className="d-grid gap-2" style={{ color: "#334155" }}>
+                    <div className="d-flex justify-content-between">
+                      <span>Tạm tính</span>
+                      <strong>{formatPrice(cart.subtotal)}</strong>
+                    </div>
+
+                    <div className="d-flex justify-content-between">
+                      <span>Giảm giá</span>
+                      <strong>- {formatPrice(discountAmount)}</strong>
+                    </div>
+
+                    <hr />
+
+                    <div
+                      className="d-flex justify-content-between"
+                      style={{ fontSize: 20, color: "#0f172a" }}
+                    >
+                      <span>Tổng cộng</span>
+                      <strong>{formatPrice(finalTotal)}</strong>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={checkout}
+                    disabled={checkingOut || (cart.items || []).length === 0}
+                    className="btn btn-primary w-100 mt-4"
+                    style={{
+                      height: 48,
+                      borderRadius: 12,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {checkingOut ? "Đang tạo đơn..." : "Tiến hành thanh toán"}
+                  </button>
+
+                  <Link
+                    to="/products"
+                    className="btn btn-outline-secondary w-100 mt-3"
+                    style={{
+                      height: 48,
+                      borderRadius: 12,
+                      fontWeight: 600,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    Tiếp tục mua sắm
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-      ))}
-
-      <h3>Subtotal: {cart.subtotal}</h3>
-
-      <div style={{ display:"flex", gap: 8, marginTop: 10 }}>
-        <input placeholder="Coupon code" value={couponCode} onChange={(e)=>setCouponCode(e.target.value)} />
-        <button onClick={validateCoupon}>Validate</button>
-      </div>
-
-      {couponInfo && (
-        <div style={{ marginTop: 8, border:"1px dashed #999", padding: 10 }}>
-          <div>Valid: {String(couponInfo.isValid)}</div>
-          <div>Message: {couponInfo.message}</div>
-          <div>DiscountAmount: {couponInfo.discountAmount}</div>
-        </div>
-      )}
-
-      <div style={{ marginTop: 16 }}>
-        <button onClick={checkout} disabled={(cart.items || []).length === 0}>Checkout</button>
-      </div>
-    </div>
+      </section>
+    </MainLayout>
   );
 }

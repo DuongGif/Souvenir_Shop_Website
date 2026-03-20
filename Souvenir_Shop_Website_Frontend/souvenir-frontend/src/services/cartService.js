@@ -1,8 +1,8 @@
-import { api } from "./apiClient";
+import apiClient from "./apiClient";
 
 export const cartService = {
-  get: () => api.get("/api/cart"),
-  addItem: (data) => api.post("/api/cart/items", data), // { variantId, quantity }
-  updateItem: (itemId, data) => api.put(`/api/cart/items/${itemId}`, data), // { quantity }
-  deleteItem: (itemId) => api.delete(`/api/cart/items/${itemId}`),
+  get: () => apiClient.get("/api/cart"),
+  addItem: (data) => apiClient.post("/api/cart/items", data), // { variantId, quantity }
+  updateItem: (itemId, data) => apiClient.put(`/api/cart/items/${itemId}`, data), // { quantity }
+  deleteItem: (itemId) => apiClient.delete(`/api/cart/items/${itemId}`),
 };

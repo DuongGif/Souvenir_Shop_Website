@@ -1,2 +1,548 @@
-import React from "react";
-export default function AdminProductsPage(){ return <h2>Admin Products (hook vào /api/admin/products)</h2>; }
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { adminProductsService } from "../../services/admin/adminProductsService";
+
+const emptyForm = {
+  slug: "",
+  categoryId: "",
+  basePrice: "",
+  status: "active",
+  isFeatured: false,
+  imageUrls: [""],
+};
+
+const API_ORIGIN = "https://localhost:7020";
+
+const getErrorMessage = (ex, fallback) => {
+  const data = ex?.response?.data;
+  if (typeof data === "string") return data;
+  if (data?.message) return data.message;
+  if (data?.title) return data.title;
+  if (data?.errors) {
+    const firstError = Object.values(data.errors)?.flat?.()[0];
+    if (firstError) return firstError;
+  }
+  return fallback;
+};
+
+const formatPrice = (value) => {
+  if (value === null || value === undefined || value === "") return "0 ₫";
+  return Number(value).toLocaleString("vi-VN") + " ₫";
+};
+
+const getImageSrc = (url) => {
+  if (!url) return "";
+  if (url.startsWith("http")) return url;
+  return `${API_ORIGIN}${url}`;
+};
+
+export default function AdminProductsPage() {
+  const [list, setList] = useState([]);
+  const [form, setForm] = useState(emptyForm);
+  const [editingId, setEditingId] = useState(null);
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploadingIndex, setUploadingIndex] = useState(null);
+
+  const [err, setErr] = useState("");
+  const [msg, setMsg] = useState("");
+
+  const load = async () => {
+    setLoading(true);
+    setErr("");
+
+    try {
+      const res = await adminProductsService.getAll();
+      setList(res.data || []);
+    } catch (ex) {
+      setErr(getErrorMessage(ex, "Không thể tải danh sách sản phẩm"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const resetForm = () => {
+    setForm(emptyForm);
+    setEditingId(null);
+  };
+
+  const startEdit = async (p) => {
+    setErr("");
+    try {
+      const imgRes = await adminProductsService.getImages(p.id);
+      const imageUrls = imgRes.data || [];
+
+      setEditingId(p.id);
+      setForm({
+        slug: p.slug || "",
+        categoryId: p.categoryId ?? "",
+        basePrice: p.basePrice ?? "",
+        status: p.status || "active",
+        isFeatured: !!p.isFeatured,
+        imageUrls: imageUrls.length > 0 ? imageUrls : [""],
+      });
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (ex) {
+      setErr(getErrorMessage(ex, "Không thể tải ảnh sản phẩm"));
+    }
+  };
+
+  const addImageField = () => {
+    setForm((prev) => ({
+      ...prev,
+      imageUrls: [...prev.imageUrls, ""],
+    }));
+  };
+
+  const removeImageField = (index) => {
+    const newUrls = form.imageUrls.filter((_, i) => i !== index);
+    setForm({
+      ...form,
+      imageUrls: newUrls.length > 0 ? newUrls : [""],
+    });
+  };
+
+  const handleChooseImage = async (index, file) => {
+    if (!file) return;
+
+    setErr("");
+    setMsg("");
+
+    try {
+      setUploadingIndex(index);
+
+      const res = await adminProductsService.uploadImage(file);
+      const uploadedUrl = res.data?.imageUrl;
+
+      if (!uploadedUrl) {
+        throw new Error("Upload xong nhưng không nhận được imageUrl");
+      }
+
+      const newUrls = [...form.imageUrls];
+      newUrls[index] = uploadedUrl;
+      setForm((prev) => ({
+        ...prev,
+        imageUrls: newUrls,
+      }));
+
+      setMsg("Upload ảnh thành công");
+    } catch (ex) {
+      setErr(getErrorMessage(ex, "Upload ảnh thất bại"));
+    } finally {
+      setUploadingIndex(null);
+    }
+  };
+
+  const save = async () => {
+    setErr("");
+    setMsg("");
+
+    if (!form.slug.trim()) {
+      setErr("Slug là bắt buộc");
+      return;
+    }
+
+    if (form.basePrice === "" || Number(form.basePrice) < 0) {
+      setErr("Giá sản phẩm không hợp lệ");
+      return;
+    }
+
+    const cleanImageUrls = form.imageUrls.filter((x) => x.trim() !== "");
+
+    try {
+      setSaving(true);
+
+      const productPayload = {
+        slug: form.slug.trim(),
+        categoryId: form.categoryId === "" ? null : Number(form.categoryId),
+        basePrice: Number(form.basePrice),
+        status: form.status,
+        isFeatured: form.isFeatured,
+      };
+
+      if (editingId) {
+        await adminProductsService.update(editingId, productPayload);
+
+        if (cleanImageUrls.length > 0) {
+          await adminProductsService.replaceImages(editingId, cleanImageUrls);
+        }
+
+        setMsg(`Đã cập nhật sản phẩm #${editingId}`);
+      } else {
+        const res = await adminProductsService.create(productPayload);
+        const createdProduct = res.data;
+        const newProductId = createdProduct?.id;
+
+        if (newProductId && cleanImageUrls.length > 0) {
+          await adminProductsService.addImages(newProductId, cleanImageUrls);
+        }
+
+        setMsg(`Đã tạo sản phẩm ${productPayload.slug}`);
+      }
+
+      resetForm();
+      await load();
+    } catch (ex) {
+      setErr(
+        getErrorMessage(
+          ex,
+          editingId ? "Cập nhật sản phẩm thất bại" : "Tạo sản phẩm thất bại"
+        )
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const remove = async (id) => {
+    setErr("");
+    setMsg("");
+
+    if (!window.confirm(`Bạn có chắc muốn xóa sản phẩm #${id}?`)) return;
+
+    try {
+      await adminProductsService.remove(id);
+      setMsg(`Đã xóa sản phẩm #${id}`);
+      await load();
+    } catch (ex) {
+      setErr(getErrorMessage(ex, "Xóa sản phẩm thất bại"));
+    }
+  };
+
+  return (
+    <div>
+      <div className="mb-4">
+        <h2 style={{ marginBottom: 6, color: "#0f172a", fontWeight: 700 }}>
+          Quản lý sản phẩm
+        </h2>
+        <p style={{ marginBottom: 0, color: "#64748b" }}>
+          Tạo mới, chỉnh sửa, upload ảnh và đi tới trang variants của sản phẩm.
+        </p>
+      </div>
+
+      {err && <div className="alert alert-danger">{err}</div>}
+      {msg && <div className="alert alert-success">{msg}</div>}
+
+      <div className="row g-4">
+        <div className="col-lg-4">
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: 20,
+              padding: 24,
+              boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
+            }}
+          >
+            <h4 style={{ color: "#0f172a", fontWeight: 700, marginBottom: 18 }}>
+              {editingId ? "Chỉnh sửa sản phẩm" : "Tạo sản phẩm mới"}
+            </h4>
+
+            <div className="d-grid gap-3">
+              <div>
+                <label className="form-label" style={labelStyle}>
+                  Slug
+                </label>
+                <input
+                  className="form-control"
+                  value={form.slug}
+                  onChange={(e) => setForm({ ...form, slug: e.target.value })}
+                  style={inputStyle}
+                />
+              </div>
+
+              <div>
+                <label className="form-label" style={labelStyle}>
+                  Category Id
+                </label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={form.categoryId}
+                  onChange={(e) =>
+                    setForm({ ...form, categoryId: e.target.value })
+                  }
+                  style={inputStyle}
+                />
+              </div>
+
+              <div>
+                <label className="form-label" style={labelStyle}>
+                  Giá
+                </label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={form.basePrice}
+                  onChange={(e) =>
+                    setForm({ ...form, basePrice: e.target.value })
+                  }
+                  style={inputStyle}
+                />
+              </div>
+
+              <div>
+                <label className="form-label" style={labelStyle}>
+                  Trạng thái
+                </label>
+                <select
+                  className="form-select"
+                  value={form.status}
+                  onChange={(e) => setForm({ ...form, status: e.target.value })}
+                  style={inputStyle}
+                >
+                  <option value="active">active</option>
+                  <option value="inactive">inactive</option>
+                  <option value="hidden">hidden</option>
+                </select>
+              </div>
+
+              <div className="form-check">
+                <input
+                  id="isFeatured"
+                  type="checkbox"
+                  className="form-check-input"
+                  checked={form.isFeatured}
+                  onChange={(e) =>
+                    setForm({ ...form, isFeatured: e.target.checked })
+                  }
+                />
+                <label
+                  htmlFor="isFeatured"
+                  className="form-check-label"
+                  style={labelStyle}
+                >
+                  Sản phẩm nổi bật
+                </label>
+              </div>
+
+              <div>
+                <label className="form-label" style={labelStyle}>
+                  Ảnh sản phẩm
+                </label>
+
+                <div className="d-grid gap-2">
+                  {form.imageUrls.map((url, index) => (
+                    <div key={index} className="border rounded-3 p-2">
+                      <div className="d-flex gap-2 align-items-start">
+                        <input
+                          className="form-control"
+                          value={url}
+                          readOnly
+                          placeholder="Chưa chọn ảnh"
+                          style={inputStyle}
+                        />
+
+                        <button
+                          type="button"
+                          className="btn btn-outline-danger"
+                          onClick={() => removeImageField(index)}
+                          style={{ borderRadius: 12 }}
+                        >
+                          X
+                        </button>
+                      </div>
+
+                      <div className="mt-2">
+                        <input
+                          type="file"
+                          accept=".jpg,.jpeg,.png,.webp"
+                          className="form-control"
+                          onChange={(e) =>
+                            handleChooseImage(index, e.target.files?.[0])
+                          }
+                          style={inputStyle}
+                        />
+                      </div>
+
+                      {uploadingIndex === index && (
+                        <div className="mt-2" style={{ color: "#2563eb", fontSize: 14 }}>
+                          Đang upload ảnh...
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  className="btn btn-outline-primary btn-sm mt-2"
+                  onClick={addImageField}
+                  style={{ borderRadius: 10 }}
+                >
+                  + Thêm ảnh
+                </button>
+
+                <div className="mt-3 d-flex flex-wrap gap-2">
+                  {form.imageUrls
+                    .filter((x) => x.trim() !== "")
+                    .map((url, idx) => (
+                      <img
+                        key={idx}
+                        src={getImageSrc(url)}
+                        alt={`preview-${idx}`}
+                        style={{
+                          width: 70,
+                          height: 70,
+                          objectFit: "cover",
+                          borderRadius: 10,
+                          border: "1px solid #e5e7eb",
+                        }}
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
+                    ))}
+                </div>
+              </div>
+
+              <div className="d-flex gap-2">
+                <button
+                  onClick={save}
+                  className="btn btn-primary"
+                  disabled={saving}
+                  style={{ height: 46, borderRadius: 12, fontWeight: 600 }}
+                >
+                  {saving ? "Đang lưu..." : editingId ? "Cập nhật" : "Tạo mới"}
+                </button>
+
+                {editingId && (
+                  <button
+                    onClick={resetForm}
+                    className="btn btn-outline-secondary"
+                    style={{ height: 46, borderRadius: 12, fontWeight: 600 }}
+                  >
+                    Hủy
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-lg-8">
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: 20,
+              overflow: "hidden",
+              boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
+            }}
+          >
+            <div style={{ padding: 20, borderBottom: "1px solid #e5e7eb" }}>
+              <h4 style={{ marginBottom: 0, color: "#0f172a", fontWeight: 700 }}>
+                Danh sách sản phẩm
+              </h4>
+            </div>
+
+            {loading ? (
+              <div className="text-center py-5">Đang tải sản phẩm...</div>
+            ) : list.length === 0 ? (
+              <div style={{ padding: 24, color: "#64748b" }}>
+                Chưa có sản phẩm nào.
+              </div>
+            ) : (
+              <div className="table-responsive">
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr style={{ background: "#f8fafc" }}>
+                      <th style={thStyle}>Id</th>
+                      <th style={thStyle}>Ảnh</th>
+                      <th style={thStyle}>Slug</th>
+                      <th style={thStyle}>Giá</th>
+                      <th style={thStyle}>Status</th>
+                      <th style={thStyle}>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {list.map((p) => (
+                      <tr key={p.id}>
+                        <td style={tdStyle}>{p.id}</td>
+                        <td style={tdStyle}>
+                          {p.imageUrl ? (
+                            <img
+                              src={getImageSrc(p.imageUrl)}
+                              alt={p.slug}
+                              style={{
+                                width: 60,
+                                height: 60,
+                                objectFit: "cover",
+                                borderRadius: 10,
+                              }}
+                            />
+                          ) : (
+                            <span style={{ color: "#94a3b8" }}>No image</span>
+                          )}
+                        </td>
+                        <td style={{ ...tdStyle, fontWeight: 600 }}>{p.slug}</td>
+                        <td style={tdStyle}>{formatPrice(p.basePrice)}</td>
+                        <td style={tdStyle}>{p.status}</td>
+                        <td style={tdStyle}>
+                          <div className="d-flex gap-2 flex-wrap">
+                            <button
+                              onClick={() => startEdit(p)}
+                              className="btn btn-outline-primary btn-sm"
+                              style={{ borderRadius: 10 }}
+                            >
+                              Sửa
+                            </button>
+
+                            <button
+                              onClick={() => remove(p.id)}
+                              className="btn btn-outline-danger btn-sm"
+                              style={{ borderRadius: 10 }}
+                            >
+                              Xóa
+                            </button>
+
+                            <Link
+                              to={`/admin/products/${p.id}/variants`}
+                              className="btn btn-outline-success btn-sm"
+                              style={{ borderRadius: 10 }}
+                            >
+                              Variants
+                            </Link>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const labelStyle = {
+  color: "#111827",
+  fontWeight: 600,
+};
+
+const inputStyle = {
+  height: 46,
+  borderRadius: 12,
+  color: "#111827",
+};
+
+const thStyle = {
+  padding: "14px",
+  textAlign: "left",
+  color: "#0f172a",
+  fontWeight: 700,
+  borderBottom: "1px solid #e5e7eb",
+};
+
+const tdStyle = {
+  padding: "14px",
+  color: "#334155",
+  borderBottom: "1px solid #e5e7eb",
+};

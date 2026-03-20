@@ -1,6 +1,6 @@
-import { api } from "./apiClient";
+import apiClient from "./apiClient";
 
 export const reviewService = {
-  create: (data) => api.post("/api/reviews", data), // { productId, rating, title, content }
-  byProduct: (productId) => api.get(`/api/reviews/product/${productId}`),
+  create: (data) => apiClient.post("/api/reviews", data), // { productId, rating, title, content }
+  byProduct: (productId) => apiClient.get(`/api/reviews/product/${productId}`),
 };

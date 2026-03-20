@@ -13,6 +13,41 @@ public class ProductsController : ControllerBase
 	private readonly SouvenirShopContext _db;
 	public ProductsController(SouvenirShopContext db) => _db = db;
 
+	// GET /api/products/{id}
+	[HttpGet("{id:long}")]
+	public async Task<ActionResult<ProductDetailDto>> GetById(long id)
+	{
+		var product = await _db.Products.AsNoTracking()
+			.Where(p => p.Id == id && p.Status == "active")
+			.Select(p => new ProductDetailDto
+			{
+				Id = p.Id,
+				Slug = p.Slug,
+				BasePrice = p.BasePrice,
+				Images = _db.ProductImages
+					.Where(i => i.ProductId == p.Id)
+					.OrderBy(i => i.Id)
+					.Select(i => i.ImageUrl)
+					.ToList(),
+				Variants = _db.ProductVariants
+					.Where(v => v.ProductId == p.Id && v.IsActive)
+					.OrderBy(v => v.Id)
+					.Select(v => new VariantDto
+					{
+						Id = v.Id,
+						Sku = v.Sku,
+						VariantName = v.VariantName,
+						Price = v.Price,
+						IsActive = v.IsActive
+					})
+					.ToList()
+			})
+			.FirstOrDefaultAsync();
+
+		if (product == null) return NotFound();
+
+		return Ok(product);
+	}
 	// GET /api/products/all
 	[HttpGet("all")]
 	public async Task<ActionResult<List<ProductSearchDto>>> GetAll()
@@ -136,4 +171,5 @@ public class ProductsController : ControllerBase
 			Items = items
 		});
 	}
+
 }

@@ -4,7 +4,8 @@ import { Routes, Route, Navigate } from "react-router-dom";
 // User pages
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
-import AccountPage from "./pages/AccountPage";
+import RegisterPage from "./pages/RegisterPage";
+import AccountDetailPage from "./pages/AccountDetailPage";
 import ContactPage from "./pages/ContactPage";
 import Wishlist from "./pages/Wishlist";
 import ProductsPage from "./pages/ProductsPage";
@@ -24,6 +25,7 @@ import AdminProductsPage from "./pages/admin/AdminProductsPage";
 import AdminOrdersPage from "./pages/admin/AdminOrdersPage";
 import AdminCouponsPage from "./pages/admin/AdminCouponsPage";
 import AdminReviewsPage from "./pages/admin/AdminReviewsPage";
+import AdminProductVariantsPage from "./pages/admin/AdminProductVariantsPage";
 
 import { getRoleFromToken } from "./utils";
 
@@ -56,7 +58,15 @@ export default function App() {
 
       {/* Auth */}
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/account" element={<AccountPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route
+      path="/account"
+      element={
+        <Protected>
+          <AccountDetailPage />
+        </Protected>
+        }
+      />
 
       {/* User protected */}
       <Route
@@ -123,6 +133,7 @@ export default function App() {
         <Route path="orders" element={<AdminOrdersPage />} />
         <Route path="coupons" element={<AdminCouponsPage />} />
         <Route path="reviews" element={<AdminReviewsPage />} />
+        <Route path="products/:productId/variants" element={<AdminProductVariantsPage />} />
       </Route>
 
       {/* Fallback */}

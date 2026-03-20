@@ -1,7 +1,7 @@
-import { api } from "../apiClient";
+import  apiClient from "../apiClient";
 
 export const adminUsersService = {
-  getAll: () => api.get("/api/admin/users"),
-  lock: (id) => api.put(`/api/admin/users/${id}/lock`),
-  unlock: (id) => api.put(`/api/admin/users/${id}/unlock`),
+  getAll: () => apiClient.get("/api/admin/users"),
+  lock: (id) => apiClient.put(`/api/admin/users/${id}/lock`),
+  unlock: (id) => apiClient.put(`/api/admin/users/${id}/unlock`),
 };

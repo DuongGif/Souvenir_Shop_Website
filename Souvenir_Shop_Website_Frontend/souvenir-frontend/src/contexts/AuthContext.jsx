@@ -42,10 +42,10 @@ export default function AuthProvider({ children }) {
   }, [token]);
 
   const login = async (email, password) => {
-    const res = await authService.login({ email, password });
-    setToken(res.data.token);
+    const res = await authService.login(email, password);
+    localStorage.setItem("token", res.data.token);
     return res.data;
-  };
+};  
 
   const register = async (data) => {
     const res = await authService.register(data);

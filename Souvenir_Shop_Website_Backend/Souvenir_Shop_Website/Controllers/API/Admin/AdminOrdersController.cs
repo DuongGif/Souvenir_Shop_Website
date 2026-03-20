@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Souvenir_Shop_Website.Models;
+using Souvenir_Shop_Website.DTOs.Order;
 
 namespace Souvenir_Shop_Website.Controllers.API.Admin;
 
@@ -26,12 +27,15 @@ public class AdminOrdersController : ControllerBase
 
 	// PUT update status
 	[HttpPut("{id:long}/status")]
-	public async Task<IActionResult> UpdateStatus(long id, [FromBody] string status)
+	public async Task<IActionResult> UpdateStatus(long id, [FromBody] UpdateOrderStatusRequest req)
 	{
 		var order = await _db.Orders.FindAsync(id);
 		if (order == null) return NotFound();
 
-		order.Status = status;
+		if (string.IsNullOrWhiteSpace(req.Status))
+			return BadRequest("Status is required.");
+
+		order.Status = req.Status.Trim();
 		await _db.SaveChangesAsync();
 
 		return Ok(order);

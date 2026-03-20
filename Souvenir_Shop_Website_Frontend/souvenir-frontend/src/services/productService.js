@@ -1,9 +1,10 @@
-import { api } from "./apiClient";
+import apiClient from "./apiClient";
 
 /**
  * GET /api/products?keyword=&categoryIds=1,2,3&minPrice=&maxPrice=&minRating=&inStockOnly=&sort=&page=&pageSize=
  */
 export const productService = {
-  search: (params) => api.get("/api/products", { params }),
-  detail: (id) => api.get(`/api/products/${id}`),
+  search: (params) => apiClient.get("/api/products", { params }),
+  detail: (id) => apiClient.get(`/api/products/${id}`),
+  
 };

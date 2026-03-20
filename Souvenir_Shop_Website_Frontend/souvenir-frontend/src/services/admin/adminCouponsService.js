@@ -1,9 +1,9 @@
-import { api } from "../apiClient";
+import  apiClient from "../apiClient";
 
 export const adminCouponsService = {
-  getAll: () => api.get("/api/admin/coupons"),
-  getByCode: (code) => api.get(`/api/admin/coupons/${code}`),
-  create: (data) => api.post("/api/admin/coupons", data),
-  update: (code, data) => api.put(`/api/admin/coupons/${code}`, data),
-  remove: (code) => api.delete(`/api/admin/coupons/${code}`),
+  getAll: () => apiClient.get("/api/admin/coupons"),
+  getByCode: (code) => apiClient.get(`/api/admin/coupons/${code}`),
+  create: (data) => apiClient.post("/api/admin/coupons", data),
+  update: (code, data) => apiClient.put(`/api/admin/coupons/${code}`, data),
+  remove: (code) => apiClient.delete(`/api/admin/coupons/${code}`),
 };

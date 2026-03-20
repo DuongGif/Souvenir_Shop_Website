@@ -1,7 +1,7 @@
-import { api } from "./apiClient";
+import apiClient from "./apiClient";
 
 export const paymentService = {
-  create: (data) => api.post("/api/payments", data), // { orderCode, paymentMethod }
-  confirm: (data) => api.post("/api/payments/confirm", data), // { orderCode }
-  byOrderCode: (orderCode) => api.get(`/api/payments/by-order-code/${orderCode}`),
+  create: (data) => apiClient.post("/api/payments", data), // { orderCode, paymentMethod }
+  confirm: (data) => apiClient.post("/api/payments/confirm", data), // { orderCode }
+  byOrderCode: (orderCode) => apiClient.get(`/api/payments/by-order-code/${orderCode}`),
 };

@@ -1,9 +1,26 @@
-import { api } from "../apiClient";
+import apiClient from "../apiClient";
 
-// Nếu bạn có admin products controller: /api/admin/products ...
 export const adminProductsService = {
-  getAll: () => api.get("/api/admin/products"),
-  create: (data) => api.post("/api/admin/products", data),
-  update: (id, data) => api.put(`/api/admin/products/${id}`, data),
-  remove: (id) => api.delete(`/api/admin/products/${id}`),
+  getAll: () => apiClient.get("api/admin/products"),
+  create: (data) => apiClient.post("api/admin/products", data),
+  update: (id, data) => apiClient.put(`api/admin/products/${id}`, data),
+  remove: (id) => apiClient.delete(`api/admin/products/${id}`),
+
+  getImages: (productId) => apiClient.get(`api/admin/products/${productId}/images`),
+  addImages: (productId, imageUrls) =>
+    apiClient.post(`api/admin/products/${productId}/images`, imageUrls),
+
+  replaceImages: (productId, imageUrls) =>
+  apiClient.put(`api/admin/products/${productId}/images`, imageUrls),
+  
+  uploadImage: (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    return apiClient.post("api/admin/products/upload-image", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  },
 };
