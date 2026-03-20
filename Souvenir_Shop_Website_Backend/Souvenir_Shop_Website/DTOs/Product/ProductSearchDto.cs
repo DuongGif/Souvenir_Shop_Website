@@ -2,6 +2,9 @@
 
 public class ProductSearchDto
 {
+	public long CategoryId { get; set; }
+	public DateTime? CreatedAt { get; set; }
+
 	public long Id { get; set; }
 	public string Slug { get; set; } = "";
 	public decimal? Price { get; set; }

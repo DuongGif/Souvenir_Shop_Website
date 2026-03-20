@@ -190,8 +190,7 @@
               "RelativeToolTip": "Souvenir_Shop_Website\\Models\\Product.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-14T03:32:53.032Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-03-14T03:32:53.032Z"
             },
             {
               "$type": "Document",
@@ -203,8 +202,7 @@
               "RelativeToolTip": "Souvenir_Shop_Website\\Program.cs",
               "ViewState": "AgIAAGgAAAAAAAAAAAAgwHsAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-10T02:56:37.569Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-03-10T02:56:37.569Z"
             },
             {
               "$type": "Document",
@@ -226,10 +224,9 @@
               "RelativeDocumentMoniker": "Souvenir_Shop_Website\\DTOs\\Product\\ProductSearchDto.cs",
               "ToolTip": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Git\\Souvenir_Shop_Website\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\DTOs\\Product\\ProductSearchDto.cs",
               "RelativeToolTip": "Souvenir_Shop_Website\\DTOs\\Product\\ProductSearchDto.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-08T15:00:57.316Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-03-08T15:00:57.316Z"
             },
             {
               "$type": "Document",
@@ -239,7 +236,7 @@
               "RelativeDocumentMoniker": "Souvenir_Shop_Website\\Controllers\\API\\User\\ProductsController.cs",
               "ToolTip": "D:\\Nam4\\ki2\\\u0110\u1ED3 \u00E1n\\Git\\Souvenir_Shop_Website\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\Controllers\\API\\User\\ProductsController.cs",
               "RelativeToolTip": "Souvenir_Shop_Website\\Controllers\\API\\User\\ProductsController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAG8AAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACQAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-03-05T03:45:24.959Z",
               "EditorCaption": ""

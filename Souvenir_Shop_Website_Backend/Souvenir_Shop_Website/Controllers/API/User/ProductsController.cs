@@ -13,6 +13,33 @@ public class ProductsController : ControllerBase
 	private readonly SouvenirShopContext _db;
 	public ProductsController(SouvenirShopContext db) => _db = db;
 
+	// GET /api/products/all
+	[HttpGet("all")]
+	public async Task<ActionResult<List<ProductSearchDto>>> GetAll()
+	{
+		// ✅ an toàn: chỉ lấy product cơ bản, tránh join reviews/inventory
+		var items = await _db.Products.AsNoTracking()
+			.Where(p => p.Status == "active")
+			.Select(p => new ProductSearchDto
+			{
+				Id = p.Id,
+				CategoryId = p.CategoryId,
+				CreatedAt = p.CreatedAt,
+				Slug = p.Slug,
+				Price = p.BasePrice,
+				ImageUrl = _db.ProductImages
+					.Where(i => i.ProductId == p.Id)
+					.Select(i => i.ImageUrl)
+					.FirstOrDefault(),
+				AvgRating = 0,      // tạm
+				ReviewCount = 0,    // tạm
+				InStock = true      // tạm
+			})
+			.ToListAsync();
+
+		return Ok(items);
+	}
+
 	// ✅ Chỉ lọc cơ bản: keyword/category/price + sort + paging
 	[HttpGet]
 	public async Task<ActionResult<PagedResultDto<ProductSearchDto>>> Search(
