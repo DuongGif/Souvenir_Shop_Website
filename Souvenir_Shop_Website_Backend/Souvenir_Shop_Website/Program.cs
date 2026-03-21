@@ -13,6 +13,11 @@ namespace Souvenir_Shop_Website
 		{
 			var builder = WebApplication.CreateBuilder(args);
 
+			builder.Services.Configure<BankTransferOptions>(
+			builder.Configuration.GetSection("Payments:BankTransfer"));
+
+			builder.Services.AddScoped<IBankTransferService, BankTransferService>();
+
 			// MVC + API
 			builder.Services.AddControllersWithViews();
 			builder.Services.AddControllers();

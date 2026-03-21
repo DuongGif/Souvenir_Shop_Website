@@ -28,7 +28,6 @@ const formatPrice = (value) => {
 
 export default function AdminProductVariantsPage() {
   const { productId } = useParams();
-
   const [list, setList] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
@@ -47,7 +46,7 @@ export default function AdminProductVariantsPage() {
       const res = await adminVariantsService.getAll(productId);
       setList(res.data || []);
     } catch (ex) {
-      setErr(getErrorMessage(ex, "Không thể tải danh sách variants"));
+      setErr(getErrorMessage(ex, "Không thể tải danh sách biến thể"));
     } finally {
       setLoading(false);
     }
@@ -104,10 +103,10 @@ export default function AdminProductVariantsPage() {
 
       if (editingId) {
         await adminVariantsService.update(productId, editingId, payload);
-        setMsg(`Đã cập nhật variant #${editingId}`);
+        setMsg(`Đã cập nhật biến thể #${editingId}`);
       } else {
         await adminVariantsService.create(productId, payload);
-        setMsg("Đã tạo variant mới");
+        setMsg("Đã tạo biến thể mới");
       }
 
       resetForm();
@@ -116,7 +115,9 @@ export default function AdminProductVariantsPage() {
       setErr(
         getErrorMessage(
           ex,
-          editingId ? "Cập nhật variant thất bại" : "Tạo variant thất bại"
+          editingId
+            ? "Cập nhật biến thể thất bại"
+            : "Tạo biến thể thất bại"
         )
       );
     } finally {
@@ -128,14 +129,14 @@ export default function AdminProductVariantsPage() {
     setErr("");
     setMsg("");
 
-    if (!window.confirm(`Bạn có chắc muốn xóa variant #${id}?`)) return;
+    if (!window.confirm(`Bạn có chắc muốn xóa biến thể #${id}?`)) return;
 
     try {
       await adminVariantsService.remove(productId, id);
-      setMsg(`Đã xóa variant #${id}`);
+      setMsg(`Đã xóa biến thể #${id}`);
       await load();
     } catch (ex) {
-      setErr(getErrorMessage(ex, "Xóa variant thất bại"));
+      setErr(getErrorMessage(ex, "Xóa biến thể thất bại"));
     }
   };
 
@@ -149,10 +150,10 @@ export default function AdminProductVariantsPage() {
 
       <div className="mb-4">
         <h2 style={{ color: "#0f172a", fontWeight: 700, marginBottom: 6 }}>
-          Quản lý Variants của sản phẩm #{productId}
+          Quản lý biến thể của sản phẩm {productId}
         </h2>
         <p style={{ color: "#64748b", marginBottom: 0 }}>
-          Quản lý SKU, tên biến thể, giá và trạng thái hoạt động của từng variant.
+          Quản lý SKU, tên biến thể, giá và trạng thái hoạt động của từng biến thể.
         </p>
       </div>
 
@@ -170,13 +171,13 @@ export default function AdminProductVariantsPage() {
             }}
           >
             <h4 style={{ color: "#0f172a", fontWeight: 700, marginBottom: 18 }}>
-              {editingId ? "Chỉnh sửa variant" : "Tạo variant mới"}
+              {editingId ? "Chỉnh sửa biến thể" : "Tạo biến thể mới"}
             </h4>
 
             <div className="d-grid gap-3">
               <div>
                 <label className="form-label" style={labelStyle}>
-                  SKU
+                  Mã Định Danh (SKU)
                 </label>
                 <input
                   className="form-control"
@@ -209,7 +210,7 @@ export default function AdminProductVariantsPage() {
                 <input
                   type="number"
                   className="form-control"
-                  placeholder="Nhập giá variant"
+                  placeholder="Nhập giá biến thể"
                   value={form.price}
                   onChange={(e) => setForm({ ...form, price: e.target.value })}
                   style={inputStyle}
@@ -231,7 +232,7 @@ export default function AdminProductVariantsPage() {
                   className="form-check-label"
                   style={labelStyle}
                 >
-                  Variant đang hoạt động
+                  Biến thể đang hoạt động
                 </label>
               </div>
 
@@ -270,30 +271,30 @@ export default function AdminProductVariantsPage() {
           >
             <div style={{ padding: 20, borderBottom: "1px solid #e5e7eb" }}>
               <h4 style={{ marginBottom: 0, color: "#0f172a", fontWeight: 700 }}>
-                Danh sách variants
+                Danh sách biến thể
               </h4>
             </div>
 
             {loading ? (
               <div className="text-center py-5">
                 <div className="spinner-border text-info" role="status"></div>
-                <p className="mt-3 mb-0">Đang tải variants...</p>
+                <p className="mt-3 mb-0">Đang tải biến thể...</p>
               </div>
             ) : list.length === 0 ? (
               <div style={{ padding: 24, color: "#64748b" }}>
-                Chưa có variant nào cho sản phẩm này.
+                Chưa có biến thể nào cho sản phẩm này.
               </div>
             ) : (
               <div className="table-responsive">
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr style={{ background: "#f8fafc" }}>
-                      <th style={thStyle}>Id</th>
-                      <th style={thStyle}>SKU</th>
+                      <th style={thStyle}>Mã</th>
+                      <th style={thStyle}>Mã Định Danh (SKU)</th>
                       <th style={thStyle}>Tên biến thể</th>
                       <th style={thStyle}>Giá</th>
                       <th style={thStyle}>Trạng thái</th>
-                      <th style={thStyle}>Action</th>
+                      <th style={thStyle}>Thao tác</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -314,7 +315,7 @@ export default function AdminProductVariantsPage() {
                               fontWeight: 600,
                             }}
                           >
-                            {v.isActive ? "Active" : "Inactive"}
+                            {v.isActive ? "Đang hoạt động" : "Ngừng hoạt động"}
                           </span>
                         </td>
                         <td style={tdStyle}>

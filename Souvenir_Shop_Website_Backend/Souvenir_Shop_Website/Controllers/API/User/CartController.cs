@@ -23,22 +23,36 @@ public class CartController : ControllerBase
 
 		var cart = await _db.Carts.FirstOrDefaultAsync(c => c.UserId == userId);
 		if (cart == null)
-			return Ok(new CartDto { CartId = 0, Items = new(), Subtotal = 0 });
+			return Ok(new CartDto
+			{
+				CartId = 0,
+				Items = new(),
+				Subtotal = 0
+			});
 
-		var items = await (from ci in _db.CartItems
-						   join v in _db.ProductVariants on ci.VariantId equals v.Id
-						   where ci.CartId == cart.Id
-						   select new CartItemDto
-						   {
-							   Id = ci.Id,
-							   VariantId = ci.VariantId,
-							   VariantName = v.VariantName,
-							   Price = v.Price ?? 0,
-							   Quantity = ci.Quantity,
-							   LineTotal = (v.Price ?? 0) * ci.Quantity
-						   })
-						   .AsNoTracking()
-						   .ToListAsync();
+		var items = await (
+			from ci in _db.CartItems
+			join v in _db.ProductVariants on ci.VariantId equals v.Id
+			join p in _db.Products on v.ProductId equals p.Id
+			where ci.CartId == cart.Id
+			select new CartItemDto
+			{
+				Id = ci.Id,
+				VariantId = ci.VariantId,
+				ProductSlug = p.Slug,
+				VariantName = v.VariantName,
+				Price = v.Price ?? 0,
+				Quantity = ci.Quantity,
+				LineTotal = (v.Price ?? 0) * ci.Quantity,
+				ImageUrl = _db.ProductImages
+					.Where(pi => pi.ProductId == p.Id)
+					.OrderBy(pi => pi.Id)
+					.Select(pi => pi.ImageUrl)
+					.FirstOrDefault()
+			}
+		)
+		.AsNoTracking()
+		.ToListAsync();
 
 		return Ok(new CartDto
 		{
@@ -90,7 +104,6 @@ public class CartController : ControllerBase
 
 		var userId = CurrentUser.GetUserId(User);
 
-		// đảm bảo item thuộc cart của user đang login
 		var item = await (from ci in _db.CartItems
 						  join c in _db.Carts on ci.CartId equals c.Id
 						  where ci.Id == itemId && c.UserId == userId

@@ -26,7 +26,11 @@ const getStatusBadge = (status) => {
     return { text: "Từ chối", bg: "#fee2e2", color: "#991b1b" };
   }
 
-  return { text: status || "Không xác định", bg: "#e5e7eb", color: "#374151" };
+  return {
+    text: status || "Không xác định",
+    bg: "#e5e7eb",
+    color: "#374151",
+  };
 };
 
 export default function AdminReviewsPage() {
@@ -114,6 +118,7 @@ export default function AdminReviewsPage() {
 
         <div className="d-flex gap-2 align-items-center flex-wrap">
           <span style={{ color: "#334155", fontWeight: 600 }}>Trạng thái:</span>
+
           <select
             className="form-select"
             value={status}
@@ -125,9 +130,9 @@ export default function AdminReviewsPage() {
               color: "#111827",
             }}
           >
-            <option value="pending">pending</option>
-            <option value="approved">approved</option>
-            <option value="rejected">rejected</option>
+            <option value="pending">Chờ duyệt</option>
+            <option value="approved">Đã duyệt</option>
+            <option value="rejected">Từ chối</option>
           </select>
 
           <button
@@ -135,7 +140,7 @@ export default function AdminReviewsPage() {
             className="btn btn-outline-primary"
             style={{ borderRadius: 12, height: 42 }}
           >
-            Reload
+            Tải lại
           </button>
         </div>
       </div>
@@ -193,18 +198,18 @@ export default function AdminReviewsPage() {
                         fontWeight: 700,
                       }}
                     >
-                      Review #{r.id}
+                      Đánh giá #{r.id}
                     </h5>
 
                     <div style={{ color: "#475569", lineHeight: 1.8 }}>
                       <div>
-                        <strong>Product Id:</strong> {r.productId}
+                        <strong>Mã sản phẩm:</strong> {r.productId}
                       </div>
                       <div>
-                        <strong>User Id:</strong> {r.userId}
+                        <strong>Mã người dùng:</strong> {r.userId}
                       </div>
                       <div>
-                        <strong>Rating:</strong> {r.rating}
+                        <strong>Số sao:</strong> {r.rating}
                       </div>
                     </div>
                   </div>
@@ -277,7 +282,7 @@ export default function AdminReviewsPage() {
                     className="btn btn-outline-success btn-sm"
                     style={{ borderRadius: 10, fontWeight: 600 }}
                   >
-                    Approve
+                    Duyệt
                   </button>
 
                   <button
@@ -285,7 +290,7 @@ export default function AdminReviewsPage() {
                     className="btn btn-outline-danger btn-sm"
                     style={{ borderRadius: 10, fontWeight: 600 }}
                   >
-                    Reject
+                    Từ chối
                   </button>
                 </div>
 

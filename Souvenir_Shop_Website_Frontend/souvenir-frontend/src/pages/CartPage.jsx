@@ -6,9 +6,24 @@ import { couponService } from "../services/couponService";
 import { orderService } from "../services/orderService";
 import { accountService } from "../services/accountService";
 
+const API_ORIGIN = "https://localhost:7020";
+
+const getImageSrc = (url) => {
+  if (!url) return "/no-image.png";
+  if (url.startsWith("http")) return url;
+  return `${API_ORIGIN}${url}`;
+};
+
 const formatPrice = (value) => {
   if (value === null || value === undefined) return "0 ₫";
   return Number(value).toLocaleString("vi-VN") + " ₫";
+};
+
+const slugToTitle = (slug = "") => {
+  if (!slug) return "Sản phẩm lưu niệm";
+  return slug
+    .replace(/-/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
 const getErrorMessage = (ex, fallback) => {
@@ -75,7 +90,9 @@ export default function CartPage() {
     load();
   }, []);
 
-  const discountAmount = couponInfo?.isValid ? Number(couponInfo.discountAmount || 0) : 0;
+  const discountAmount = couponInfo?.isValid
+    ? Number(couponInfo.discountAmount || 0)
+    : 0;
 
   const finalTotal = useMemo(() => {
     return Math.max(0, Number(cart.subtotal || 0) - discountAmount);
@@ -187,17 +204,8 @@ export default function CartPage() {
             </p>
           </div>
 
-          {err && (
-            <div className="alert alert-danger" role="alert">
-              {err}
-            </div>
-          )}
-
-          {msg && (
-            <div className="alert alert-success" role="alert">
-              {msg}
-            </div>
-          )}
+          {err && <div className="alert alert-danger">{err}</div>}
+          {msg && <div className="alert alert-success">{msg}</div>}
 
           {loading ? (
             <div className="text-center py-5">
@@ -256,10 +264,7 @@ export default function CartPage() {
                             }}
                           >
                             <img
-                              src={
-                                it.imageUrl ||
-                                "https://via.placeholder.com/400x300?text=Souvenir"
-                              }
+                              src={getImageSrc(it.imageUrl)}
                               alt={it.variantName}
                               style={{
                                 width: "100%",
@@ -267,8 +272,7 @@ export default function CartPage() {
                                 objectFit: "cover",
                               }}
                               onError={(e) => {
-                                e.currentTarget.src =
-                                  "https://via.placeholder.com/400x300?text=No+Image";
+                                e.currentTarget.src = "/no-image.png";
                               }}
                             />
                           </div>
@@ -277,21 +281,30 @@ export default function CartPage() {
                         <div className="col-md-5">
                           <h5
                             style={{
-                              color: "#0f172a",
+                              color: "#020a16",
+                              fontWeight: 600,
+                              marginBottom: 4,
+                            }}
+                          >
+                            {slugToTitle(it.productSlug)}
+                          </h5>
+
+                          <div
+                            style={{
+                              color: "#586072",
                               fontWeight: 700,
                               marginBottom: 8,
                             }}
                           >
-                            {it.variantName}
-                          </h5>
+                            Biến thể: {it.variantName}
+                          </div>
 
                           <div style={{ color: "#475569", marginBottom: 6 }}>
                             Đơn giá: <strong>{formatPrice(it.price)}</strong>
                           </div>
 
                           <div style={{ color: "#475569" }}>
-                            Thành tiền:{" "}
-                            <strong>{formatPrice(it.lineTotal)}</strong>
+                            Thành tiền: <strong>{formatPrice(it.lineTotal)}</strong>
                           </div>
                         </div>
 

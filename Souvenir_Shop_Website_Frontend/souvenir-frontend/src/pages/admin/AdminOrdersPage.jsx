@@ -18,17 +18,38 @@ const formatPrice = (value) => {
   return Number(value).toLocaleString("vi-VN") + " ₫";
 };
 
+const STATUS_OPTIONS = [
+  { value: "pending", label: "Chờ xử lý" },
+  { value: "confirmed", label: "Đã xác nhận" },
+  { value: "paid", label: "Đã thanh toán" },
+  { value: "shipping", label: "Đang giao hàng" },
+  { value: "shipped", label: "Đã giao vận" },
+  { value: "completed", label: "Hoàn thành" },
+  { value: "cancelled", label: "Đã hủy" },
+];
+
+const getStatusLabel = (status) => {
+  const found = STATUS_OPTIONS.find((x) => x.value === String(status || "").toLowerCase());
+  return found ? found.label : status || "Không xác định";
+};
+
 const getStatusBadge = (status) => {
   const s = String(status || "").toLowerCase();
 
   if (s === "pending") {
     return { text: "Chờ xử lý", bg: "#fef3c7", color: "#92400e" };
   }
+  if (s === "confirmed") {
+    return { text: "Đã xác nhận", bg: "#e5e7eb", color: "#374151" };
+  }
   if (s === "paid") {
     return { text: "Đã thanh toán", bg: "#dcfce7", color: "#166534" };
   }
   if (s === "shipping") {
-    return { text: "Đang giao", bg: "#dbeafe", color: "#1d4ed8" };
+    return { text: "Đang giao hàng", bg: "#dbeafe", color: "#1d4ed8" };
+  }
+  if (s === "shipped") {
+    return { text: "Đã giao vận", bg: "#e0e7ff", color: "#4338ca" };
   }
   if (s === "completed") {
     return { text: "Hoàn thành", bg: "#dcfce7", color: "#166534" };
@@ -113,7 +134,7 @@ export default function AdminOrdersPage() {
           className="btn btn-outline-primary"
           style={{ borderRadius: 12, height: 42 }}
         >
-          Reload
+          Tải lại
         </button>
       </div>
 
@@ -166,12 +187,12 @@ export default function AdminOrdersPage() {
               <thead>
                 <tr style={{ background: "#f8fafc" }}>
                   <th style={thStyle}>Id</th>
-                  <th style={thStyle}>Order Code</th>
-                  <th style={thStyle}>Subtotal</th>
-                  <th style={thStyle}>Shipping Fee</th>
-                  <th style={thStyle}>Total</th>
-                  <th style={thStyle}>Status</th>
-                  <th style={thStyle}>Update</th>
+                  <th style={thStyle}>Mã đơn hàng</th>
+                  <th style={thStyle}>Tạm tính</th>
+                  <th style={thStyle}>Phí vận chuyển</th>
+                  <th style={thStyle}>Tổng tiền</th>
+                  <th style={thStyle}>Trạng thái</th>
+                  <th style={thStyle}>Cập nhật</th>
                 </tr>
               </thead>
 
@@ -222,16 +243,16 @@ export default function AdminOrdersPage() {
                               })
                             }
                             style={{
-                              width: 150,
+                              width: 170,
                               borderRadius: 10,
                               color: "#111827",
                             }}
                           >
-                            <option value="pending">pending</option>
-                            <option value="paid">paid</option>
-                            <option value="shipping">shipping</option>
-                            <option value="completed">completed</option>
-                            <option value="cancelled">cancelled</option>
+                            {STATUS_OPTIONS.map((item) => (
+                              <option key={item.value} value={item.value}>
+                                {item.label}
+                              </option>
+                            ))}
                           </select>
 
                           <button

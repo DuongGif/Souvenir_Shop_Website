@@ -924,7 +924,7 @@
     "Parameters": [
       {
         "Name": "req",
-        "Type": "Souvenir_Shop_Website.DTOs.Payment.ConfirmPaymentRequest",
+        "Type": "SouvenirShop.DTOs.Payment.ConfirmPaymentRequest",
         "IsRequired": true
       }
     ],

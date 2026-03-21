@@ -17,14 +17,23 @@ const getStatusBadge = (status) => {
   const s = String(status || "").toLowerCase();
 
   if (s === "active") {
-    return { text: "Active", bg: "#dcfce7", color: "#166534" };
+    return { text: "Đang hoạt động", bg: "#dcfce7", color: "#166534" };
   }
 
   if (s === "blocked" || s === "locked") {
-    return { text: "Blocked", bg: "#fee2e2", color: "#991b1b" };
+    return { text: "Đã khóa", bg: "#fee2e2", color: "#991b1b" };
   }
 
-  return { text: status || "Unknown", bg: "#e5e7eb", color: "#374151" };
+  return { text: "Không xác định", bg: "#e5e7eb", color: "#374151" };
+};
+
+const getRoleText = (role) => {
+  const r = String(role || "").toLowerCase();
+
+  if (r === "admin") return "Quản trị viên";
+  if (r === "customer") return "Khách hàng";
+
+  return role || "Không xác định";
 };
 
 export default function AdminUsersPage() {
@@ -153,7 +162,7 @@ export default function AdminUsersPage() {
                       borderBottom: "1px solid #e5e7eb",
                     }}
                   >
-                    Id
+                    Mã
                   </th>
                   <th
                     style={{
@@ -175,7 +184,7 @@ export default function AdminUsersPage() {
                       borderBottom: "1px solid #e5e7eb",
                     }}
                   >
-                    Role
+                    Vai trò
                   </th>
                   <th
                     style={{
@@ -186,7 +195,7 @@ export default function AdminUsersPage() {
                       borderBottom: "1px solid #e5e7eb",
                     }}
                   >
-                    Status
+                    Trạng thái
                   </th>
                   <th
                     style={{
@@ -197,7 +206,7 @@ export default function AdminUsersPage() {
                       borderBottom: "1px solid #e5e7eb",
                     }}
                   >
-                    Action
+                    Thao tác
                   </th>
                 </tr>
               </thead>
@@ -236,7 +245,7 @@ export default function AdminUsersPage() {
                           borderBottom: "1px solid #e5e7eb",
                         }}
                       >
-                        {u.role}
+                        {getRoleText(u.role)}
                       </td>
 
                       <td
@@ -271,7 +280,7 @@ export default function AdminUsersPage() {
                             className="btn btn-outline-danger btn-sm"
                             style={{ borderRadius: 10, fontWeight: 600 }}
                           >
-                            Lock
+                            Khóa
                           </button>
 
                           <button
@@ -279,7 +288,7 @@ export default function AdminUsersPage() {
                             className="btn btn-outline-success btn-sm"
                             style={{ borderRadius: 10, fontWeight: 600 }}
                           >
-                            Unlock
+                            Mở khóa
                           </button>
                         </div>
                       </td>

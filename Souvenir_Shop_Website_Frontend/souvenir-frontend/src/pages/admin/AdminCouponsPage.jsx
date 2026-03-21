@@ -52,7 +52,7 @@ export default function AdminCouponsPage() {
       const res = await adminCouponsService.getAll();
       setList(res.data || []);
     } catch (ex) {
-      setErr(getErrorMessage(ex, "Không thể tải danh sách coupon"));
+      setErr(getErrorMessage(ex, "Không thể tải danh sách mã giảm giá"));
     } finally {
       setLoading(false);
     }
@@ -78,12 +78,13 @@ export default function AdminCouponsPage() {
           form.maximumDiscount === "" ? null : Number(form.maximumDiscount),
         totalUsageLimit:
           form.totalUsageLimit === "" ? null : Number(form.totalUsageLimit),
-        perUserLimit: form.perUserLimit === "" ? null : Number(form.perUserLimit),
+        perUserLimit:
+          form.perUserLimit === "" ? null : Number(form.perUserLimit),
         isActive: form.isActive,
       };
 
       await adminCouponsService.create(payload);
-      setMsg("Đã tạo coupon " + form.code);
+      setMsg("Đã tạo mã giảm giá " + form.code);
 
       setForm({
         code: "",
@@ -98,7 +99,7 @@ export default function AdminCouponsPage() {
 
       await load();
     } catch (ex) {
-      setErr(getErrorMessage(ex, "Tạo coupon thất bại"));
+      setErr(getErrorMessage(ex, "Tạo mã giảm giá thất bại"));
     } finally {
       setCreating(false);
     }
@@ -108,14 +109,14 @@ export default function AdminCouponsPage() {
     setErr("");
     setMsg("");
 
-    if (!window.confirm(`Bạn có chắc muốn xóa coupon ${code}?`)) return;
+    if (!window.confirm(`Bạn có chắc muốn xóa mã giảm giá ${code}?`)) return;
 
     try {
       await adminCouponsService.remove(code);
-      setMsg("Đã xóa coupon " + code);
+      setMsg("Đã xóa mã giảm giá " + code);
       await load();
     } catch (ex) {
-      setErr(getErrorMessage(ex, "Xóa coupon thất bại"));
+      setErr(getErrorMessage(ex, "Xóa mã giảm giá thất bại"));
     }
   };
 
@@ -132,7 +133,7 @@ export default function AdminCouponsPage() {
           Quản lý mã giảm giá
         </h2>
         <p style={{ marginBottom: 0, color: "#64748b" }}>
-          Tạo mới, xem danh sách và xóa coupon khuyến mãi trong hệ thống.
+          Tạo mới, xem danh sách và xóa mã giảm giá khuyến mãi trong hệ thống.
         </p>
       </div>
 
@@ -165,7 +166,7 @@ export default function AdminCouponsPage() {
                 marginBottom: 18,
               }}
             >
-              Tạo coupon mới
+              Tạo mã giảm giá mới
             </h4>
 
             <div className="d-grid gap-3">
@@ -174,11 +175,11 @@ export default function AdminCouponsPage() {
                   className="form-label"
                   style={{ color: "#111827", fontWeight: 600 }}
                 >
-                  Mã coupon
+                  Mã giảm giá
                 </label>
                 <input
                   className="form-control"
-                  placeholder="Ví dụ: SALE10"
+                  placeholder="Ví dụ: GIAM10"
                   value={form.code}
                   onChange={(e) => setForm({ ...form, code: e.target.value })}
                   style={{ height: 46, borderRadius: 12, color: "#111827" }}
@@ -198,9 +199,9 @@ export default function AdminCouponsPage() {
                   onChange={(e) => setForm({ ...form, type: e.target.value })}
                   style={{ height: 46, borderRadius: 12, color: "#111827" }}
                 >
-                  <option value="percentage">percentage</option>
-                  <option value="fixed">fixed</option>
-                  <option value="free_shipping">free_shipping</option>
+                  <option value="percentage">Phần trăm</option>
+                  <option value="fixed">Giảm cố định</option>
+                  <option value="free_shipping">Miễn phí vận chuyển</option>
                 </select>
               </div>
 
@@ -227,7 +228,7 @@ export default function AdminCouponsPage() {
                   className="form-label"
                   style={{ color: "#111827", fontWeight: 600 }}
                 >
-                  Đơn tối thiểu
+                  Đơn hàng tối thiểu
                 </label>
                 <input
                   type="number"
@@ -248,7 +249,7 @@ export default function AdminCouponsPage() {
                   className="form-label"
                   style={{ color: "#111827", fontWeight: 600 }}
                 >
-                  Giảm tối đa
+                  Mức giảm tối đa
                 </label>
                 <input
                   type="number"
@@ -315,7 +316,7 @@ export default function AdminCouponsPage() {
                   className="form-check-label"
                   style={{ color: "#111827", fontWeight: 500 }}
                 >
-                  Kích hoạt coupon
+                  Kích hoạt mã giảm giá
                 </label>
               </div>
 
@@ -329,7 +330,7 @@ export default function AdminCouponsPage() {
                   fontWeight: 600,
                 }}
               >
-                {creating ? "Đang tạo..." : "Tạo coupon"}
+                {creating ? "Đang tạo..." : "Tạo mã giảm giá"}
               </button>
             </div>
           </div>
@@ -357,18 +358,18 @@ export default function AdminCouponsPage() {
                   fontWeight: 700,
                 }}
               >
-                Danh sách coupon
+                Danh sách mã giảm giá
               </h4>
             </div>
 
             {loading ? (
               <div className="text-center py-5">
                 <div className="spinner-border text-info" role="status"></div>
-                <p className="mt-3 mb-0">Đang tải coupon...</p>
+                <p className="mt-3 mb-0">Đang tải mã giảm giá...</p>
               </div>
             ) : list.length === 0 ? (
               <div style={{ padding: 24, color: "#64748b" }}>
-                Chưa có coupon nào trong hệ thống.
+                Chưa có mã giảm giá nào trong hệ thống.
               </div>
             ) : (
               <div className="table-responsive">
@@ -390,7 +391,7 @@ export default function AdminCouponsPage() {
                           borderBottom: "1px solid #e5e7eb",
                         }}
                       >
-                        Code
+                        Mã
                       </th>
                       <th
                         style={{
@@ -401,7 +402,7 @@ export default function AdminCouponsPage() {
                           borderBottom: "1px solid #e5e7eb",
                         }}
                       >
-                        Type
+                        Loại
                       </th>
                       <th
                         style={{
@@ -412,7 +413,7 @@ export default function AdminCouponsPage() {
                           borderBottom: "1px solid #e5e7eb",
                         }}
                       >
-                        Value
+                        Giá trị
                       </th>
                       <th
                         style={{
@@ -423,7 +424,7 @@ export default function AdminCouponsPage() {
                           borderBottom: "1px solid #e5e7eb",
                         }}
                       >
-                        Min Order
+                        Đơn tối thiểu
                       </th>
                       <th
                         style={{
@@ -434,7 +435,7 @@ export default function AdminCouponsPage() {
                           borderBottom: "1px solid #e5e7eb",
                         }}
                       >
-                        Active
+                        Trạng thái
                       </th>
                       <th
                         style={{
@@ -445,7 +446,7 @@ export default function AdminCouponsPage() {
                           borderBottom: "1px solid #e5e7eb",
                         }}
                       >
-                        Action
+                        Thao tác
                       </th>
                     </tr>
                   </thead>
@@ -514,7 +515,7 @@ export default function AdminCouponsPage() {
                               fontWeight: 600,
                             }}
                           >
-                            {c.isActive ? "Active" : "Inactive"}
+                            {c.isActive ? "Đang hoạt động" : "Ngừng hoạt động"}
                           </span>
                         </td>
 
@@ -529,7 +530,7 @@ export default function AdminCouponsPage() {
                             className="btn btn-outline-danger btn-sm"
                             style={{ borderRadius: 10, fontWeight: 600 }}
                           >
-                            Delete
+                            Xóa
                           </button>
                         </td>
                       </tr>

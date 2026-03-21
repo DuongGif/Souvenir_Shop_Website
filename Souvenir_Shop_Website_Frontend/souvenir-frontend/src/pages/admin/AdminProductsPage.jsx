@@ -36,6 +36,16 @@ const getImageSrc = (url) => {
   return `${API_ORIGIN}${url}`;
 };
 
+const getStatusText = (status) => {
+  const s = String(status || "").toLowerCase();
+
+  if (s === "active") return "Đang hoạt động";
+  if (s === "inactive") return "Ngừng hoạt động";
+  if (s === "hidden") return "Ẩn";
+
+  return status || "Không xác định";
+};
+
 export default function AdminProductsPage() {
   const [list, setList] = useState([]);
   const [form, setForm] = useState(emptyForm);
@@ -121,7 +131,7 @@ export default function AdminProductsPage() {
       const uploadedUrl = res.data?.imageUrl;
 
       if (!uploadedUrl) {
-        throw new Error("Upload xong nhưng không nhận được imageUrl");
+        throw new Error("Tải ảnh lên thành công nhưng không nhận được đường dẫn ảnh");
       }
 
       const newUrls = [...form.imageUrls];
@@ -131,9 +141,9 @@ export default function AdminProductsPage() {
         imageUrls: newUrls,
       }));
 
-      setMsg("Upload ảnh thành công");
+      setMsg("Tải ảnh lên thành công");
     } catch (ex) {
-      setErr(getErrorMessage(ex, "Upload ảnh thất bại"));
+      setErr(getErrorMessage(ex, "Tải ảnh lên thất bại"));
     } finally {
       setUploadingIndex(null);
     }
@@ -144,7 +154,7 @@ export default function AdminProductsPage() {
     setMsg("");
 
     if (!form.slug.trim()) {
-      setErr("Slug là bắt buộc");
+      setErr("Đường dẫn là bắt buộc");
       return;
     }
 
@@ -222,7 +232,7 @@ export default function AdminProductsPage() {
           Quản lý sản phẩm
         </h2>
         <p style={{ marginBottom: 0, color: "#64748b" }}>
-          Tạo mới, chỉnh sửa, upload ảnh và đi tới trang variants của sản phẩm.
+          Tạo mới, chỉnh sửa, tải ảnh lên và đi tới trang biến thể của sản phẩm.
         </p>
       </div>
 
@@ -246,7 +256,7 @@ export default function AdminProductsPage() {
             <div className="d-grid gap-3">
               <div>
                 <label className="form-label" style={labelStyle}>
-                  Slug
+                  Tên
                 </label>
                 <input
                   className="form-control"
@@ -258,7 +268,7 @@ export default function AdminProductsPage() {
 
               <div>
                 <label className="form-label" style={labelStyle}>
-                  Category Id
+                  Mã danh mục
                 </label>
                 <input
                   type="number"
@@ -296,9 +306,9 @@ export default function AdminProductsPage() {
                   onChange={(e) => setForm({ ...form, status: e.target.value })}
                   style={inputStyle}
                 >
-                  <option value="active">active</option>
-                  <option value="inactive">inactive</option>
-                  <option value="hidden">hidden</option>
+                  <option value="active">Đang hoạt động</option>
+                  <option value="inactive">Ngừng hoạt động</option>
+                  <option value="hidden">Ẩn</option>
                 </select>
               </div>
 
@@ -344,7 +354,7 @@ export default function AdminProductsPage() {
                           onClick={() => removeImageField(index)}
                           style={{ borderRadius: 12 }}
                         >
-                          X
+                          Xóa
                         </button>
                       </div>
 
@@ -361,8 +371,11 @@ export default function AdminProductsPage() {
                       </div>
 
                       {uploadingIndex === index && (
-                        <div className="mt-2" style={{ color: "#2563eb", fontSize: 14 }}>
-                          Đang upload ảnh...
+                        <div
+                          className="mt-2"
+                          style={{ color: "#2563eb", fontSize: 14 }}
+                        >
+                          Đang tải ảnh lên...
                         </div>
                       )}
                     </div>
@@ -408,7 +421,11 @@ export default function AdminProductsPage() {
                   disabled={saving}
                   style={{ height: 46, borderRadius: 12, fontWeight: 600 }}
                 >
-                  {saving ? "Đang lưu..." : editingId ? "Cập nhật" : "Tạo mới"}
+                  {saving
+                    ? "Đang lưu..."
+                    : editingId
+                    ? "Cập nhật"
+                    : "Tạo mới"}
                 </button>
 
                 {editingId && (
@@ -451,12 +468,12 @@ export default function AdminProductsPage() {
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr style={{ background: "#f8fafc" }}>
-                      <th style={thStyle}>Id</th>
+                      <th style={thStyle}>Mã</th>
                       <th style={thStyle}>Ảnh</th>
-                      <th style={thStyle}>Slug</th>
+                      <th style={thStyle}>Tên</th>
                       <th style={thStyle}>Giá</th>
-                      <th style={thStyle}>Status</th>
-                      <th style={thStyle}>Action</th>
+                      <th style={thStyle}>Trạng thái</th>
+                      <th style={thStyle}>Thao tác</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -476,12 +493,12 @@ export default function AdminProductsPage() {
                               }}
                             />
                           ) : (
-                            <span style={{ color: "#94a3b8" }}>No image</span>
+                            <span style={{ color: "#94a3b8" }}>Chưa có ảnh</span>
                           )}
                         </td>
                         <td style={{ ...tdStyle, fontWeight: 600 }}>{p.slug}</td>
                         <td style={tdStyle}>{formatPrice(p.basePrice)}</td>
-                        <td style={tdStyle}>{p.status}</td>
+                        <td style={tdStyle}>{getStatusText(p.status)}</td>
                         <td style={tdStyle}>
                           <div className="d-flex gap-2 flex-wrap">
                             <button
@@ -505,7 +522,7 @@ export default function AdminProductsPage() {
                               className="btn btn-outline-success btn-sm"
                               style={{ borderRadius: 10 }}
                             >
-                              Variants
+                              Biến thể
                             </Link>
                           </div>
                         </td>
