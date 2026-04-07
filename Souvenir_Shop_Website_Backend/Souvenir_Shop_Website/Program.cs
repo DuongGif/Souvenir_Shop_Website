@@ -85,9 +85,15 @@ namespace Souvenir_Shop_Website
 						ClockSkew = TimeSpan.FromSeconds(10)
 					};
 				});
+			builder.Services.AddHttpClient();
 
 			builder.Services.AddAuthorization();
 
+			builder.Services.Configure<SmtpOptions>(
+			builder.Configuration.GetSection("Smtp"));
+
+			builder.Services.AddScoped<EmailService>();
+			builder.Services.AddScoped<OtpService>();
 			var app = builder.Build();
 				app.UseStaticFiles();
 

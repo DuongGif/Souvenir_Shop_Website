@@ -13,19 +13,55 @@ public class AdminProductsController : ControllerBase
 	private readonly SouvenirShopContext _db;
 	private readonly IWebHostEnvironment _env;
 
+	// Đổi giá trị này nếu cột base_price trong DB của bạn lớn hơn/nhỏ hơn.
+	// Với decimal(12,2) thì giá tối đa an toàn là 9,999,999,999.99
+	private const decimal MAX_PRICE = 9999999999.9999m;
+
 	public AdminProductsController(SouvenirShopContext db, IWebHostEnvironment env)
 	{
 		_db = db;
 		_env = env;
 	}
 
+	private List<string> NormalizeImageUrls(IEnumerable<string>? imageUrls)
+	{
+		if (imageUrls == null) return new List<string>();
+
+		return imageUrls
+			.Where(x => !string.IsNullOrWhiteSpace(x))
+			.Select(x => x.Trim())
+			.Distinct(StringComparer.OrdinalIgnoreCase)
+			.ToList();
+	}
+
+	private IActionResult? ValidateProduct(Product product)
+	{
+		if (product == null)
+			return BadRequest("Dữ liệu sản phẩm không hợp lệ.");
+
+		if (string.IsNullOrWhiteSpace(product.Slug))
+			return BadRequest("Slug không được để trống.");
+
+		if (product.CategoryId <= 0)
+			return BadRequest("CategoryId không hợp lệ.");
+
+		if (product.BasePrice < 0)
+			return BadRequest("Giá sản phẩm không được âm.");
+
+		if (product.BasePrice > MAX_PRICE)
+			return BadRequest($"Giá sản phẩm không được vượt quá {MAX_PRICE:N2}.");
+
+		return null;
+	}
+
 	[HttpPut("{id:long}/images")]
 	public async Task<IActionResult> ReplaceImages(long id, [FromBody] List<string> imageUrls)
 	{
 		var product = await _db.Products.FindAsync(id);
-		if (product == null) return NotFound();
+		if (product == null) return NotFound("Không tìm thấy sản phẩm.");
 
-		// Xóa toàn bộ ảnh cũ
+		var urls = NormalizeImageUrls(imageUrls);
+
 		var oldImages = await _db.ProductImages
 			.Where(x => x.ProductId == id)
 			.ToListAsync();
@@ -35,19 +71,23 @@ public class AdminProductsController : ControllerBase
 			_db.ProductImages.RemoveRange(oldImages);
 		}
 
-		// Thêm ảnh mới
-		foreach (var url in imageUrls.Where(x => !string.IsNullOrWhiteSpace(x)))
+		foreach (var url in urls)
 		{
 			_db.ProductImages.Add(new ProductImage
 			{
 				ProductId = id,
-				ImageUrl = url.Trim()
+				ImageUrl = url
 			});
 		}
 
 		await _db.SaveChangesAsync();
 
-		return Ok(new { message = "Images replaced" });
+		return Ok(new
+		{
+			message = "Images replaced",
+			productId = id,
+			imageCount = urls.Count
+		});
 	}
 
 	[HttpPost("upload-image")]
@@ -81,6 +121,9 @@ public class AdminProductsController : ControllerBase
 	[HttpGet("{id:long}/images")]
 	public async Task<IActionResult> GetImages(long id)
 	{
+		var productExists = await _db.Products.AnyAsync(x => x.Id == id);
+		if (!productExists) return NotFound("Không tìm thấy sản phẩm.");
+
 		var images = await _db.ProductImages
 			.Where(x => x.ProductId == id)
 			.OrderBy(x => x.Id)
@@ -94,19 +137,29 @@ public class AdminProductsController : ControllerBase
 	public async Task<IActionResult> AddImages(long id, [FromBody] List<string> imageUrls)
 	{
 		var product = await _db.Products.FindAsync(id);
-		if (product == null) return NotFound();
+		if (product == null) return NotFound("Không tìm thấy sản phẩm.");
 
-		foreach (var url in imageUrls.Where(x => !string.IsNullOrWhiteSpace(x)))
+		var urls = NormalizeImageUrls(imageUrls);
+		if (urls.Count == 0)
+			return BadRequest("Danh sách ảnh không hợp lệ.");
+
+		foreach (var url in urls)
 		{
 			_db.ProductImages.Add(new ProductImage
 			{
 				ProductId = id,
-				ImageUrl = url.Trim()
+				ImageUrl = url
 			});
 		}
 
 		await _db.SaveChangesAsync();
-		return Ok(new { message = "Images added" });
+
+		return Ok(new
+		{
+			message = "Images added",
+			productId = id,
+			imageCount = urls.Count
+		});
 	}
 
 	// GET all products (including hidden) + first image + all images
@@ -127,14 +180,12 @@ public class AdminProductsController : ControllerBase
 				p.CreatedAt,
 				p.UpdatedAt,
 
-				// ảnh đầu tiên để show trong list
 				ImageUrl = _db.ProductImages
 					.Where(i => i.ProductId == p.Id)
 					.OrderBy(i => i.Id)
 					.Select(i => i.ImageUrl)
 					.FirstOrDefault(),
 
-				// toàn bộ ảnh để dùng nếu cần
 				Images = _db.ProductImages
 					.Where(i => i.ProductId == p.Id)
 					.OrderBy(i => i.Id)
@@ -176,7 +227,7 @@ public class AdminProductsController : ControllerBase
 			})
 			.FirstOrDefaultAsync();
 
-		if (product == null) return NotFound();
+		if (product == null) return NotFound("Không tìm thấy sản phẩm.");
 
 		return Ok(product);
 	}
@@ -185,8 +236,16 @@ public class AdminProductsController : ControllerBase
 	[HttpPost]
 	public async Task<IActionResult> Create([FromBody] Product product)
 	{
+		var validationError = ValidateProduct(product);
+		if (validationError != null) return validationError;
+
+		var existedSlug = await _db.Products.AnyAsync(x => x.Slug == product.Slug);
+		if (existedSlug)
+			return BadRequest("Slug đã tồn tại.");
+
 		product.CreatedAt = DateTime.Now;
-		product.Status ??= "active";
+		product.UpdatedAt = DateTime.Now;
+		product.Status = string.IsNullOrWhiteSpace(product.Status) ? "active" : product.Status.Trim();
 
 		_db.Products.Add(product);
 		await _db.SaveChangesAsync();
@@ -198,13 +257,25 @@ public class AdminProductsController : ControllerBase
 	[HttpPut("{id:long}")]
 	public async Task<IActionResult> Update(long id, [FromBody] Product updated)
 	{
-		var product = await _db.Products.FindAsync(id);
-		if (product == null) return NotFound();
+		if (updated == null)
+			return BadRequest("Dữ liệu sản phẩm không hợp lệ.");
 
-		product.Slug = updated.Slug;
+		var validationError = ValidateProduct(updated);
+		if (validationError != null) return validationError;
+
+		var product = await _db.Products.FindAsync(id);
+		if (product == null) return NotFound("Không tìm thấy sản phẩm.");
+
+		var existedSlug = await _db.Products
+			.AnyAsync(x => x.Id != id && x.Slug == updated.Slug);
+
+		if (existedSlug)
+			return BadRequest("Slug đã tồn tại.");
+
+		product.Slug = updated.Slug.Trim();
 		product.CategoryId = updated.CategoryId;
 		product.BasePrice = updated.BasePrice;
-		product.Status = updated.Status;
+		product.Status = string.IsNullOrWhiteSpace(updated.Status) ? "active" : updated.Status.Trim();
 		product.IsFeatured = updated.IsFeatured;
 		product.UpdatedAt = DateTime.Now;
 
@@ -217,7 +288,16 @@ public class AdminProductsController : ControllerBase
 	public async Task<IActionResult> Delete(long id)
 	{
 		var product = await _db.Products.FindAsync(id);
-		if (product == null) return NotFound();
+		if (product == null) return NotFound("Không tìm thấy sản phẩm.");
+
+		var images = await _db.ProductImages
+			.Where(x => x.ProductId == id)
+			.ToListAsync();
+
+		if (images.Count > 0)
+		{
+			_db.ProductImages.RemoveRange(images);
+		}
 
 		_db.Products.Remove(product);
 		await _db.SaveChangesAsync();

@@ -53,10 +53,40 @@ public partial class SouvenirShopContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
+	public virtual DbSet<EmailOtp> EmailOtps { get; set; }
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Address>(entity =>
+		modelBuilder.Entity<EmailOtp>(entity =>
+		{
+			entity.ToTable("email_otps");
+
+			entity.HasKey(e => e.Id);
+
+			entity.Property(e => e.Id).HasColumnName("id");
+			entity.Property(e => e.Email)
+				.HasMaxLength(255)
+				.HasColumnName("email");
+			entity.Property(e => e.Purpose)
+				.HasMaxLength(50)
+				.HasColumnName("purpose");
+			entity.Property(e => e.CodeHash)
+				.HasMaxLength(128)
+				.HasColumnName("code_hash");
+			entity.Property(e => e.ExpiresAt)
+				.HasColumnType("datetime")
+				.HasColumnName("expires_at");
+			entity.Property(e => e.CreatedAt)
+				.HasColumnType("datetime")
+				.HasColumnName("created_at");
+			entity.Property(e => e.UsedAt)
+				.HasColumnType("datetime")
+				.HasColumnName("used_at");
+			entity.Property(e => e.AttemptCount)
+				.HasColumnName("attempt_count");
+		});
+
+		modelBuilder.Entity<Address>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__addresse__3213E83FEC4D628C");
 

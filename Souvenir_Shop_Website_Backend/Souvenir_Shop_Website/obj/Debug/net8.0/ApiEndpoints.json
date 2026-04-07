@@ -605,6 +605,38 @@
   },
   {
     "ContainingType": "Souvenir_Shop_Website.Controllers.API.AuthController",
+    "Method": "ResetPasswordWithOtp",
+    "RelativePath": "api/auth/forgot-password/reset",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "req",
+        "Type": "SouvenirShop.DTOs.Auth.ResetPasswordWithOtpRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Souvenir_Shop_Website.Controllers.API.AuthController",
+    "Method": "SendForgotPasswordOtp",
+    "RelativePath": "api/auth/forgot-password/send-otp",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "req",
+        "Type": "SouvenirShop.DTOs.Auth.SendOtpRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Souvenir_Shop_Website.Controllers.API.AuthController",
     "Method": "Login",
     "RelativePath": "api/auth/login",
     "HttpMethod": "POST",
@@ -640,6 +672,48 @@
       {
         "Name": "req",
         "Type": "SouvenirShop.DTOs.Auth.RegisterRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "SouvenirShop.DTOs.Auth.RegisterResponse",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Souvenir_Shop_Website.Controllers.API.AuthController",
+    "Method": "SendRegisterOtp",
+    "RelativePath": "api/auth/register/send-otp",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "req",
+        "Type": "SouvenirShop.DTOs.Auth.SendOtpRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Souvenir_Shop_Website.Controllers.API.AuthController",
+    "Method": "VerifyRegisterOtp",
+    "RelativePath": "api/auth/register/verify-otp",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "req",
+        "Type": "SouvenirShop.DTOs.Auth.VerifyRegisterOtpRequest",
         "IsRequired": true
       }
     ],

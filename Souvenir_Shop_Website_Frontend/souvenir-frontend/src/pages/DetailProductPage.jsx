@@ -47,6 +47,7 @@ export default function DetailProductPage() {
   const [p, setP] = useState(null);
   const [variantId, setVariantId] = useState(null);
   const [qty, setQty] = useState(1);
+  const [selectedImage, setSelectedImage] = useState("");
 
   const [reviews, setReviews] = useState([]);
   const [rv, setRv] = useState({ rating: 5, title: "", content: "" });
@@ -96,11 +97,35 @@ export default function DetailProductPage() {
 
   const productTitle = p?.name || slugToTitle(p?.slug);
 
-  const imageUrl = p?.images?.[0]
-    ? getImageSrc(p.images[0])
-    : p?.imageUrl
-    ? getImageSrc(p.imageUrl)
-    : "https://via.placeholder.com/800x600?text=Souvenir+Shop";
+  const imageList = useMemo(() => {
+    const rawImages = Array.isArray(p?.images) ? p.images : [];
+
+    const normalizedImages = rawImages
+      .map((img) => {
+        if (!img) return "";
+
+        if (typeof img === "string") {
+          return getImageSrc(img);
+        }
+
+        return getImageSrc(
+          img.imageUrl || img.url || img.imagePath || img.path || ""
+        );
+      })
+      .filter(Boolean);
+
+    if (normalizedImages.length > 0) return normalizedImages;
+
+    if (p?.imageUrl) return [getImageSrc(p.imageUrl)];
+
+    return ["https://via.placeholder.com/800x600?text=Souvenir+Shop"];
+  }, [p]);
+
+  useEffect(() => {
+    if (imageList.length > 0) {
+      setSelectedImage(imageList[0]);
+    }
+  }, [imageList]);
 
   const displayPrice = currentVariant?.price ?? p?.basePrice ?? 0;
 
@@ -200,24 +225,76 @@ export default function DetailProductPage() {
                     style={{
                       background: "#fff",
                       borderRadius: 24,
-                      overflow: "hidden",
+                      padding: 16,
                       boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
                     }}
                   >
-                    <img
-                      src={imageUrl}
-                      alt={productTitle}
+                    <div
                       style={{
-                        width: "100%",
-                        height: 500,
-                        objectFit: "cover",
-                        display: "block",
+                        borderRadius: 20,
+                        overflow: "hidden",
+                        marginBottom: 16,
                       }}
-                      onError={(e) => {
-                        e.currentTarget.src =
-                          "https://via.placeholder.com/800x600?text=No+Image";
-                      }}
-                    />
+                    >
+                      <img
+                        src={selectedImage || imageList[0]}
+                        alt={productTitle}
+                        style={{
+                          width: "100%",
+                          height: 500,
+                          objectFit: "cover",
+                          display: "block",
+                        }}
+                        onError={(e) => {
+                          e.currentTarget.src =
+                            "https://via.placeholder.com/800x600?text=No+Image";
+                        }}
+                      />
+                    </div>
+
+                    {imageList.length > 1 && (
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))",
+                          gap: 12,
+                        }}
+                      >
+                        {imageList.map((img, index) => (
+                          <button
+                            key={`${img}-${index}`}
+                            type="button"
+                            onClick={() => setSelectedImage(img)}
+                            style={{
+                              border:
+                                selectedImage === img
+                                  ? "2px solid #2563eb"
+                                  : "1px solid #e5e7eb",
+                              borderRadius: 14,
+                              padding: 4,
+                              background: "#fff",
+                              cursor: "pointer",
+                            }}
+                          >
+                            <img
+                              src={img}
+                              alt={`${productTitle}-${index + 1}`}
+                              style={{
+                                width: "100%",
+                                height: 80,
+                                objectFit: "cover",
+                                borderRadius: 10,
+                                display: "block",
+                              }}
+                              onError={(e) => {
+                                e.currentTarget.src =
+                                  "https://via.placeholder.com/200x150?text=No+Image";
+                              }}
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -284,6 +361,9 @@ export default function DetailProductPage() {
                       </div>
                       <div>
                         <strong>Số biến thể:</strong> {p.variants?.length || 0}
+                      </div>
+                      <div>
+                        <strong>Số ảnh:</strong> {imageList.length}
                       </div>
                     </div>
 
