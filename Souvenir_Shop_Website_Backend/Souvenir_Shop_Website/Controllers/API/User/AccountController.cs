@@ -20,7 +20,7 @@ public class AccountController : ControllerBase
 		=> long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
 	// =======================
-	// 1) PROFILE
+	// 1) THÔNG TIN CÁ NHÂN
 	// =======================
 
 	// GET /api/account/me
@@ -43,7 +43,7 @@ public class AccountController : ControllerBase
 			})
 			.FirstOrDefaultAsync();
 
-		if (user == null) return NotFound();
+		if (user == null) return NotFound("Không tìm thấy người dùng.");
 		return Ok(user);
 	}
 
@@ -53,27 +53,29 @@ public class AccountController : ControllerBase
 	{
 		var userId = CurrentUserId();
 		var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId);
-		if (user == null) return NotFound();
 
-		// validate đơn giản
+		if (user == null)
+			return NotFound("Không tìm thấy người dùng.");
+
+		// kiểm tra dữ liệu đơn giản
 		if (req.Phone != null && req.Phone.Length > 50)
-			return BadRequest("Phone too long.");
+			return BadRequest("Số điện thoại quá dài.");
 
 		if (req.FullName != null && req.FullName.Length > 255)
-			return BadRequest("FullName too long.");
+			return BadRequest("Họ và tên quá dài.");
 
-		// update
+		// cập nhật
 		if (req.FullName != null) user.FullName = req.FullName.Trim();
 		if (req.Phone != null) user.Phone = req.Phone.Trim();
 
 		user.UpdatedAt = DateTime.Now;
 
 		await _db.SaveChangesAsync();
-		return Ok(new { message = "Updated profile" });
+		return Ok(new { message = "Cập nhật thông tin cá nhân thành công." });
 	}
 
 	// =======================
-	// 2) ADDRESSES
+	// 2) ĐỊA CHỈ
 	// =======================
 
 	// GET /api/account/addresses
@@ -111,20 +113,25 @@ public class AccountController : ControllerBase
 	{
 		var userId = CurrentUserId();
 
-		if (string.IsNullOrWhiteSpace(req.RecipientName)) return BadRequest("RecipientName is required.");
-		if (string.IsNullOrWhiteSpace(req.RecipientPhone)) return BadRequest("RecipientPhone is required.");
-		if (string.IsNullOrWhiteSpace(req.AddressLine1)) return BadRequest("AddressLine1 is required.");
+		if (string.IsNullOrWhiteSpace(req.RecipientName))
+			return BadRequest("Tên người nhận là bắt buộc.");
+
+		if (string.IsNullOrWhiteSpace(req.RecipientPhone))
+			return BadRequest("Số điện thoại người nhận là bắt buộc.");
+
+		if (string.IsNullOrWhiteSpace(req.AddressLine1))
+			return BadRequest("Địa chỉ là bắt buộc.");
 
 		using var tx = await _db.Database.BeginTransactionAsync();
 
-		// Nếu set default thì bỏ default cũ
+		// Nếu đặt mặc định thì bỏ mặc định cũ
 		if (req.IsDefault)
 		{
 			var olds = await _db.Addresses.Where(a => a.UserId == userId && a.IsDefault).ToListAsync();
 			foreach (var x in olds) x.IsDefault = false;
 		}
 
-		// Nếu user chưa có địa chỉ nào -> địa chỉ đầu tiên auto default
+		// Nếu người dùng chưa có địa chỉ nào -> địa chỉ đầu tiên tự động là mặc định
 		var hasAny = await _db.Addresses.AnyAsync(a => a.UserId == userId);
 		var isDefault = req.IsDefault || !hasAny;
 
@@ -171,11 +178,17 @@ public class AccountController : ControllerBase
 		var userId = CurrentUserId();
 
 		var address = await _db.Addresses.FirstOrDefaultAsync(a => a.Id == id && a.UserId == userId);
-		if (address == null) return NotFound();
+		if (address == null)
+			return NotFound("Không tìm thấy địa chỉ.");
 
-		if (string.IsNullOrWhiteSpace(req.RecipientName)) return BadRequest("RecipientName is required.");
-		if (string.IsNullOrWhiteSpace(req.RecipientPhone)) return BadRequest("RecipientPhone is required.");
-		if (string.IsNullOrWhiteSpace(req.AddressLine1)) return BadRequest("AddressLine1 is required.");
+		if (string.IsNullOrWhiteSpace(req.RecipientName))
+			return BadRequest("Tên người nhận là bắt buộc.");
+
+		if (string.IsNullOrWhiteSpace(req.RecipientPhone))
+			return BadRequest("Số điện thoại người nhận là bắt buộc.");
+
+		if (string.IsNullOrWhiteSpace(req.AddressLine1))
+			return BadRequest("Địa chỉ là bắt buộc.");
 
 		using var tx = await _db.Database.BeginTransactionAsync();
 
@@ -199,7 +212,7 @@ public class AccountController : ControllerBase
 		await _db.SaveChangesAsync();
 		await tx.CommitAsync();
 
-		return Ok(new { message = "Updated address" });
+		return Ok(new { message = "Cập nhật địa chỉ thành công." });
 	}
 
 	// PUT /api/account/addresses/{id}/default
@@ -209,7 +222,8 @@ public class AccountController : ControllerBase
 		var userId = CurrentUserId();
 
 		var address = await _db.Addresses.FirstOrDefaultAsync(a => a.Id == id && a.UserId == userId);
-		if (address == null) return NotFound();
+		if (address == null)
+			return NotFound("Không tìm thấy địa chỉ.");
 
 		using var tx = await _db.Database.BeginTransactionAsync();
 
@@ -221,7 +235,7 @@ public class AccountController : ControllerBase
 		await _db.SaveChangesAsync();
 		await tx.CommitAsync();
 
-		return Ok(new { message = "Set default address" });
+		return Ok(new { message = "Đặt địa chỉ mặc định thành công." });
 	}
 
 	// DELETE /api/account/addresses/{id}
@@ -231,14 +245,15 @@ public class AccountController : ControllerBase
 		var userId = CurrentUserId();
 
 		var address = await _db.Addresses.FirstOrDefaultAsync(a => a.Id == id && a.UserId == userId);
-		if (address == null) return NotFound();
+		if (address == null)
+			return NotFound("Không tìm thấy địa chỉ.");
 
 		var wasDefault = address.IsDefault;
 
 		_db.Addresses.Remove(address);
 		await _db.SaveChangesAsync();
 
-		// Nếu xóa địa chỉ default -> set default cho địa chỉ mới nhất còn lại
+		// Nếu xóa địa chỉ mặc định -> đặt địa chỉ mới nhất còn lại thành mặc định
 		if (wasDefault)
 		{
 			var latest = await _db.Addresses
@@ -253,6 +268,6 @@ public class AccountController : ControllerBase
 			}
 		}
 
-		return Ok(new { message = "Deleted address" });
+		return Ok(new { message = "Xóa địa chỉ thành công." });
 	}
 }

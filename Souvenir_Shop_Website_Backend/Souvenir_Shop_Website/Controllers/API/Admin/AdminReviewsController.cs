@@ -18,14 +18,11 @@ public class AdminReviewsController : ControllerBase
 	private long CurrentAdminId()
 		=> long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-	// GET /api/admin/reviews?status=pending
+	// GET /api/admin/reviews
 	[HttpGet]
-	public async Task<IActionResult> GetAll([FromQuery] string? status = "pending")
+	public async Task<IActionResult> GetAll()
 	{
-		status ??= "pending";
-
 		var data = await _db.Reviews.AsNoTracking()
-			.Where(r => r.Status == status)
 			.OrderByDescending(r => r.CreatedAt)
 			.Select(r => new
 			{
@@ -43,41 +40,16 @@ public class AdminReviewsController : ControllerBase
 		return Ok(data);
 	}
 
-	// PUT /api/admin/reviews/{id}/approve
-	[HttpPut("{id:long}/approve")]
-	public async Task<IActionResult> Approve(long id)
-	{
-		var review = await _db.Reviews.FindAsync(id);
-		if (review == null) return NotFound();
-
-		review.Status = "approved";
-		await _db.SaveChangesAsync();
-
-		return Ok(new { message = "Approved" });
-	}
-
-	// PUT /api/admin/reviews/{id}/reject
-	[HttpPut("{id:long}/reject")]
-	public async Task<IActionResult> Reject(long id)
-	{
-		var review = await _db.Reviews.FindAsync(id);
-		if (review == null) return NotFound();
-
-		review.Status = "rejected";
-		await _db.SaveChangesAsync();
-
-		return Ok(new { message = "Rejected" });
-	}
-
 	// POST /api/admin/reviews/{id}/reply
 	[HttpPost("{id:long}/reply")]
 	public async Task<IActionResult> Reply(long id, [FromBody] ReviewReplyRequest req)
 	{
 		if (string.IsNullOrWhiteSpace(req.Content))
-			return BadRequest("Content is required.");
+			return BadRequest("Nội dung phản hồi là bắt buộc.");
 
 		var review = await _db.Reviews.FindAsync(id);
-		if (review == null) return NotFound();
+		if (review == null)
+			return NotFound("Không tìm thấy đánh giá.");
 
 		var adminId = CurrentAdminId();
 
@@ -92,6 +64,6 @@ public class AdminReviewsController : ControllerBase
 		_db.ReviewReplies.Add(reply);
 		await _db.SaveChangesAsync();
 
-		return Ok(new { message = "Replied" });
+		return Ok(new { message = "Phản hồi đánh giá thành công." });
 	}
 }

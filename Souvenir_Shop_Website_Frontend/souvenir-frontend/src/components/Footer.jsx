@@ -99,7 +99,7 @@ export default function Footer() {
 
         <div className="copyright text-center">
           <p style={{ marginBottom: 0 }}>
-            © {year} <strong>SouVN</strong>. Tất cả quyền được bảo lưu.
+             {year} <strong>SouVN</strong>. Tất cả quyền được bảo lưu.
           </p>
         </div>
       </div>

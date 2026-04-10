@@ -14,7 +14,6 @@ public class OrdersController : ControllerBase
 {
 	private readonly SouvenirShopContext _db;
 
-	// Nếu DB của bạn là decimal(12,2) thì mức này là an toàn
 	private const decimal MAX_MONEY = 9999999999.99m;
 	private const int MAX_ITEM_QTY = 1000;
 
@@ -34,26 +33,31 @@ public class OrdersController : ControllerBase
 		return null;
 	}
 
+	// =======================
+	// TẠO ĐƠN HÀNG
+	// =======================
+
 	[HttpPost]
 	public async Task<ActionResult<OrderDto>> CreateOrder([FromBody] CreateOrderRequest req)
 	{
 		var userId = CurrentUserId();
 
+		// kiểm tra địa chỉ giao hàng
 		if (req.FulfillmentType == "delivery" || req.FulfillmentType == "hotel")
 		{
 			if (req.ShippingAddressId == null || req.ShippingAddressId <= 0)
-				return BadRequest("ShippingAddressId is required.");
+				return BadRequest("Cần cung cấp địa chỉ giao hàng.");
 
 			var addressOk = await _db.Addresses
 				.AnyAsync(a => a.Id == req.ShippingAddressId && a.UserId == userId);
 
 			if (!addressOk)
-				return BadRequest("Invalid shippingAddressId.");
+				return BadRequest("Địa chỉ giao hàng không hợp lệ.");
 		}
 
 		var cart = await _db.Carts.FirstOrDefaultAsync(c => c.UserId == userId);
 		if (cart == null)
-			return BadRequest("Cart not found.");
+			return BadRequest("Không tìm thấy giỏ hàng.");
 
 		var cartItems = await (
 			from ci in _db.CartItems
@@ -70,25 +74,26 @@ public class OrdersController : ControllerBase
 		).ToListAsync();
 
 		if (cartItems.Count == 0)
-			return BadRequest("Cart is empty.");
+			return BadRequest("Giỏ hàng đang trống.");
 
+		// validate sản phẩm
 		foreach (var x in cartItems)
 		{
 			if (x.ci.Quantity <= 0)
-				return BadRequest($"Số lượng không hợp lệ cho sản phẩm ");
+				return BadRequest("Số lượng sản phẩm không hợp lệ.");
 
 			if (x.ci.Quantity > MAX_ITEM_QTY)
-				return BadRequest($"Số lượng vượt quá giới hạn cho phép cho sản phẩm ");
+				return BadRequest("Số lượng sản phẩm vượt quá giới hạn.");
 
 			if (x.UnitPrice < 0)
-				return BadRequest($"Giá không hợp lệ cho sản phẩm ");
+				return BadRequest("Giá sản phẩm không hợp lệ.");
 
 			if (x.UnitPrice > MAX_MONEY)
-				return BadRequest($"Giá sản phẩm quá lớn cho sản phẩm ");
+				return BadRequest("Giá sản phẩm quá lớn.");
 
 			var lineTotal = x.UnitPrice * x.ci.Quantity;
 			if (lineTotal > MAX_MONEY)
-				return BadRequest("Thành tiền của một sản phẩm vượt quá giới hạn cho phép.");
+				return BadRequest("Thành tiền sản phẩm vượt quá giới hạn.");
 		}
 
 		await using var tx = await _db.Database.BeginTransactionAsync();
@@ -97,13 +102,13 @@ public class OrdersController : ControllerBase
 		{
 			var subtotal = cartItems.Sum(x => x.UnitPrice * x.ci.Quantity);
 
-			var subtotalError = ValidateMoney(subtotal, "Subtotal");
+			var subtotalError = ValidateMoney(subtotal, "Tạm tính");
 			if (subtotalError != null)
 				return BadRequest(subtotalError);
 
 			var shippingFee = 0m;
 
-			var shippingFeeError = ValidateMoney(shippingFee, "ShippingFee");
+			var shippingFeeError = ValidateMoney(shippingFee, "Phí vận chuyển");
 			if (shippingFeeError != null)
 				return BadRequest(shippingFeeError);
 
@@ -117,26 +122,27 @@ public class OrdersController : ControllerBase
 			{
 				coupon = await _db.Coupons.FirstOrDefaultAsync(c => c.Code == couponCode);
 				if (coupon == null)
-					return BadRequest("Coupon not found.");
+					return BadRequest("Không tìm thấy mã giảm giá.");
 
 				if (!coupon.IsActive)
-					return BadRequest("Coupon is not active.");
+					return BadRequest("Mã giảm giá không hoạt động.");
 
 				var now = DateTime.Now;
+
 				if (coupon.StartAt != null && now < coupon.StartAt)
-					return BadRequest("Coupon not started yet.");
+					return BadRequest("Mã giảm giá chưa đến thời gian sử dụng.");
 
 				if (coupon.EndAt != null && now > coupon.EndAt)
-					return BadRequest("Coupon expired.");
+					return BadRequest("Mã giảm giá đã hết hạn.");
 
 				if (coupon.MinimumOrderValue != null && subtotal < coupon.MinimumOrderValue.Value)
-					return BadRequest("Order value is too low for this coupon.");
+					return BadRequest("Đơn hàng chưa đủ điều kiện áp dụng mã giảm giá.");
 
 				if (coupon.TotalUsageLimit != null)
 				{
 					var used = await _db.OrderCoupons.CountAsync(oc => oc.CouponId == coupon.Id);
 					if (used >= coupon.TotalUsageLimit.Value)
-						return BadRequest("Coupon usage limit reached.");
+						return BadRequest("Mã giảm giá đã hết lượt sử dụng.");
 				}
 
 				if (coupon.PerUserLimit != null)
@@ -149,7 +155,7 @@ public class OrdersController : ControllerBase
 					).CountAsync();
 
 					if (usedByUser >= coupon.PerUserLimit.Value)
-						return BadRequest("You have reached coupon usage limit.");
+						return BadRequest("Bạn đã dùng hết số lần sử dụng mã này.");
 				}
 
 				var type = (coupon.Type ?? "").Trim().ToLowerInvariant();
@@ -173,10 +179,10 @@ public class OrdersController : ControllerBase
 				}
 				else
 				{
-					return BadRequest("Invalid coupon type.");
+					return BadRequest("Loại mã giảm giá không hợp lệ.");
 				}
 
-				var discountError = ValidateMoney(discountAmount, "DiscountAmount");
+				var discountError = ValidateMoney(discountAmount, "Số tiền giảm");
 				if (discountError != null)
 					return BadRequest(discountError);
 			}
@@ -184,7 +190,7 @@ public class OrdersController : ControllerBase
 			var total = (subtotal - discountAmount) + (shippingFee - shippingDiscount);
 			if (total < 0) total = 0;
 
-			var totalError = ValidateMoney(total, "TotalAmount");
+			var totalError = ValidateMoney(total, "Tổng tiền");
 			if (totalError != null)
 				return BadRequest(totalError);
 
@@ -212,13 +218,6 @@ public class OrdersController : ControllerBase
 			foreach (var x in cartItems)
 			{
 				var lineTotal = x.UnitPrice * x.ci.Quantity;
-
-				var lineTotalError = ValidateMoney(lineTotal, "LineTotal");
-				if (lineTotalError != null)
-				{
-					await tx.RollbackAsync();
-					return BadRequest(lineTotalError);
-				}
 
 				_db.OrderItems.Add(new OrderItem
 				{
@@ -274,6 +273,10 @@ public class OrdersController : ControllerBase
 		}
 	}
 
+	// =======================
+	// LẤY ĐƠN HÀNG CỦA TÔI
+	// =======================
+
 	[HttpGet("my")]
 	public async Task<ActionResult<List<OrderDto>>> GetMyOrders()
 	{
@@ -297,6 +300,10 @@ public class OrdersController : ControllerBase
 		}).ToList());
 	}
 
+	// =======================
+	// LẤY ĐƠN THEO MÃ
+	// =======================
+
 	[HttpGet("by-code/{orderCode}")]
 	public async Task<ActionResult<OrderDto>> GetOrderByCode(string orderCode)
 	{
@@ -306,19 +313,25 @@ public class OrdersController : ControllerBase
 			.FirstOrDefaultAsync(o => o.OrderCode == orderCode && o.UserId == userId);
 
 		if (order == null)
-			return NotFound();
+			return NotFound("Không tìm thấy đơn hàng.");
 
-		var items = await _db.OrderItems.AsNoTracking()
-			.Where(i => i.OrderId == order.Id)
-			.Select(i => new OrderItemDto
-			{
-				ProductName = i.ProductNameSnapshot,
-				VariantName = i.VariantNameSnapshot,
-				UnitPrice = i.UnitPrice,
-				Quantity = i.Quantity,
-				LineTotal = i.LineTotal
-			})
-			.ToListAsync();
+		var items = await (
+		from i in _db.OrderItems.AsNoTracking()
+		join v in _db.ProductVariants on i.VariantId equals v.Id
+		join p in _db.Products on v.ProductId equals p.Id
+		where i.OrderId == order.Id
+		select new OrderItemDto
+		{
+			ProductId = p.Id,
+			VariantId = v.Id,
+			ProductSlug = p.Slug,
+			ProductName = i.ProductNameSnapshot,
+			VariantName = i.VariantNameSnapshot,
+			UnitPrice = i.UnitPrice,
+			Quantity = i.Quantity,
+			LineTotal = i.LineTotal
+		}
+	).ToListAsync();
 
 		return Ok(new OrderDto
 		{

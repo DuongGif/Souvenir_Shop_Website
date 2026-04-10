@@ -7,4 +7,7 @@ public class VariantCreateUpdateDto
 	public decimal? Price { get; set; }
 	public int? WeightGrams { get; set; }
 	public bool IsActive { get; set; } = true;
+
+	// thêm tồn kho ban đầu khi tạo mới
+	public int InitialStock { get; set; } = 0;
 }

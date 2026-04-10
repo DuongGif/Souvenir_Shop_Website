@@ -14,7 +14,7 @@ public class AdminOrdersController : ControllerBase
 	private readonly SouvenirShopContext _db;
 	public AdminOrdersController(SouvenirShopContext db) => _db = db;
 
-	// GET all orders
+	// LẤY TẤT CẢ ĐƠN HÀNG
 	[HttpGet]
 	public async Task<IActionResult> GetAll()
 	{
@@ -25,19 +25,24 @@ public class AdminOrdersController : ControllerBase
 		return Ok(orders);
 	}
 
-	// PUT update status
+	// CẬP NHẬT TRẠNG THÁI ĐƠN HÀNG
 	[HttpPut("{id:long}/status")]
 	public async Task<IActionResult> UpdateStatus(long id, [FromBody] UpdateOrderStatusRequest req)
 	{
 		var order = await _db.Orders.FindAsync(id);
-		if (order == null) return NotFound();
+		if (order == null)
+			return NotFound(new { message = "Không tìm thấy đơn hàng." });
 
 		if (string.IsNullOrWhiteSpace(req.Status))
-			return BadRequest("Status is required.");
+			return BadRequest("Trạng thái đơn hàng là bắt buộc.");
 
 		order.Status = req.Status.Trim();
 		await _db.SaveChangesAsync();
 
-		return Ok(order);
+		return Ok(new
+		{
+			message = "Cập nhật trạng thái đơn hàng thành công.",
+			data = order
+		});
 	}
 }

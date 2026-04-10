@@ -1,5 +1,21 @@
 import React, { useState } from "react";
 import MainLayout from "../layouts/MainLayout";
+import { contactService } from "../services/contactService";
+
+const getErrorMessage = (ex, fallback) => {
+  const data = ex?.response?.data;
+
+  if (typeof data === "string") return data;
+  if (data?.message) return data.message;
+  if (data?.title) return data.title;
+
+  if (data?.errors) {
+    const firstError = Object.values(data.errors)?.flat?.()[0];
+    if (firstError) return firstError;
+  }
+
+  return fallback;
+};
 
 export default function ContactPage() {
   const [form, setForm] = useState({
@@ -41,9 +57,13 @@ export default function ContactPage() {
     try {
       setLoading(true);
 
-      // Tạm thời chỉ hiển thị thông báo thành công ở frontend.
-      // Khi bạn có API backend, thay đoạn này bằng gọi API thật.
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      await contactService.send({
+        fullName: form.fullName.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+        subject: form.subject.trim(),
+        message: form.message.trim(),
+      });
 
       setSuccess("Gửi liên hệ thành công. SouVN sẽ phản hồi bạn sớm nhất có thể.");
       setForm({
@@ -53,8 +73,8 @@ export default function ContactPage() {
         subject: "",
         message: "",
       });
-    } catch {
-      setErr("Gửi liên hệ thất bại.");
+    } catch (ex) {
+      setErr(getErrorMessage(ex, "Gửi liên hệ thất bại."));
     } finally {
       setLoading(false);
     }
@@ -62,47 +82,73 @@ export default function ContactPage() {
 
   return (
     <MainLayout>
-      <section className="section">
-        <div className="container" data-aos="fade-up">
-          <div className="text-center mb-5">
-            <span
-              style={{
-                display: "inline-block",
-                padding: "6px 14px",
-                borderRadius: 999,
-                background: "rgba(13,110,253,0.12)",
-                color: "#0d6efd",
-                fontSize: 14,
-                fontWeight: 600,
-                marginBottom: 16,
-              }}
-            >
-              Liên hệ với SouVN
-            </span>
+<section
+  className="section"
+  style={{
+    background:
+      "radial-gradient(circle at top center, rgba(56,189,248,0.10), transparent 25%), linear-gradient(180deg, #04131f 0%, #071a29 60%, #0a1f31 100%)",
+    paddingTop: 50,
+    paddingBottom: 60,
+  }}
+>
+  <div className="container" data-aos="fade-up">
+    <div
+      className="text-center mb-5"
+      style={{
+        paddingTop: 20,
+      }}
+    >
+      {/* Badge */}
+      <span
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 8,
+          padding: "10px 20px",
+          borderRadius: 999,
+          background: "rgba(56,189,248,0.12)",
+          color: "#38bdf8",
+          fontSize: 15,
+          fontWeight: 700,
+          marginBottom: 26,
+          border: "1px solid rgba(56,189,248,0.18)",
+          boxShadow: "0 10px 30px rgba(13,110,253,0.15)",
+        }}
+      >
+        <i className="bi bi-chat-dots-fill"></i>
+        Liên hệ với SouVN
+      </span>
 
-            <h2
-              style={{
-                fontWeight: 700,
-                marginBottom: 14,
-                color: "#0f172a",
-              }}
-            >
-              Chúng tôi luôn sẵn sàng hỗ trợ bạn
-            </h2>
+      {/* Title */}
+      <h2
+        style={{
+          fontWeight: 800,
+          marginBottom: 20,
+          color: "#f8fafc",
+          fontSize: "clamp(34px, 5vw, 60px)",
+          lineHeight: 1.2,
+          letterSpacing: "-0.02em",
+          textShadow: "0 10px 30px rgba(0,0,0,0.35)",
+        }}
+      >
+        Chúng tôi luôn sẵn sàng hỗ trợ bạn
+      </h2>
 
-            <p
-              style={{
-                maxWidth: 760,
-                margin: "0 auto",
-                color: "#64748b",
-                lineHeight: 1.8,
-              }}
-            >
-              Hãy liên hệ với SouVN nếu bạn cần tư vấn sản phẩm lưu niệm, hỗ trợ
-              đơn hàng, hợp tác kinh doanh hoặc giải đáp các thắc mắc trong quá
-              trình mua sắm.
-            </p>
-          </div>
+      {/* Description */}
+      <p
+        style={{
+          maxWidth: 820,
+          margin: "0 auto",
+          color: "rgba(226,232,240,0.85)",
+          lineHeight: 1.9,
+          fontSize: 18,
+        }}
+      >
+        Hãy liên hệ với SouVN nếu bạn cần tư vấn sản phẩm lưu niệm, hỗ trợ đơn
+        hàng, hợp tác kinh doanh hoặc giải đáp các thắc mắc trong quá trình mua
+        sắm.
+      </p>
+    </div>
 
           <div className="row g-4">
             <div className="col-lg-5">
@@ -134,7 +180,7 @@ export default function ContactPage() {
                       Địa chỉ
                     </div>
                     <div style={{ color: "rgba(255,255,255,0.85)" }}>
-                      Hải Phòng, Việt Nam
+                      Hà Nội, Việt Nam
                     </div>
                   </div>
 
@@ -411,7 +457,7 @@ export default function ContactPage() {
             >
               <iframe
                 title="SouVN Map"
-                src="https://www.google.com/maps?q=Hai%20Phong%2C%20Viet%20Nam&z=13&output=embed"
+                src="https://www.google.com/maps?q=Ha%20Noi%2C%20Viet%20Nam&z=13&output=embed"
                 width="100%"
                 height="360"
                 style={{ border: 0, borderRadius: 18 }}

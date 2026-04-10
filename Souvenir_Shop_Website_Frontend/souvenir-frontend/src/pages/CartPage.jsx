@@ -38,6 +38,34 @@ const getErrorMessage = (ex, fallback) => {
   return fallback;
 };
 
+const glassCard = {
+  border: "1px solid rgba(255,255,255,0.08)",
+  background: "rgba(255,255,255,0.03)",
+  borderRadius: 24,
+  boxShadow: "0 18px 40px rgba(0,0,0,0.14)",
+  backdropFilter: "blur(6px)",
+};
+
+const whiteCard = {
+  background: "#fff",
+  borderRadius: 24,
+  boxShadow: "0 16px 38px rgba(0,0,0,0.10)",
+};
+
+const blockTitleStyle = {
+  color: "#0f172a",
+  fontWeight: 800,
+  marginBottom: 16,
+};
+
+const inputStyle = {
+  height: 48,
+  borderRadius: 14,
+  color: "#111827",
+  border: "1px solid #e2e8f0",
+  boxShadow: "none",
+};
+
 export default function CartPage() {
   const nav = useNavigate();
 
@@ -194,44 +222,146 @@ export default function CartPage() {
 
   return (
     <MainLayout>
-      <section className="section">
+      <section
+        className="section"
+        style={{
+          background:
+            "radial-gradient(circle at top center, rgba(56,189,248,0.10), transparent 24%), linear-gradient(180deg, #04131f 0%, #071a29 60%, #0a1f31 100%)",
+          paddingTop: 50,
+          paddingBottom: 60,
+        }}
+      >
         <div className="container" data-aos="fade-up">
-          <div className="section-title">
-            <h2>Giỏ hàng của bạn</h2>
-            <p>
-              Kiểm tra sản phẩm đã chọn, cập nhật số lượng, áp dụng mã giảm giá
-              và tiến hành đặt hàng.
+          <div
+            className="text-center mb-5"
+            style={{
+              paddingTop: 18,
+            }}
+          >
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "10px 20px",
+                borderRadius: 999,
+                background: "rgba(56,189,248,0.12)",
+                color: "#38bdf8",
+                fontSize: 15,
+                fontWeight: 700,
+                marginBottom: 24,
+                border: "1px solid rgba(56,189,248,0.18)",
+                boxShadow: "0 10px 30px rgba(13,110,253,0.15)",
+              }}
+            >
+              <i className="bi bi-cart-check-fill"></i>
+              Giỏ hàng SouVN
+            </span>
+
+            <h2
+              style={{
+                fontWeight: 800,
+                marginBottom: 20,
+                color: "#f8fafc",
+                fontSize: "clamp(34px, 5vw, 58px)",
+                lineHeight: 1.2,
+                letterSpacing: "-0.02em",
+                textShadow: "0 10px 30px rgba(0,0,0,0.35)",
+              }}
+            >
+              Kiểm tra và hoàn tất đơn hàng của bạn
+            </h2>
+
+            <p
+              style={{
+                maxWidth: 860,
+                margin: "0 auto",
+                color: "rgba(226,232,240,0.86)",
+                lineHeight: 1.9,
+                fontSize: 18,
+              }}
+            >
+              Xem lại sản phẩm đã chọn, cập nhật số lượng, áp dụng mã giảm giá và
+              tiến hành đặt hàng một cách nhanh chóng.
             </p>
           </div>
 
-          {err && <div className="alert alert-danger">{err}</div>}
-          {msg && <div className="alert alert-success">{msg}</div>}
+          {err && (
+            <div
+              className="alert mb-4"
+              style={{
+                background: "#fef2f2",
+                color: "#b91c1c",
+                border: "1px solid #fecaca",
+                borderRadius: 16,
+              }}
+            >
+              {err}
+            </div>
+          )}
+
+          {msg && (
+            <div
+              className="alert mb-4"
+              style={{
+                background: "#ecfdf5",
+                color: "#047857",
+                border: "1px solid #a7f3d0",
+                borderRadius: 16,
+              }}
+            >
+              {msg}
+            </div>
+          )}
 
           {loading ? (
-            <div className="text-center py-5">
+            <div
+              className="text-center py-5"
+              style={{
+                ...glassCard,
+                padding: 40,
+              }}
+            >
               <div className="spinner-border text-info" role="status"></div>
-              <p className="mt-3 mb-0">Đang tải giỏ hàng...</p>
+              <p className="mt-3 mb-0" style={{ color: "#cbd5e1" }}>
+                Đang tải giỏ hàng...
+              </p>
             </div>
           ) : (cart.items || []).length === 0 ? (
             <div
               style={{
-                background: "#fff",
-                borderRadius: 24,
-                padding: 36,
-                boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
+                ...whiteCard,
+                padding: 40,
                 textAlign: "center",
               }}
             >
-              <h4 style={{ color: "#0f172a", fontWeight: 700 }}>
+              <div
+                style={{
+                  width: 78,
+                  height: 78,
+                  borderRadius: "50%",
+                  margin: "0 auto 18px auto",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: "rgba(13,110,253,0.10)",
+                  color: "#0d6efd",
+                  fontSize: 30,
+                }}
+              >
+                <i className="bi bi-cart-x"></i>
+              </div>
+
+              <h4 style={{ color: "#0f172a", fontWeight: 800 }}>
                 Giỏ hàng đang trống
               </h4>
-              <p style={{ color: "#64748b" }}>
+              <p style={{ color: "#64748b", marginBottom: 20 }}>
                 Bạn chưa thêm sản phẩm nào vào giỏ hàng.
               </p>
               <Link
                 to="/products"
                 className="btn btn-primary"
-                style={{ borderRadius: 12, padding: "10px 22px" }}
+                style={{ borderRadius: 14, padding: "11px 24px", fontWeight: 700 }}
               >
                 Tiếp tục mua sắm
               </Link>
@@ -244,10 +374,8 @@ export default function CartPage() {
                     <div
                       key={it.id}
                       style={{
-                        background: "#fff",
-                        borderRadius: 22,
+                        ...whiteCard,
                         padding: 20,
-                        boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
                       }}
                     >
                       <div className="row g-3 align-items-center">
@@ -261,6 +389,7 @@ export default function CartPage() {
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
+                              border: "1px solid #e2e8f0",
                             }}
                           >
                             <img
@@ -282,8 +411,8 @@ export default function CartPage() {
                           <h5
                             style={{
                               color: "#020a16",
-                              fontWeight: 600,
-                              marginBottom: 4,
+                              fontWeight: 700,
+                              marginBottom: 6,
                             }}
                           >
                             {slugToTitle(it.productSlug)}
@@ -291,9 +420,10 @@ export default function CartPage() {
 
                           <div
                             style={{
-                              color: "#586072",
+                              color: "#2563eb",
                               fontWeight: 700,
-                              marginBottom: 8,
+                              marginBottom: 10,
+                              fontSize: 14,
                             }}
                           >
                             Biến thể: {it.variantName}
@@ -311,7 +441,7 @@ export default function CartPage() {
                         <div className="col-md-4">
                           <label
                             className="form-label"
-                            style={{ color: "#111827", fontWeight: 600 }}
+                            style={{ color: "#111827", fontWeight: 700 }}
                           >
                             Số lượng
                           </label>
@@ -320,7 +450,7 @@ export default function CartPage() {
                             <button
                               type="button"
                               className="btn btn-outline-secondary"
-                              style={{ borderRadius: 10 }}
+                              style={{ borderRadius: 12, width: 42, height: 42 }}
                               onClick={() => updateQty(it.id, Number(it.quantity) - 1)}
                               disabled={Number(it.quantity) <= 1}
                             >
@@ -338,15 +468,16 @@ export default function CartPage() {
                               style={{
                                 width: 90,
                                 color: "#111827",
-                                borderRadius: 10,
+                                borderRadius: 12,
                                 textAlign: "center",
+                                height: 42,
                               }}
                             />
 
                             <button
                               type="button"
                               className="btn btn-outline-secondary"
-                              style={{ borderRadius: 10 }}
+                              style={{ borderRadius: 12, width: 42, height: 42 }}
                               onClick={() => updateQty(it.id, Number(it.quantity) + 1)}
                             >
                               +
@@ -356,8 +487,9 @@ export default function CartPage() {
                           <button
                             onClick={() => removeItem(it.id)}
                             className="btn btn-outline-danger btn-sm mt-3"
-                            style={{ borderRadius: 10 }}
+                            style={{ borderRadius: 12, fontWeight: 600 }}
                           >
+                            <i className="bi bi-trash3 me-2"></i>
                             Xóa sản phẩm
                           </button>
                         </div>
@@ -370,16 +502,12 @@ export default function CartPage() {
               <div className="col-lg-4">
                 <div
                   style={{
-                    background: "#fff",
-                    borderRadius: 24,
+                    ...whiteCard,
                     padding: 24,
-                    boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
                     marginBottom: 20,
                   }}
                 >
-                  <h4 style={{ color: "#0f172a", fontWeight: 700, marginBottom: 16 }}>
-                    Mã giảm giá
-                  </h4>
+                  <h4 style={blockTitleStyle}>Mã giảm giá</h4>
 
                   <div className="d-grid gap-3">
                     <input
@@ -387,14 +515,14 @@ export default function CartPage() {
                       placeholder="Nhập mã giảm giá"
                       value={couponCode}
                       onChange={(e) => setCouponCode(e.target.value)}
-                      style={{ height: 46, borderRadius: 12, color: "#111827" }}
+                      style={inputStyle}
                     />
 
                     <button
                       onClick={validateCoupon}
                       className="btn btn-outline-primary"
                       disabled={checkingCoupon}
-                      style={{ borderRadius: 12, height: 46 }}
+                      style={{ borderRadius: 14, height: 48, fontWeight: 700 }}
                     >
                       {checkingCoupon ? "Đang kiểm tra..." : "Áp dụng mã"}
                     </button>
@@ -408,6 +536,7 @@ export default function CartPage() {
                         borderRadius: 16,
                         padding: 16,
                         color: "#334155",
+                        border: "1px solid #e2e8f0",
                       }}
                     >
                       <div>
@@ -425,16 +554,12 @@ export default function CartPage() {
 
                 <div
                   style={{
-                    background: "#fff",
-                    borderRadius: 24,
+                    ...whiteCard,
                     padding: 24,
-                    boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
                     marginBottom: 20,
                   }}
                 >
-                  <h4 style={{ color: "#0f172a", fontWeight: 700, marginBottom: 16 }}>
-                    Địa chỉ giao hàng
-                  </h4>
+                  <h4 style={blockTitleStyle}>Địa chỉ giao hàng</h4>
 
                   {addresses.length === 0 ? (
                     <div
@@ -443,10 +568,11 @@ export default function CartPage() {
                         borderRadius: 16,
                         padding: 16,
                         color: "#475569",
+                        border: "1px solid #e2e8f0",
                       }}
                     >
                       Bạn chưa có địa chỉ giao hàng.{" "}
-                      <Link to="/account" style={{ fontWeight: 600 }}>
+                      <Link to="/account" style={{ fontWeight: 700 }}>
                         Thêm địa chỉ ngay
                       </Link>
                     </div>
@@ -455,7 +581,7 @@ export default function CartPage() {
                       className="form-select"
                       value={selectedAddressId}
                       onChange={(e) => setSelectedAddressId(e.target.value)}
-                      style={{ height: 48, borderRadius: 12, color: "#111827" }}
+                      style={inputStyle}
                     >
                       <option value="">Chọn địa chỉ giao hàng</option>
                       {addresses.map((addr) => (
@@ -473,15 +599,11 @@ export default function CartPage() {
 
                 <div
                   style={{
-                    background: "#fff",
-                    borderRadius: 24,
+                    ...whiteCard,
                     padding: 24,
-                    boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
                   }}
                 >
-                  <h4 style={{ color: "#0f172a", fontWeight: 700, marginBottom: 16 }}>
-                    Tóm tắt đơn hàng
-                  </h4>
+                  <h4 style={blockTitleStyle}>Tóm tắt đơn hàng</h4>
 
                   <div className="d-grid gap-2" style={{ color: "#334155" }}>
                     <div className="d-flex justify-content-between">
@@ -510,9 +632,10 @@ export default function CartPage() {
                     disabled={checkingOut || (cart.items || []).length === 0}
                     className="btn btn-primary w-100 mt-4"
                     style={{
-                      height: 48,
-                      borderRadius: 12,
-                      fontWeight: 600,
+                      height: 50,
+                      borderRadius: 14,
+                      fontWeight: 700,
+                      boxShadow: "0 12px 24px rgba(13,110,253,0.18)",
                     }}
                   >
                     {checkingOut ? "Đang tạo đơn..." : "Tiến hành thanh toán"}
@@ -522,9 +645,9 @@ export default function CartPage() {
                     to="/products"
                     className="btn btn-outline-secondary w-100 mt-3"
                     style={{
-                      height: 48,
-                      borderRadius: 12,
-                      fontWeight: 600,
+                      height: 50,
+                      borderRadius: 14,
+                      fontWeight: 700,
                       display: "inline-flex",
                       alignItems: "center",
                       justifyContent: "center",

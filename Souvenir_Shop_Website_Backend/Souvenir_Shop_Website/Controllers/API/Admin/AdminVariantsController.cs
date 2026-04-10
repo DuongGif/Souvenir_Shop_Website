@@ -20,7 +20,7 @@ public class AdminVariantsController : ControllerBase
 	{
 		var productExists = await _db.Products.AnyAsync(p => p.Id == productId);
 		if (!productExists)
-			return NotFound(new { message = "Product not found" });
+			return NotFound(new { message = "Không tìm thấy sản phẩm." });
 
 		var variants = await _db.ProductVariants
 			.Where(v => v.ProductId == productId)
@@ -55,7 +55,7 @@ public class AdminVariantsController : ControllerBase
 			.FirstOrDefaultAsync();
 
 		if (variant == null)
-			return NotFound(new { message = "Variant not found" });
+			return NotFound(new { message = "Không tìm thấy biến thể sản phẩm." });
 
 		return Ok(variant);
 	}
@@ -66,17 +66,17 @@ public class AdminVariantsController : ControllerBase
 	{
 		var product = await _db.Products.FindAsync(productId);
 		if (product == null)
-			return NotFound(new { message = "Product not found" });
+			return NotFound(new { message = "Không tìm thấy sản phẩm." });
 
 		if (string.IsNullOrWhiteSpace(dto.Sku))
-			return BadRequest(new { message = "SKU is required" });
+			return BadRequest(new { message = "Mã SKU là bắt buộc." });
 
 		if (string.IsNullOrWhiteSpace(dto.VariantName))
-			return BadRequest(new { message = "Variant name is required" });
+			return BadRequest(new { message = "Tên biến thể là bắt buộc." });
 
 		var skuExists = await _db.ProductVariants.AnyAsync(v => v.Sku == dto.Sku.Trim());
 		if (skuExists)
-			return BadRequest(new { message = "SKU already exists" });
+			return BadRequest(new { message = "Mã SKU đã tồn tại." });
 
 		var variant = new ProductVariant
 		{
@@ -112,19 +112,19 @@ public class AdminVariantsController : ControllerBase
 			.FirstOrDefaultAsync(v => v.ProductId == productId && v.Id == id);
 
 		if (variant == null)
-			return NotFound(new { message = "Variant not found" });
+			return NotFound(new { message = "Không tìm thấy biến thể sản phẩm." });
 
 		if (string.IsNullOrWhiteSpace(dto.Sku))
-			return BadRequest(new { message = "SKU is required" });
+			return BadRequest(new { message = "Mã SKU là bắt buộc." });
 
 		if (string.IsNullOrWhiteSpace(dto.VariantName))
-			return BadRequest(new { message = "Variant name is required" });
+			return BadRequest(new { message = "Tên biến thể là bắt buộc." });
 
 		var skuExists = await _db.ProductVariants
 			.AnyAsync(v => v.Id != id && v.Sku == dto.Sku.Trim());
 
 		if (skuExists)
-			return BadRequest(new { message = "SKU already exists" });
+			return BadRequest(new { message = "Mã SKU đã tồn tại." });
 
 		variant.Sku = dto.Sku.Trim();
 		variant.VariantName = dto.VariantName.Trim();
@@ -154,11 +154,11 @@ public class AdminVariantsController : ControllerBase
 			.FirstOrDefaultAsync(v => v.ProductId == productId && v.Id == id);
 
 		if (variant == null)
-			return NotFound(new { message = "Variant not found" });
+			return NotFound(new { message = "Không tìm thấy biến thể sản phẩm." });
 
 		_db.ProductVariants.Remove(variant);
 		await _db.SaveChangesAsync();
 
-		return Ok(new { message = "Deleted" });
+		return Ok(new { message = "Xóa biến thể thành công." });
 	}
 }

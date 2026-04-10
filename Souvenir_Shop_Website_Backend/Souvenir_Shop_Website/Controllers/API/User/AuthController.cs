@@ -28,16 +28,20 @@ public class AuthController : ControllerBase
 		_otpService = otpService;
 	}
 
+	// =======================
+	// ĐĂNG KÝ
+	// =======================
+
 	[HttpPost("register")]
 	public async Task<ActionResult<RegisterResponse>> Register([FromBody] RegisterRequest req)
 	{
 		if (string.IsNullOrWhiteSpace(req.Email) || string.IsNullOrWhiteSpace(req.Password))
-			return BadRequest("Email and Password are required.");
+			return BadRequest("Email và mật khẩu là bắt buộc.");
 
 		var email = OtpService.NormalizeEmail(req.Email);
 
 		var exists = await _db.Users.AnyAsync(x => x.Email.ToLower() == email);
-		if (exists) return BadRequest("Email already exists.");
+		if (exists) return BadRequest("Email đã tồn tại.");
 
 		var user = new AppUser
 		{
@@ -58,9 +62,13 @@ public class AuthController : ControllerBase
 			UserId = user.Id,
 			Email = user.Email,
 			FullName = user.FullName ?? "",
-			Message = "Register successful"
+			Message = "Đăng ký thành công."
 		});
 	}
+
+	// =======================
+	// ĐĂNG NHẬP
+	// =======================
 
 	[HttpPost("login")]
 	public async Task<ActionResult<LoginResponse>> Login([FromBody] LoginRequest req)
@@ -69,8 +77,8 @@ public class AuthController : ControllerBase
 		var password = req.Password ?? "";
 
 		var user = await _db.Users.FirstOrDefaultAsync(x => x.Email.ToLower() == email);
-		if (user == null) return Unauthorized("Sai email hoặc mật khẩu");
-		if (user.Status != "active") return Unauthorized("Người dùng đang bị khóa");
+		if (user == null) return Unauthorized("Sai email hoặc mật khẩu.");
+		if (user.Status != "active") return Unauthorized("Tài khoản đang bị khóa.");
 
 		bool ok;
 		try
@@ -79,25 +87,29 @@ public class AuthController : ControllerBase
 		}
 		catch
 		{
-			return Unauthorized("Sai email hoặc mật khẩu");
+			return Unauthorized("Sai email hoặc mật khẩu.");
 		}
 
-		if (!ok) return Unauthorized("Sai email hoặc mật khẩu");
+		if (!ok) return Unauthorized("Sai email hoặc mật khẩu.");
 
 		return Ok(BuildLoginResponse(user));
 	}
+
+	// =======================
+	// OTP ĐĂNG KÝ
+	// =======================
 
 	[HttpPost("register/send-otp")]
 	public async Task<IActionResult> SendRegisterOtp([FromBody] SendOtpRequest req)
 	{
 		if (string.IsNullOrWhiteSpace(req.Email))
-			return BadRequest("Email is required.");
+			return BadRequest("Email là bắt buộc.");
 
 		var email = OtpService.NormalizeEmail(req.Email);
 
 		var exists = await _db.Users.AnyAsync(x => x.Email.ToLower() == email);
 		if (exists)
-			return BadRequest("Email already exists.");
+			return BadRequest("Email đã tồn tại.");
 
 		var result = await _otpService.SendOtpAsync(
 			email,
@@ -115,19 +127,19 @@ public class AuthController : ControllerBase
 	public async Task<ActionResult<RegisterResponse>> VerifyRegisterOtp([FromBody] VerifyRegisterOtpRequest req)
 	{
 		if (string.IsNullOrWhiteSpace(req.Email))
-			return BadRequest("Mời nhập email");
+			return BadRequest("Vui lòng nhập email.");
 
 		if (string.IsNullOrWhiteSpace(req.Otp))
-			return BadRequest("Cần có mã OTP");
+			return BadRequest("Vui lòng nhập mã OTP.");
 
 		if (string.IsNullOrWhiteSpace(req.Password))
-			return BadRequest("Hãy nhập mật khẩu");
+			return BadRequest("Vui lòng nhập mật khẩu.");
 
 		var email = OtpService.NormalizeEmail(req.Email);
 
 		var exists = await _db.Users.AnyAsync(x => x.Email.ToLower() == email);
 		if (exists)
-			return BadRequest("Email đã tồn tại");
+			return BadRequest("Email đã tồn tại.");
 
 		var verify = await _otpService.VerifyOtpAsync(email, "register", req.Otp);
 		if (!verify.Ok || verify.Entity == null)
@@ -158,11 +170,15 @@ public class AuthController : ControllerBase
 		});
 	}
 
+	// =======================
+	// QUÊN MẬT KHẨU
+	// =======================
+
 	[HttpPost("forgot-password/send-otp")]
 	public async Task<IActionResult> SendForgotPasswordOtp([FromBody] SendOtpRequest req)
 	{
 		if (string.IsNullOrWhiteSpace(req.Email))
-			return BadRequest("Email is required.");
+			return BadRequest("Email là bắt buộc.");
 
 		var email = OtpService.NormalizeEmail(req.Email);
 
@@ -176,7 +192,7 @@ public class AuthController : ControllerBase
 			});
 		}
 
-		var result = await _otpService.SendOtpAsync(
+		await _otpService.SendOtpAsync(
 			email,
 			"reset_password",
 			"Mã OTP đặt lại mật khẩu SouVN",
@@ -192,13 +208,13 @@ public class AuthController : ControllerBase
 	public async Task<IActionResult> ResetPasswordWithOtp([FromBody] ResetPasswordWithOtpRequest req)
 	{
 		if (string.IsNullOrWhiteSpace(req.Email))
-			return BadRequest("Email is required.");
+			return BadRequest("Email là bắt buộc.");
 
 		if (string.IsNullOrWhiteSpace(req.Otp))
-			return BadRequest("OTP is required.");
+			return BadRequest("OTP là bắt buộc.");
 
 		if (string.IsNullOrWhiteSpace(req.NewPassword))
-			return BadRequest("NewPassword is required.");
+			return BadRequest("Mật khẩu mới là bắt buộc.");
 
 		var email = OtpService.NormalizeEmail(req.Email);
 
@@ -221,10 +237,14 @@ public class AuthController : ControllerBase
 		});
 	}
 
+	// =======================
+	// BUILD TOKEN
+	// =======================
+
 	private LoginResponse BuildLoginResponse(AppUser user)
 	{
 		if (user.Status != "active")
-			throw new InvalidOperationException("User is not active.");
+			throw new InvalidOperationException("Người dùng không hoạt động.");
 
 		var role = user.Role ?? "customer";
 		var (token, expiresAt) = _jwt.CreateToken(user.Id, user.Email, role);

@@ -164,7 +164,7 @@ export default function DetailProductPage() {
         ...rv,
       });
 
-      setMsg("Đánh giá đã được gửi và đang chờ duyệt.");
+      setMsg("Đánh giá đã được gửi thành công");
       setRv({ rating: 5, title: "", content: "" });
 
       try {

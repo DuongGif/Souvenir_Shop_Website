@@ -9,6 +9,16 @@ const emptyForm = {
   status: "active",
   isFeatured: false,
   imageUrls: [""],
+
+  // chỉ dùng khi tạo mới
+  firstVariant: {
+    sku: "",
+    variantName: "",
+    price: "",
+    weightGrams: "",
+    isActive: true,
+    initialStock: 0,
+  },
 };
 
 const API_ORIGIN = "https://localhost:7020";
@@ -95,6 +105,16 @@ export default function AdminProductsPage() {
         status: p.status || "active",
         isFeatured: !!p.isFeatured,
         imageUrls: imageUrls.length > 0 ? imageUrls : [""],
+
+        // giữ form này nhưng không dùng khi edit
+        firstVariant: {
+          sku: "",
+          variantName: "",
+          price: "",
+          weightGrams: "",
+          isActive: true,
+          initialStock: 0,
+        },
       });
 
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -149,12 +169,58 @@ export default function AdminProductsPage() {
     }
   };
 
+  const updateFirstVariantField = (field, value) => {
+    setForm((prev) => ({
+      ...prev,
+      firstVariant: {
+        ...prev.firstVariant,
+        [field]: value,
+      },
+    }));
+  };
+
+  const validateCreateVariant = () => {
+    const v = form.firstVariant;
+
+    if (!v.sku.trim()) {
+      setErr("SKU biến thể đầu tiên là bắt buộc");
+      return false;
+    }
+
+    if (!v.variantName.trim()) {
+      setErr("Tên biến thể đầu tiên là bắt buộc");
+      return false;
+    }
+
+    if (v.price !== "" && Number(v.price) < 0) {
+      setErr("Giá biến thể không hợp lệ");
+      return false;
+    }
+
+    if (v.weightGrams !== "" && Number(v.weightGrams) < 0) {
+      setErr("Khối lượng biến thể không hợp lệ");
+      return false;
+    }
+
+    if (v.initialStock === "" || Number(v.initialStock) < 0) {
+      setErr("Tồn kho ban đầu không hợp lệ");
+      return false;
+    }
+
+    return true;
+  };
+
   const save = async () => {
     setErr("");
     setMsg("");
 
     if (!form.slug.trim()) {
       setErr("Đường dẫn là bắt buộc");
+      return;
+    }
+
+    if (form.categoryId === "" || Number(form.categoryId) <= 0) {
+      setErr("Mã danh mục không hợp lệ");
       return;
     }
 
@@ -168,31 +234,48 @@ export default function AdminProductsPage() {
     try {
       setSaving(true);
 
-      const productPayload = {
-        slug: form.slug.trim(),
-        categoryId: form.categoryId === "" ? null : Number(form.categoryId),
-        basePrice: Number(form.basePrice),
-        status: form.status,
-        isFeatured: form.isFeatured,
-      };
-
       if (editingId) {
+        const productPayload = {
+          slug: form.slug.trim(),
+          categoryId: Number(form.categoryId),
+          basePrice: Number(form.basePrice),
+          status: form.status,
+          isFeatured: form.isFeatured,
+          images: cleanImageUrls,
+          variants: [],
+        };
+
         await adminProductsService.update(editingId, productPayload);
-
-        if (cleanImageUrls.length > 0) {
-          await adminProductsService.replaceImages(editingId, cleanImageUrls);
-        }
-
         setMsg(`Đã cập nhật sản phẩm #${editingId}`);
       } else {
-        const res = await adminProductsService.create(productPayload);
-        const createdProduct = res.data;
-        const newProductId = createdProduct?.id;
-
-        if (newProductId && cleanImageUrls.length > 0) {
-          await adminProductsService.addImages(newProductId, cleanImageUrls);
+        if (!validateCreateVariant()) {
+          setSaving(false);
+          return;
         }
 
+        const v = form.firstVariant;
+
+        const productPayload = {
+          slug: form.slug.trim(),
+          categoryId: Number(form.categoryId),
+          basePrice: Number(form.basePrice),
+          status: form.status,
+          isFeatured: form.isFeatured,
+          images: cleanImageUrls,
+          variants: [
+            {
+              sku: v.sku.trim(),
+              variantName: v.variantName.trim(),
+              price: v.price === "" ? Number(form.basePrice) : Number(v.price),
+              weightGrams:
+                v.weightGrams === "" ? null : Number(v.weightGrams),
+              isActive: !!v.isActive,
+              initialStock: Number(v.initialStock || 0),
+            },
+          ],
+        };
+
+        await adminProductsService.create(productPayload);
         setMsg(`Đã tạo sản phẩm ${productPayload.slug}`);
       }
 
@@ -256,7 +339,7 @@ export default function AdminProductsPage() {
             <div className="d-grid gap-3">
               <div>
                 <label className="form-label" style={labelStyle}>
-                  Tên
+                  Tên / Slug
                 </label>
                 <input
                   className="form-control"
@@ -283,7 +366,7 @@ export default function AdminProductsPage() {
 
               <div>
                 <label className="form-label" style={labelStyle}>
-                  Giá
+                  Giá cơ bản
                 </label>
                 <input
                   type="number"
@@ -330,6 +413,111 @@ export default function AdminProductsPage() {
                   Sản phẩm nổi bật
                 </label>
               </div>
+
+              {!editingId && (
+                <div
+                  style={{
+                    border: "1px solid #e5e7eb",
+                    borderRadius: 16,
+                    padding: 16,
+                    background: "#f8fafc",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontWeight: 700,
+                      color: "#0f172a",
+                      marginBottom: 12,
+                    }}
+                  >
+                    Biến thể đầu tiên khi tạo mới
+                  </div>
+
+                  <div className="d-grid gap-3">
+                    <div>
+                      <label className="form-label" style={labelStyle}>
+                        SKU biến thể
+                      </label>
+                      <input
+                        className="form-control"
+                        value={form.firstVariant.sku}
+                        onChange={(e) =>
+                          updateFirstVariantField("sku", e.target.value)
+                        }
+                        style={inputStyle}
+                        placeholder="VD: SP-001-DEFAULT"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="form-label" style={labelStyle}>
+                        Tên biến thể
+                      </label>
+                      <input
+                        className="form-control"
+                        value={form.firstVariant.variantName}
+                        onChange={(e) =>
+                          updateFirstVariantField("variantName", e.target.value)
+                        }
+                        style={inputStyle}
+                        placeholder="VD: Mặc định / Đỏ / Size M"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="form-label" style={labelStyle}>
+                        Giá biến thể
+                      </label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        value={form.firstVariant.price}
+                        onChange={(e) =>
+                          updateFirstVariantField("price", e.target.value)
+                        }
+                        style={inputStyle}
+                        placeholder="Để trống sẽ lấy giá cơ bản"
+                      />
+                    </div>
+
+
+
+                    <div>
+                      <label className="form-label" style={labelStyle}>
+                        Tồn kho ban đầu
+                      </label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        value={form.firstVariant.initialStock}
+                        onChange={(e) =>
+                          updateFirstVariantField("initialStock", e.target.value)
+                        }
+                        style={inputStyle}
+                      />
+                    </div>
+
+                    <div className="form-check">
+                      <input
+                        id="firstVariantIsActive"
+                        type="checkbox"
+                        className="form-check-input"
+                        checked={form.firstVariant.isActive}
+                        onChange={(e) =>
+                          updateFirstVariantField("isActive", e.target.checked)
+                        }
+                      />
+                      <label
+                        htmlFor="firstVariantIsActive"
+                        className="form-check-label"
+                        style={labelStyle}
+                      >
+                        Biến thể đang hoạt động
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="form-label" style={labelStyle}>

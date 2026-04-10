@@ -66,14 +66,19 @@ public class CartController : ControllerBase
 	[HttpPost("items")]
 	public async Task<IActionResult> AddItem([FromBody] AddCartItemRequest req)
 	{
-		if (req.Quantity <= 0) return BadRequest("Quantity must be > 0");
+		if (req.Quantity <= 0)
+			return BadRequest("Số lượng phải lớn hơn 0.");
 
 		var userId = CurrentUser.GetUserId(User);
 
 		var cart = await _db.Carts.FirstOrDefaultAsync(c => c.UserId == userId);
 		if (cart == null)
 		{
-			cart = new Cart { UserId = userId, CreatedAt = DateTime.Now };
+			cart = new Cart
+			{
+				UserId = userId,
+				CreatedAt = DateTime.Now
+			};
 			_db.Carts.Add(cart);
 			await _db.SaveChangesAsync();
 		}
@@ -82,8 +87,11 @@ public class CartController : ControllerBase
 			.FirstOrDefaultAsync(x => x.CartId == cart.Id && x.VariantId == req.VariantId);
 
 		if (existing != null)
+		{
 			existing.Quantity += req.Quantity;
+		}
 		else
+		{
 			_db.CartItems.Add(new CartItem
 			{
 				CartId = cart.Id,
@@ -91,29 +99,35 @@ public class CartController : ControllerBase
 				Quantity = req.Quantity,
 				CreatedAt = DateTime.Now
 			});
+		}
 
 		await _db.SaveChangesAsync();
-		return Ok(new { message = "Added to cart" });
+		return Ok(new { message = "Đã thêm sản phẩm vào giỏ hàng." });
 	}
 
 	// PUT /api/cart/items/{itemId}
 	[HttpPut("items/{itemId:long}")]
 	public async Task<IActionResult> UpdateItem(long itemId, [FromBody] UpdateCartItemRequest req)
 	{
-		if (req.Quantity <= 0) return BadRequest("Quantity must be > 0");
+		if (req.Quantity <= 0)
+			return BadRequest("Số lượng phải lớn hơn 0.");
 
 		var userId = CurrentUser.GetUserId(User);
 
-		var item = await (from ci in _db.CartItems
-						  join c in _db.Carts on ci.CartId equals c.Id
-						  where ci.Id == itemId && c.UserId == userId
-						  select ci).FirstOrDefaultAsync();
+		var item = await (
+			from ci in _db.CartItems
+			join c in _db.Carts on ci.CartId equals c.Id
+			where ci.Id == itemId && c.UserId == userId
+			select ci
+		).FirstOrDefaultAsync();
 
-		if (item == null) return NotFound();
+		if (item == null)
+			return NotFound("Không tìm thấy sản phẩm trong giỏ hàng.");
 
 		item.Quantity = req.Quantity;
 		await _db.SaveChangesAsync();
-		return Ok(new { message = "Updated" });
+
+		return Ok(new { message = "Cập nhật giỏ hàng thành công." });
 	}
 
 	// DELETE /api/cart/items/{itemId}
@@ -122,15 +136,19 @@ public class CartController : ControllerBase
 	{
 		var userId = CurrentUser.GetUserId(User);
 
-		var item = await (from ci in _db.CartItems
-						  join c in _db.Carts on ci.CartId equals c.Id
-						  where ci.Id == itemId && c.UserId == userId
-						  select ci).FirstOrDefaultAsync();
+		var item = await (
+			from ci in _db.CartItems
+			join c in _db.Carts on ci.CartId equals c.Id
+			where ci.Id == itemId && c.UserId == userId
+			select ci
+		).FirstOrDefaultAsync();
 
-		if (item == null) return NotFound();
+		if (item == null)
+			return NotFound("Không tìm thấy sản phẩm trong giỏ hàng.");
 
 		_db.CartItems.Remove(item);
 		await _db.SaveChangesAsync();
-		return Ok(new { message = "Deleted" });
+
+		return Ok(new { message = "Xóa sản phẩm khỏi giỏ hàng thành công." });
 	}
 }

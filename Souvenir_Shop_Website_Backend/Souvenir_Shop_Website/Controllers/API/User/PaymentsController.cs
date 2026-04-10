@@ -32,33 +32,33 @@ public class PaymentsController : ControllerBase
 	private long CurrentUserId()
 		=> long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-	// POST /api/payments
+	// TẠO THANH TOÁN
 	[HttpPost]
 	public async Task<ActionResult<PaymentDto>> CreatePayment([FromBody] CreatePaymentRequest req)
 	{
 		if (string.IsNullOrWhiteSpace(req.OrderCode))
-			return BadRequest("OrderCode is required.");
+			return BadRequest("Mã đơn hàng là bắt buộc.");
 
 		if (string.IsNullOrWhiteSpace(req.PaymentMethod))
-			return BadRequest("PaymentMethod is required.");
+			return BadRequest("Phương thức thanh toán là bắt buộc.");
 
 		var userId = CurrentUserId();
 		var method = req.PaymentMethod.Trim().ToLowerInvariant();
 
 		var allowed = new HashSet<string> { "cod", "bank_transfer", "momo", "vnpay" };
 		if (!allowed.Contains(method))
-			return BadRequest("PaymentMethod must be one of: cod, bank_transfer, momo, vnpay.");
+			return BadRequest("Phương thức phải là: cod, bank_transfer, momo, vnpay.");
 
 		var order = await _db.Orders
 			.FirstOrDefaultAsync(o => o.OrderCode == req.OrderCode && o.UserId == userId);
 
 		if (order == null)
-			return NotFound("Order not found.");
+			return NotFound("Không tìm thấy đơn hàng.");
 
 		if (order.Status == "canceled" || order.Status == "completed")
-			return BadRequest("Cannot create payment for canceled/completed order.");
+			return BadRequest("Không thể thanh toán đơn đã hủy hoặc hoàn thành.");
 
-		// Nếu đã paid rồi thì trả payment paid
+		// Nếu đã thanh toán
 		var existingPaid = await _db.Payments
 			.OrderByDescending(p => p.Id)
 			.FirstOrDefaultAsync(p => p.OrderId == order.Id && p.Status == "paid");
@@ -66,7 +66,7 @@ public class PaymentsController : ControllerBase
 		if (existingPaid != null)
 			return Ok(ToDto(existingPaid));
 
-		// Nếu đã có pending cùng method thì trả lại luôn
+		// Nếu đang chờ thanh toán cùng phương thức
 		var existingPendingSameMethod = await _db.Payments
 			.OrderByDescending(p => p.Id)
 			.FirstOrDefaultAsync(p => p.OrderId == order.Id && p.Status == "pending" && p.PaymentMethod == method);
@@ -88,12 +88,11 @@ public class PaymentsController : ControllerBase
 			payment.GatewayResponse = JsonSerializer.Serialize(new
 			{
 				type = "cod",
-				note = "Pay on delivery"
+				note = "Thanh toán khi nhận hàng"
 			});
 		}
 		else if (method == "bank_transfer")
 		{
-			// Nội dung chuyển khoản
 			var transferContent = $"PAY{order.OrderCode}";
 			if (transferContent.Length > 50)
 				transferContent = $"DH{order.Id}";
@@ -116,12 +115,12 @@ public class PaymentsController : ControllerBase
 				accountNumber = _bankOptions.AccountNo,
 				transferContent = transferContent,
 				paymentUrl = qrUrl,
-				note = "Transfer with exact content above"
+				note = "Chuyển khoản đúng nội dung để hệ thống xác nhận"
 			});
 		}
 		else
 		{
-			// momo / vnpay tạm mock
+			// mock momo/vnpay
 			var fakeTxn = Guid.NewGuid().ToString("N")[..12].ToUpper();
 			payment.TransactionCode = $"{method.ToUpper()}_{fakeTxn}";
 			payment.GatewayResponse = JsonSerializer.Serialize(new
@@ -129,7 +128,7 @@ public class PaymentsController : ControllerBase
 				type = method,
 				transactionCode = payment.TransactionCode,
 				paymentUrl = $"https://mock-gateway.local/pay?orderCode={order.OrderCode}&txn={payment.TransactionCode}",
-				note = "Mock payment URL - use confirm endpoint to mark paid"
+				note = "Link thanh toán giả lập - dùng API confirm để xác nhận"
 			});
 		}
 
@@ -139,14 +138,12 @@ public class PaymentsController : ControllerBase
 		return Ok(ToDto(payment));
 	}
 
-	// POST /api/payments/confirm
-	// Lưu ý: endpoint này chỉ phù hợp cho mock/demo.
-	// Với bank transfer thật, nên xác nhận bằng admin/webhook thay vì để user tự confirm.
+	// XÁC NHẬN THANH TOÁN (demo)
 	[HttpPost("confirm")]
 	public async Task<IActionResult> ConfirmPayment([FromBody] ConfirmPaymentRequest req)
 	{
 		if (string.IsNullOrWhiteSpace(req.OrderCode))
-			return BadRequest("OrderCode is required.");
+			return BadRequest("Mã đơn hàng là bắt buộc.");
 
 		var userId = CurrentUserId();
 
@@ -154,17 +151,17 @@ public class PaymentsController : ControllerBase
 			.FirstOrDefaultAsync(o => o.OrderCode == req.OrderCode && o.UserId == userId);
 
 		if (order == null)
-			return NotFound("Order not found.");
+			return NotFound("Không tìm thấy đơn hàng.");
 
 		var payment = await _db.Payments
 			.OrderByDescending(p => p.Id)
 			.FirstOrDefaultAsync(p => p.OrderId == order.Id);
 
 		if (payment == null)
-			return NotFound("Payment not found.");
+			return NotFound("Không tìm thấy thanh toán.");
 
 		if (payment.Status == "paid")
-			return Ok(new { message = "Already paid." });
+			return Ok(new { message = "Đơn hàng đã được thanh toán trước đó." });
 
 		payment.Status = "paid";
 		payment.PaidAt = DateTime.UtcNow;
@@ -176,12 +173,12 @@ public class PaymentsController : ControllerBase
 
 		return Ok(new
 		{
-			message = "Payment confirmed.",
+			message = "Xác nhận thanh toán thành công.",
 			paidAt = payment.PaidAt
 		});
 	}
 
-	// GET /api/payments/by-order-code/{orderCode}
+	// LẤY THANH TOÁN THEO MÃ ĐƠN
 	[HttpGet("by-order-code/{orderCode}")]
 	public async Task<ActionResult<PaymentDto>> GetLatestPaymentByOrderCode(string orderCode)
 	{
@@ -191,7 +188,7 @@ public class PaymentsController : ControllerBase
 			.FirstOrDefaultAsync(o => o.OrderCode == orderCode && o.UserId == userId);
 
 		if (order == null)
-			return NotFound("Order not found.");
+			return NotFound("Không tìm thấy đơn hàng.");
 
 		var payment = await _db.Payments.AsNoTracking()
 			.Where(p => p.OrderId == order.Id)
@@ -199,7 +196,7 @@ public class PaymentsController : ControllerBase
 			.FirstOrDefaultAsync();
 
 		if (payment == null)
-			return NotFound("Payment not found.");
+			return NotFound("Không tìm thấy thanh toán.");
 
 		return Ok(ToDto(payment));
 	}
@@ -240,7 +237,7 @@ public class PaymentsController : ControllerBase
 			}
 			catch
 			{
-				// ignore parse lỗi
+				// bỏ qua lỗi parse
 			}
 		}
 
