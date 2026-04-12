@@ -38,32 +38,25 @@ const getErrorMessage = (ex, fallback) => {
   return fallback;
 };
 
-const glassCard = {
-  border: "1px solid rgba(255,255,255,0.08)",
-  background: "rgba(255,255,255,0.03)",
-  borderRadius: 24,
-  boxShadow: "0 18px 40px rgba(0,0,0,0.14)",
-  backdropFilter: "blur(6px)",
-};
-
-const whiteCard = {
-  background: "#fff",
-  borderRadius: 24,
-  boxShadow: "0 16px 38px rgba(0,0,0,0.10)",
-};
-
-const blockTitleStyle = {
-  color: "#0f172a",
-  fontWeight: 800,
-  marginBottom: 16,
+const pageCard = {
+  background: "#ffffff",
+  borderRadius: 20,
+  boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
 };
 
 const inputStyle = {
-  height: 48,
-  borderRadius: 14,
+  height: 44,
+  borderRadius: 10,
   color: "#111827",
-  border: "1px solid #e2e8f0",
+  border: "1px solid #e5e7eb",
   boxShadow: "none",
+};
+
+const sectionTitle = {
+  color: "#111827",
+  fontWeight: 800,
+  marginBottom: 16,
+  fontSize: 20,
 };
 
 export default function CartPage() {
@@ -225,65 +218,57 @@ export default function CartPage() {
       <section
         className="section"
         style={{
-          background:
-            "radial-gradient(circle at top center, rgba(56,189,248,0.10), transparent 24%), linear-gradient(180deg, #04131f 0%, #071a29 60%, #0a1f31 100%)",
-          paddingTop: 50,
-          paddingBottom: 60,
+          background: "#f5f5f5",
+          minHeight: "100vh",
+          paddingTop: 32,
+          paddingBottom: 48,
         }}
       >
-        <div className="container" data-aos="fade-up">
+        <div className="container">
           <div
-            className="text-center mb-5"
             style={{
-              paddingTop: 18,
+              ...pageCard,
+              padding: 24,
+              marginBottom: 20,
+              borderLeft: "5px solid #ee4d2d",
             }}
           >
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "10px 20px",
-                borderRadius: 999,
-                background: "rgba(56,189,248,0.12)",
-                color: "#38bdf8",
-                fontSize: 15,
-                fontWeight: 700,
-                marginBottom: 24,
-                border: "1px solid rgba(56,189,248,0.18)",
-                boxShadow: "0 10px 30px rgba(13,110,253,0.15)",
-              }}
-            >
-              <i className="bi bi-cart-check-fill"></i>
-              Giỏ hàng SouVN
-            </span>
+            <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
+              <div>
+                <div
+                  style={{
+                    fontSize: 14,
+                    color: "#6b7280",
+                    marginBottom: 8,
+                    fontWeight: 600,
+                  }}
+                >
+                  Giỏ hàng SouVN
+                </div>
 
-            <h2
-              style={{
-                fontWeight: 800,
-                marginBottom: 20,
-                color: "#f8fafc",
-                fontSize: "clamp(34px, 5vw, 58px)",
-                lineHeight: 1.2,
-                letterSpacing: "-0.02em",
-                textShadow: "0 10px 30px rgba(0,0,0,0.35)",
-              }}
-            >
-              Kiểm tra và hoàn tất đơn hàng của bạn
-            </h2>
+                <h2
+                  style={{
+                    margin: 0,
+                    fontWeight: 800,
+                    color: "#111827",
+                    fontSize: "clamp(24px, 4vw, 34px)",
+                  }}
+                >
+                  Giỏ hàng của bạn
+                </h2>
+              </div>
 
-            <p
-              style={{
-                maxWidth: 860,
-                margin: "0 auto",
-                color: "rgba(226,232,240,0.86)",
-                lineHeight: 1.9,
-                fontSize: 18,
-              }}
-            >
-              Xem lại sản phẩm đã chọn, cập nhật số lượng, áp dụng mã giảm giá và
-              tiến hành đặt hàng một cách nhanh chóng.
-            </p>
+              <div
+                style={{
+                  fontSize: 14,
+                  color: "#6b7280",
+                  fontWeight: 600,
+                }}
+              >
+                Số sản phẩm:{" "}
+                <span style={{ color: "#ee4d2d" }}>{cart.items?.length || 0}</span>
+              </div>
+            </div>
           </div>
 
           {err && (
@@ -293,7 +278,7 @@ export default function CartPage() {
                 background: "#fef2f2",
                 color: "#b91c1c",
                 border: "1px solid #fecaca",
-                borderRadius: 16,
+                borderRadius: 12,
               }}
             >
               {err}
@@ -307,7 +292,7 @@ export default function CartPage() {
                 background: "#ecfdf5",
                 color: "#047857",
                 border: "1px solid #a7f3d0",
-                borderRadius: 16,
+                borderRadius: 12,
               }}
             >
               {msg}
@@ -315,201 +300,255 @@ export default function CartPage() {
           )}
 
           {loading ? (
-            <div
-              className="text-center py-5"
-              style={{
-                ...glassCard,
-                padding: 40,
-              }}
-            >
-              <div className="spinner-border text-info" role="status"></div>
-              <p className="mt-3 mb-0" style={{ color: "#cbd5e1" }}>
+            <div style={{ ...pageCard, padding: 40 }} className="text-center">
+              <div className="spinner-border text-danger" role="status"></div>
+              <p className="mt-3 mb-0" style={{ color: "#6b7280" }}>
                 Đang tải giỏ hàng...
               </p>
             </div>
           ) : (cart.items || []).length === 0 ? (
             <div
               style={{
-                ...whiteCard,
+                ...pageCard,
                 padding: 40,
                 textAlign: "center",
               }}
             >
               <div
                 style={{
-                  width: 78,
-                  height: 78,
-                  borderRadius: "50%",
-                  margin: "0 auto 18px auto",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: "rgba(13,110,253,0.10)",
-                  color: "#0d6efd",
-                  fontSize: 30,
+                  fontSize: 54,
+                  color: "#d1d5db",
+                  marginBottom: 12,
                 }}
               >
                 <i className="bi bi-cart-x"></i>
               </div>
 
-              <h4 style={{ color: "#0f172a", fontWeight: 800 }}>
+              <h4 style={{ color: "#111827", fontWeight: 700 }}>
                 Giỏ hàng đang trống
               </h4>
-              <p style={{ color: "#64748b", marginBottom: 20 }}>
+              <p style={{ color: "#6b7280", marginBottom: 20 }}>
                 Bạn chưa thêm sản phẩm nào vào giỏ hàng.
               </p>
+
               <Link
                 to="/products"
-                className="btn btn-primary"
-                style={{ borderRadius: 14, padding: "11px 24px", fontWeight: 700 }}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  padding: "12px 18px",
+                  borderRadius: 10,
+                  border: "none",
+                  background: "#ee4d2d",
+                  color: "#fff",
+                  fontWeight: 700,
+                  textDecoration: "none",
+                }}
               >
+                <i className="bi bi-bag"></i>
                 Tiếp tục mua sắm
               </Link>
             </div>
           ) : (
-            <div className="row g-4">
+            <div className="row g-4 align-items-start">
               <div className="col-lg-8">
-                <div className="d-grid gap-3">
-                  {(cart.items || []).map((it) => (
-                    <div
-                      key={it.id}
-                      style={{
-                        ...whiteCard,
-                        padding: 20,
-                      }}
-                    >
-                      <div className="row g-3 align-items-center">
-                        <div className="col-md-3">
-                          <div
-                            style={{
-                              background: "#f8fafc",
-                              borderRadius: 18,
-                              overflow: "hidden",
-                              minHeight: 140,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              border: "1px solid #e2e8f0",
-                            }}
-                          >
-                            <img
-                              src={getImageSrc(it.imageUrl)}
-                              alt={it.variantName}
-                              style={{
-                                width: "100%",
-                                height: 140,
-                                objectFit: "cover",
-                              }}
-                              onError={(e) => {
-                                e.currentTarget.src = "/no-image.png";
-                              }}
-                            />
-                          </div>
-                        </div>
+                <div
+                  style={{
+                    ...pageCard,
+                    padding: 0,
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: "16px 20px",
+                      borderBottom: "1px solid #f1f5f9",
+                      background: "#fff7ed",
+                      color: "#9a3412",
+                      fontWeight: 800,
+                    }}
+                  >
+                    Sản phẩm đã chọn
+                  </div>
 
-                        <div className="col-md-5">
-                          <h5
-                            style={{
-                              color: "#020a16",
-                              fontWeight: 700,
-                              marginBottom: 6,
-                            }}
-                          >
-                            {slugToTitle(it.productSlug)}
-                          </h5>
+                  <div className="d-grid">
+                    {(cart.items || []).map((it, index) => (
+                      <div
+                        key={it.id}
+                        style={{
+                          padding: 20,
+                          borderBottom:
+                            index !== cart.items.length - 1
+                              ? "1px solid #f1f5f9"
+                              : "none",
+                        }}
+                      >
+                       <div className="row g-3 align-items-center">
+  <div className="col-md-3 col-lg-2">
+    <div
+      style={{
+        background: "#f9fafb",
+        borderRadius: 14,
+        overflow: "hidden",
+        border: "1px solid #e5e7eb",
+      }}
+    >
+      <img
+        src={getImageSrc(it.imageUrl)}
+        alt={it.variantName}
+        style={{
+          width: "100%",
+          height: 130,
+          objectFit: "cover",
+        }}
+        onError={(e) => {
+          e.currentTarget.src = "/no-image.png";
+        }}
+      />
+    </div>
+  </div>
 
-                          <div
-                            style={{
-                              color: "#2563eb",
-                              fontWeight: 700,
-                              marginBottom: 10,
-                              fontSize: 14,
-                            }}
-                          >
-                            Biến thể: {it.variantName}
-                          </div>
+  <div className="col-md-9 col-lg-4">
+    <h5
+      style={{
+        color: "#111827",
+        fontWeight: 700,
+        marginBottom: 8,
+        fontSize: 18,
+        lineHeight: 1.4,
+      }}
+    >
+      {slugToTitle(it.productSlug)}
+    </h5>
 
-                          <div style={{ color: "#475569", marginBottom: 6 }}>
-                            Đơn giá: <strong>{formatPrice(it.price)}</strong>
-                          </div>
+    <div
+      style={{
+        color: "#6b7280",
+        fontSize: 14,
+        marginBottom: 8,
+      }}
+    >
+      Phân loại: {it.variantName}
+    </div>
 
-                          <div style={{ color: "#475569" }}>
-                            Thành tiền: <strong>{formatPrice(it.lineTotal)}</strong>
-                          </div>
-                        </div>
+    <button
+      onClick={() => removeItem(it.id)}
+      type="button"
+      style={{
+        border: "none",
+        background: "transparent",
+        color: "#ef4444",
+        padding: 0,
+        fontWeight: 600,
+      }}
+    >
+      <i className="bi bi-trash3 me-1"></i>
+      Xóa
+    </button>
+  </div>
 
-                        <div className="col-md-4">
-                          <label
-                            className="form-label"
-                            style={{ color: "#111827", fontWeight: 700 }}
-                          >
-                            Số lượng
-                          </label>
+  <div className="col-4 col-lg-2">
+    <div
+      style={{
+        color: "#111827",
+        fontWeight: 700,
+        fontSize: 16,
+        whiteSpace: "nowrap",
+        textAlign: "right",
+      }}
+    >
+      {formatPrice(it.price)}
+    </div>
+  </div>
 
-                          <div className="d-flex align-items-center gap-2">
-                            <button
-                              type="button"
-                              className="btn btn-outline-secondary"
-                              style={{ borderRadius: 12, width: 42, height: 42 }}
-                              onClick={() => updateQty(it.id, Number(it.quantity) - 1)}
-                              disabled={Number(it.quantity) <= 1}
-                            >
-                              -
-                            </button>
+  <div className="col-4 col-lg-2 d-flex justify-content-center">
+    <div
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        border: "1px solid #e5e7eb",
+        borderRadius: 10,
+        overflow: "hidden",
+        background: "#fff",
+      }}
+    >
+      <button
+        type="button"
+        onClick={() => updateQty(it.id, Number(it.quantity) - 1)}
+        disabled={Number(it.quantity) <= 1}
+        style={{
+          width: 34,
+          height: 34,
+          border: "none",
+          background: "#fff",
+          color: "#374151",
+          fontWeight: 700,
+        }}
+      >
+        -
+      </button>
 
-                            <input
-                              type="number"
-                              min={1}
-                              value={it.quantity}
-                              onChange={(e) =>
-                                updateQty(it.id, Number(e.target.value || 1))
-                              }
-                              className="form-control"
-                              style={{
-                                width: 90,
-                                color: "#111827",
-                                borderRadius: 12,
-                                textAlign: "center",
-                                height: 42,
-                              }}
-                            />
+      <input
+        type="number"
+        min={1}
+        value={it.quantity}
+        onChange={(e) => updateQty(it.id, Number(e.target.value || 1))}
+        style={{
+          width: 52,
+          height: 34,
+          border: "none",
+          borderLeft: "1px solid #e5e7eb",
+          borderRight: "1px solid #e5e7eb",
+          textAlign: "center",
+          outline: "none",
+          color: "#111827",
+        }}
+      />
 
-                            <button
-                              type="button"
-                              className="btn btn-outline-secondary"
-                              style={{ borderRadius: 12, width: 42, height: 42 }}
-                              onClick={() => updateQty(it.id, Number(it.quantity) + 1)}
-                            >
-                              +
-                            </button>
-                          </div>
+      <button
+        type="button"
+        onClick={() => updateQty(it.id, Number(it.quantity) + 1)}
+        style={{
+          width: 34,
+          height: 34,
+          border: "none",
+          background: "#fff",
+          color: "#374151",
+          fontWeight: 700,
+        }}
+      >
+        +
+      </button>
+    </div>
+  </div>
 
-                          <button
-                            onClick={() => removeItem(it.id)}
-                            className="btn btn-outline-danger btn-sm mt-3"
-                            style={{ borderRadius: 12, fontWeight: 600 }}
-                          >
-                            <i className="bi bi-trash3 me-2"></i>
-                            Xóa sản phẩm
-                          </button>
-                        </div>
+  <div className="col-4 col-lg-2">
+    <div
+      style={{
+        color: "#ee4d2d",
+        fontWeight: 800,
+        fontSize: 18,
+        textAlign: "right",
+        whiteSpace: "nowrap",
+      }}
+    >
+      {formatPrice(it.lineTotal)}
+    </div>
+  </div>
+</div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
 
               <div className="col-lg-4">
-                <div
-                  style={{
-                    ...whiteCard,
-                    padding: 24,
-                    marginBottom: 20,
-                  }}
-                >
-                  <h4 style={blockTitleStyle}>Mã giảm giá</h4>
+                <div style={{ ...pageCard, padding: 20, marginBottom: 16 }}>
+                  <h4 style={sectionTitle}>Mã giảm giá</h4>
 
-                  <div className="d-grid gap-3">
+                  <div className="d-flex gap-2">
                     <input
                       className="form-control"
                       placeholder="Nhập mã giảm giá"
@@ -520,11 +559,17 @@ export default function CartPage() {
 
                     <button
                       onClick={validateCoupon}
-                      className="btn btn-outline-primary"
                       disabled={checkingCoupon}
-                      style={{ borderRadius: 14, height: 48, fontWeight: 700 }}
+                      style={{
+                        minWidth: 110,
+                        borderRadius: 10,
+                        border: "1px solid #ee4d2d",
+                        background: "#fff",
+                        color: "#ee4d2d",
+                        fontWeight: 700,
+                      }}
                     >
-                      {checkingCoupon ? "Đang kiểm tra..." : "Áp dụng mã"}
+                      {checkingCoupon ? "Đang kiểm tra..." : "Áp dụng"}
                     </button>
                   </div>
 
@@ -532,47 +577,49 @@ export default function CartPage() {
                     <div
                       className="mt-3"
                       style={{
-                        background: "#f8fafc",
-                        borderRadius: 16,
-                        padding: 16,
-                        color: "#334155",
-                        border: "1px solid #e2e8f0",
+                        background: couponInfo.isValid ? "#ecfdf5" : "#fef2f2",
+                        border: `1px solid ${
+                          couponInfo.isValid ? "#a7f3d0" : "#fecaca"
+                        }`,
+                        borderRadius: 12,
+                        padding: 14,
+                        color: couponInfo.isValid ? "#047857" : "#b91c1c",
+                        fontSize: 14,
                       }}
                     >
-                      <div>
-                        <strong>Hợp lệ:</strong> {String(couponInfo.isValid)}
-                      </div>
                       <div>
                         <strong>Thông báo:</strong> {couponInfo.message}
                       </div>
                       <div>
-                        <strong>Giảm giá:</strong> {formatPrice(couponInfo.discountAmount)}
+                        <strong>Giảm giá:</strong>{" "}
+                        {formatPrice(couponInfo.discountAmount)}
                       </div>
                     </div>
                   )}
                 </div>
 
-                <div
-                  style={{
-                    ...whiteCard,
-                    padding: 24,
-                    marginBottom: 20,
-                  }}
-                >
-                  <h4 style={blockTitleStyle}>Địa chỉ giao hàng</h4>
+                <div style={{ ...pageCard, padding: 20, marginBottom: 16 }}>
+                  <h4 style={sectionTitle}>Địa chỉ giao hàng</h4>
 
                   {addresses.length === 0 ? (
                     <div
                       style={{
-                        background: "#f8fafc",
-                        borderRadius: 16,
-                        padding: 16,
-                        color: "#475569",
-                        border: "1px solid #e2e8f0",
+                        background: "#fff7ed",
+                        borderRadius: 12,
+                        padding: 14,
+                        color: "#9a3412",
+                        border: "1px solid #fed7aa",
                       }}
                     >
                       Bạn chưa có địa chỉ giao hàng.{" "}
-                      <Link to="/account" style={{ fontWeight: 700 }}>
+                      <Link
+                        to="/account"
+                        style={{
+                          fontWeight: 700,
+                          color: "#ee4d2d",
+                          textDecoration: "none",
+                        }}
+                      >
                         Thêm địa chỉ ngay
                       </Link>
                     </div>
@@ -597,15 +644,10 @@ export default function CartPage() {
                   )}
                 </div>
 
-                <div
-                  style={{
-                    ...whiteCard,
-                    padding: 24,
-                  }}
-                >
-                  <h4 style={blockTitleStyle}>Tóm tắt đơn hàng</h4>
+                <div style={{ ...pageCard, padding: 20 }}>
+                  <h4 style={sectionTitle}>Tóm tắt đơn hàng</h4>
 
-                  <div className="d-grid gap-2" style={{ color: "#334155" }}>
+                  <div className="d-grid gap-2" style={{ color: "#374151" }}>
                     <div className="d-flex justify-content-between">
                       <span>Tạm tính</span>
                       <strong>{formatPrice(cart.subtotal)}</strong>
@@ -616,41 +658,51 @@ export default function CartPage() {
                       <strong>- {formatPrice(discountAmount)}</strong>
                     </div>
 
-                    <hr />
+                    <hr style={{ margin: "10px 0", borderColor: "#e5e7eb" }} />
 
                     <div
                       className="d-flex justify-content-between"
-                      style={{ fontSize: 20, color: "#0f172a" }}
+                      style={{ fontSize: 22, color: "#111827" }}
                     >
                       <span>Tổng cộng</span>
-                      <strong>{formatPrice(finalTotal)}</strong>
+                      <strong style={{ color: "#ee4d2d" }}>
+                        {formatPrice(finalTotal)}
+                      </strong>
                     </div>
                   </div>
 
                   <button
                     onClick={checkout}
                     disabled={checkingOut || (cart.items || []).length === 0}
-                    className="btn btn-primary w-100 mt-4"
                     style={{
-                      height: 50,
-                      borderRadius: 14,
+                      width: "100%",
+                      height: 48,
+                      borderRadius: 10,
+                      border: "none",
+                      background: "#ee4d2d",
+                      color: "#fff",
                       fontWeight: 700,
-                      boxShadow: "0 12px 24px rgba(13,110,253,0.18)",
+                      marginTop: 18,
                     }}
                   >
-                    {checkingOut ? "Đang tạo đơn..." : "Tiến hành thanh toán"}
+                    {checkingOut ? "Đang tạo đơn..." : "Mua hàng"}
                   </button>
 
                   <Link
                     to="/products"
-                    className="btn btn-outline-secondary w-100 mt-3"
                     style={{
-                      height: 50,
-                      borderRadius: 14,
+                      width: "100%",
+                      height: 48,
+                      borderRadius: 10,
+                      border: "1px solid #d1d5db",
+                      background: "#fff",
+                      color: "#374151",
                       fontWeight: 700,
+                      marginTop: 12,
                       display: "inline-flex",
                       alignItems: "center",
                       justifyContent: "center",
+                      textDecoration: "none",
                     }}
                   >
                     Tiếp tục mua sắm

@@ -1,106 +1,181 @@
 import { Link } from "react-router-dom";
 
+const footerLink = {
+  color: "#4b5563",
+  textDecoration: "none",
+  display: "block",
+  marginBottom: 8,
+  fontSize: 14,
+};
+
+const socialStyle = {
+  width: 40,
+  height: 40,
+  borderRadius: "50%",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  background: "#fff7ed",
+  color: "#ee4d2d",
+  border: "1px solid #fed7aa",
+  textDecoration: "none",
+};
+
 export default function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer id="footer" className="footer" style={{ paddingTop: 40, paddingBottom: 20 }}>
-      <div className="container">
-        <div className="row gy-4">
-          <div className="col-lg-4 col-md-6">
-            <h4 style={{ marginBottom: 16 }}>SouVN</h4>
-            <p style={{ lineHeight: 1.8, marginBottom: 16 }}>
-              SouVN là cửa hàng quà tặng và đồ lưu niệm dành cho khách tham quan,
-              cung cấp các sản phẩm đặc trưng, đẹp mắt và phù hợp để làm quà.
-            </p>
+    <footer
+      style={{
+        background: "#f5f5f5",
+        borderTop: "1px solid #e5e7eb",
+        marginTop: 40,
+      }}
+    >
+      <div className="container" style={{ paddingTop: 40, paddingBottom: 20 }}>
+        <div
+          style={{
+            background: "#fff",
+            borderRadius: 20,
+            padding: 24,
+            boxShadow: "0 8px 24px rgba(0,0,0,0.05)",
+          }}
+        >
+          <div className="row gy-4">
+            {/* ABOUT */}
+            <div className="col-lg-4 col-md-6">
+              <h4
+                style={{
+                  fontWeight: 800,
+                  color: "#ee4d2d",
+                  marginBottom: 16,
+                }}
+              >
+                SouVN
+              </h4>
 
-            <div className="social-links d-flex gap-3">
-              <a href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook">
-                <i className="bi bi-facebook"></i>
-              </a>
-              <a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram">
-                <i className="bi bi-instagram"></i>
-              </a>
-              <a href="https://tiktok.com" target="_blank" rel="noreferrer" aria-label="TikTok">
-                <i className="bi bi-tiktok"></i>
-              </a>
-              <a href="https://youtube.com" target="_blank" rel="noreferrer" aria-label="YouTube">
-                <i className="bi bi-youtube"></i>
-              </a>
+              <p style={{ color: "#6b7280", lineHeight: 1.8 }}>
+                SouVN là cửa hàng quà tặng và đồ lưu niệm dành cho khách tham
+                quan, cung cấp các sản phẩm đẹp, ý nghĩa và phù hợp làm quà.
+              </p>
+
+              <div className="d-flex gap-2 mt-3">
+                {["facebook", "instagram", "tiktok", "youtube"].map((s, i) => (
+                  <a key={i} href="#" style={socialStyle}>
+                    <i className={`bi bi-${s}`}></i>
+                  </a>
+                ))}
+              </div>
             </div>
-          </div>
 
-          <div className="col-lg-2 col-md-6">
-            <h5 style={{ marginBottom: 16 }}>Liên kết nhanh</h5>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0, lineHeight: 2 }}>
-              <li>
-                <Link to="/">Trang chủ</Link>
-              </li>
-              <li>
-                <Link to="/products">Sản phẩm</Link>
-              </li>
-              <li>
-                <Link to="/cart">Giỏ hàng</Link>
-              </li>
-              <li>
-                <Link to="/orders">Đơn hàng</Link>
-              </li>
-              <li>
-                <Link to="/contact">Liên hệ</Link>
-              </li>
-            </ul>
-          </div>
+            {/* QUICK LINKS */}
+            <div className="col-lg-2 col-md-6">
+              <h5
+                style={{
+                  fontWeight: 800,
+                  color: "#111827",
+                  marginBottom: 16,
+                }}
+              >
+                Liên kết
+              </h5>
 
-          <div className="col-lg-3 col-md-6">
-            <h5 style={{ marginBottom: 16 }}>Hỗ trợ khách hàng</h5>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0, lineHeight: 2 }}>
-              <li>
-                <Link to="/account">Tài khoản của tôi</Link>
-              </li>
-              <li>
-                <Link to="/wishlist">Sản phẩm yêu thích</Link>
-              </li>
-              <li>
-                <Link to="/orders">Tra cứu đơn hàng</Link>
-              </li>
-              <li>
-                <Link to="/contact">Chính sách đổi trả</Link>
-              </li>
-              <li>
-                <Link to="/contact">Câu hỏi thường gặp</Link>
-              </li>
-            </ul>
-          </div>
+              <Link to="/" style={footerLink}>
+                Trang chủ
+              </Link>
+              <Link to="/products" style={footerLink}>
+                Sản phẩm
+              </Link>
+              <Link to="/cart" style={footerLink}>
+                Giỏ hàng
+              </Link>
+              <Link to="/orders" style={footerLink}>
+                Đơn hàng
+              </Link>
+              <Link to="/contact" style={footerLink}>
+                Liên hệ
+              </Link>
+            </div>
 
-          <div className="col-lg-3 col-md-6">
-            <h5 style={{ marginBottom: 16 }}>Thông tin liên hệ</h5>
-            <div style={{ lineHeight: 2 }}>
-              <div>
-                <i className="bi bi-geo-alt" style={{ marginRight: 8 }}></i>
+            {/* SUPPORT */}
+            <div className="col-lg-3 col-md-6">
+              <h5
+                style={{
+                  fontWeight: 800,
+                  color: "#111827",
+                  marginBottom: 16,
+                }}
+              >
+                Hỗ trợ
+              </h5>
+
+              <Link to="/account" style={footerLink}>
+                Tài khoản của tôi
+              </Link>
+              <Link to="/orders" style={footerLink}>
+                Tra cứu đơn hàng
+              </Link>
+              <Link to="/contact" style={footerLink}>
+                Chính sách đổi trả
+              </Link>
+              <Link to="/contact" style={footerLink}>
+                FAQ
+              </Link>
+            </div>
+
+            {/* CONTACT */}
+            <div className="col-lg-3 col-md-6">
+              <h5
+                style={{
+                  fontWeight: 800,
+                  color: "#111827",
+                  marginBottom: 16,
+                }}
+              >
+                Liên hệ
+              </h5>
+
+              <div style={{ color: "#4b5563", lineHeight: 2 }}>
+                <div>
+                  <i className="bi bi-geo-alt me-2" style={{ color: "#ee4d2d" }}></i>
                   Hà Nội, Việt Nam
-              </div>
-              <div>
-                <i className="bi bi-telephone" style={{ marginRight: 8 }}></i>
-                0346673447
-              </div>
-              <div>
-                <i className="bi bi-envelope" style={{ marginRight: 8 }}></i>
-                admin@souvenir.com
-              </div>
-              <div>
-                <i className="bi bi-clock" style={{ marginRight: 8 }}></i>
-                08:00 - 22:00 mỗi ngày
+                </div>
+
+                <div>
+                  <i className="bi bi-telephone me-2" style={{ color: "#ee4d2d" }}></i>
+                  0346673447
+                </div>
+
+                <div>
+                  <i className="bi bi-envelope me-2" style={{ color: "#ee4d2d" }}></i>
+                  admin@souvenir.com
+                </div>
+
+                <div>
+                  <i className="bi bi-clock me-2" style={{ color: "#ee4d2d" }}></i>
+                  08:00 - 22:00
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <hr style={{ margin: "28px 0 20px" }} />
+          {/* BOTTOM */}
+          <hr style={{ margin: "24px 0", borderColor: "#e5e7eb" }} />
 
-        <div className="copyright text-center">
-          <p style={{ marginBottom: 0 }}>
-             {year} <strong>SouVN</strong>. Tất cả quyền được bảo lưu.
-          </p>
+          <div
+            className="d-flex justify-content-between align-items-center flex-wrap gap-2"
+            style={{ fontSize: 14 }}
+          >
+            <div style={{ color: "#6b7280" }}>
+              © {year} <strong>SouVN</strong>. All rights reserved.
+            </div>
+
+            <div className="d-flex gap-3">
+              <span style={{ color: "#9ca3af" }}>Bảo mật</span>
+              <span style={{ color: "#9ca3af" }}>Điều khoản</span>
+              <span style={{ color: "#9ca3af" }}>Chính sách</span>
+            </div>
+          </div>
         </div>
       </div>
     </footer>

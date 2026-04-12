@@ -1,42 +1,97 @@
-body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-button { cursor: pointer; }
-input, select, textarea { padding: 8px; }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-.footer {
-  background: #071521;
-  color: #dbe4ee;
+body {
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  padding: 0;
+  background: #f5f5f5;
+  color: #111827;
+}
+
+html,
+body,
+#root {
+  background: #f5f5f5 !important;
+}
+
+main,
+.main,
+section,
+.section {
+  background: #f5f5f5 !important;
+}
+
+button {
+  cursor: pointer;
+}
+
+input,
+select,
+textarea {
+  padding: 8px;
+}
+
+/* XÓA NỀN TỐI CŨ CỦA TEMPLATE */
+[class*="dark"],
+.dark-background,
+.section.dark-background,
+main.dark-background,
+footer.dark-background {
+  background: transparent !important;
+  background-image: none !important;
+}
+
+/* FOOTER MỚI */
+.footer,
+footer,
+#footer {
+  background: #f5f5f5 !important;
+  color: #4b5563;
+  border-top: 1px solid #e5e7eb;
+  margin-top: 40px;
 }
 
 .footer h4,
 .footer h5 {
-  color: #ffffff;
-  font-weight: 700;
+  color: #111827;
+  font-weight: 800;
+}
+
+.footer h4 {
+  color: #ee4d2d;
 }
 
 .footer a {
-  color: #dbe4ee;
+  color: #4b5563;
   text-decoration: none;
-  transition: 0.3s;
+  transition: 0.2s ease;
 }
 
 .footer a:hover {
-  color: #3ea6ff;
+  color: #ee4d2d;
 }
 
 .footer .social-links a {
-  width: 38px;
-  height: 38px;
-  border: 1px solid rgba(255,255,255,0.18);
+  width: 40px;
+  height: 40px;
+  border: 1px solid #fed7aa;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  background: #fff7ed;
+  color: #ee4d2d;
+  transition: 0.2s ease;
 }
 
 .footer .social-links a:hover {
-  border-color: #3ea6ff;
+  background: #ee4d2d;
+  color: #fff;
+  border-color: #ee4d2d;
+  transform: translateY(-2px);
 }
 
 .footer hr {
-  border-color: rgba(255,255,255,0.12);
+  border: none;
+  border-top: 1px solid #e5e7eb;
 }

@@ -3,16 +3,26 @@ import { AuthContext } from "../contexts/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 
+const pageCard = {
+  background: "#ffffff",
+  borderRadius: 20,
+  boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
+};
+
 const labelStyle = {
   color: "#111827",
-  fontWeight: 600,
+  fontWeight: 700,
+  marginBottom: 8,
+  fontSize: 14,
 };
 
 const inputStyle = {
-  height: 48,
-  borderRadius: 12,
+  height: 44,
+  borderRadius: 10,
+  border: "1px solid #e5e7eb",
+  background: "#fff",
   color: "#111827",
-  backgroundColor: "#fff",
+  boxShadow: "none",
 };
 
 export default function LoginPage() {
@@ -35,13 +45,10 @@ export default function LoginPage() {
     } catch (ex) {
       const data = ex?.response?.data;
 
-      if (typeof data === "string") {
-        setErr(data);
-      } else if (data?.message) {
-        setErr(data.message);
-      } else if (data?.title) {
-        setErr(data.title);
-      } else if (data?.errors) {
+      if (typeof data === "string") setErr(data);
+      else if (data?.message) setErr(data.message);
+      else if (data?.title) setErr(data.title);
+      else if (data?.errors) {
         const firstError = Object.values(data.errors)?.flat?.()[0];
         setErr(firstError || "Đăng nhập thất bại");
       } else {
@@ -54,107 +61,109 @@ export default function LoginPage() {
 
   return (
     <MainLayout>
-      <section className="section">
-        <div className="container" data-aos="fade-up">
-          <div className="row justify-content-center align-items-center g-4">
-            <div className="col-lg-5">
-              <div
-                style={{
-                  padding: "36px",
-                  borderRadius: 24,
-                  background:
-                    "linear-gradient(135deg, rgba(13,110,253,0.18), rgba(255,255,255,0.04))",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  color: "#fff",
-                  height: "100%",
-                }}
-              >
-                <span
+      <section
+        className="section"
+        style={{
+          background: "#f5f5f5",
+          minHeight: "100vh",
+          paddingTop: 32,
+          paddingBottom: 48,
+        }}
+      >
+        <div className="container">
+          {/* HEADER */}
+          <div
+            style={{
+              ...pageCard,
+              padding: 24,
+              marginBottom: 20,
+              borderLeft: "5px solid #ee4d2d",
+            }}
+          >
+            <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+              <div>
+                <div style={{ color: "#6b7280", fontSize: 14, fontWeight: 600 }}>
+                  SouVN Shop
+                </div>
+                <h2
                   style={{
-                    display: "inline-block",
-                    padding: "6px 14px",
-                    borderRadius: 999,
-                    background: "rgba(255,255,255,0.08)",
-                    fontSize: 14,
-                    marginBottom: 18,
+                    margin: 0,
+                    fontWeight: 800,
+                    color: "#111827",
                   }}
                 >
-                  SouVN
-                </span>
-
-                <h2 style={{ fontWeight: 700, marginBottom: 16 }}>
-                  Chào mừng bạn quay lại
+                  Đăng nhập
                 </h2>
+              </div>
+            </div>
+          </div>
 
-                <p style={{ color: "rgba(255,255,255,0.8)", lineHeight: 1.8 }}>
-                  Đăng nhập để tiếp tục mua sắm các sản phẩm lưu niệm dành cho
-                  khách tham quan, quản lý đơn hàng, giỏ hàng và danh sách yêu
-                  thích của bạn một cách thuận tiện.
+          <div className="row justify-content-center g-4">
+            {/* LEFT */}
+            <div className="col-lg-5">
+              <div style={{ ...pageCard, padding: 24 }}>
+                <h3
+                  style={{
+                    fontWeight: 800,
+                    color: "#111827",
+                    marginBottom: 16,
+                  }}
+                >
+                  Chào mừng quay lại
+                </h3>
+
+                <p style={{ color: "#6b7280", lineHeight: 1.8 }}>
+                  Đăng nhập để tiếp tục mua sắm, quản lý giỏ hàng và đơn hàng của bạn một cách dễ dàng.
                 </p>
 
-                <div className="mt-4 d-grid gap-3">
-                  <div
-                    style={{
-                      padding: "14px 16px",
-                      borderRadius: 16,
-                      background: "rgba(255,255,255,0.05)",
-                    }}
-                  >
-                    <i className="bi bi-bag-heart me-2"></i>
-                    Khám phá quà lưu niệm đặc sắc
-                  </div>
-
-                  <div
-                    style={{
-                      padding: "14px 16px",
-                      borderRadius: 16,
-                      background: "rgba(255,255,255,0.05)",
-                    }}
-                  >
-                    <i className="bi bi-cart-check me-2"></i>
-                    Theo dõi giỏ hàng và đơn hàng dễ dàng
-                  </div>
-
-                  <div
-                    style={{
-                      padding: "14px 16px",
-                      borderRadius: 16,
-                      background: "rgba(255,255,255,0.05)",
-                    }}
-                  >
-                    <i className="bi bi-stars me-2"></i>
-                    Trải nghiệm mua sắm hiện đại và trực quan
-                  </div>
+                <div className="d-grid gap-3 mt-4">
+                  {[
+                    "Mua sắm nhanh chóng",
+                    "Quản lý đơn hàng dễ dàng",
+                    "Trải nghiệm hiện đại",
+                  ].map((text, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        background: "#fff7ed",
+                        border: "1px solid #fed7aa",
+                        borderRadius: 12,
+                        padding: 12,
+                        color: "#9a3412",
+                        fontWeight: 600,
+                      }}
+                    >
+                      <i className="bi bi-check-circle me-2"></i>
+                      {text}
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
 
+            {/* RIGHT */}
             <div className="col-lg-5">
-              <div
-                style={{
-                  background: "#fff",
-                  borderRadius: 24,
-                  padding: "36px",
-                  boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
-                }}
-              >
-                <div className="text-center mb-4">
-                  <h3
-                    style={{
-                      fontWeight: 700,
-                      color: "#1f2937",
-                      marginBottom: 8,
-                    }}
-                  >
-                    Đăng nhập
-                  </h3>
-                  <p style={{ color: "#6b7280", marginBottom: 0 }}>
-                    Nhập thông tin tài khoản để tiếp tục
-                  </p>
-                </div>
+              <div style={{ ...pageCard, padding: 24 }}>
+                <h3
+                  style={{
+                    fontWeight: 800,
+                    color: "#111827",
+                    marginBottom: 16,
+                  }}
+                >
+                  Đăng nhập tài khoản
+                </h3>
 
                 {err && (
-                  <div className="alert alert-danger" role="alert">
+                  <div
+                    className="alert mb-3"
+                    style={{
+                      background: "#fef2f2",
+                      color: "#b91c1c",
+                      border: "1px solid #fecaca",
+                      borderRadius: 12,
+                    }}
+                  >
                     {err}
                   </div>
                 )}
@@ -167,7 +176,7 @@ export default function LoginPage() {
                     <input
                       type="email"
                       className="form-control"
-                      placeholder="Nhập email của bạn"
+                      placeholder="Nhập email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       style={inputStyle}
@@ -190,12 +199,15 @@ export default function LoginPage() {
 
                   <button
                     type="submit"
-                    className="btn btn-primary w-100"
                     disabled={loading}
                     style={{
-                      height: 48,
-                      borderRadius: 12,
-                      fontWeight: 600,
+                      width: "100%",
+                      height: 46,
+                      borderRadius: 10,
+                      border: "none",
+                      background: "#ee4d2d",
+                      color: "#fff",
+                      fontWeight: 700,
                     }}
                   >
                     {loading ? "Đang đăng nhập..." : "Đăng nhập"}
@@ -204,21 +216,20 @@ export default function LoginPage() {
 
                 <div
                   style={{
-                    marginTop: 18,
-                    padding: "14px 16px",
-                    borderRadius: 14,
-                    background: "#f8fafc",
-                    color: "#475569",
+                    marginTop: 16,
+                    background: "#fafafa",
+                    borderRadius: 12,
+                    padding: 12,
                     fontSize: 14,
+                    color: "#6b7280",
                   }}
                 >
-                  Demo admin: dùng email <strong>admin@souvenir.com</strong> để
-                  vào trang quản trị.
+                  Demo admin: <strong>admin@souvenir.com</strong>
                 </div>
 
                 <p className="text-center mt-4 mb-0" style={{ color: "#6b7280" }}>
                   Chưa có tài khoản?{" "}
-                  <Link to="/register" style={{ fontWeight: 600 }}>
+                  <Link to="/register" style={{ color: "#ee4d2d", fontWeight: 700 }}>
                     Đăng ký ngay
                   </Link>
                 </p>

@@ -39,6 +39,21 @@ const getErrorMessage = (ex, fallback) => {
   return fallback;
 };
 
+const pageCard = {
+  background: "#ffffff",
+  borderRadius: 20,
+  boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
+};
+
+const inputStyle = {
+  height: 44,
+  borderRadius: 10,
+  border: "1px solid #e5e7eb",
+  background: "#fff",
+  color: "#111827",
+  boxShadow: "none",
+};
+
 export default function DetailProductPage() {
   const { id } = useParams();
   const nav = useNavigate();
@@ -183,57 +198,123 @@ export default function DetailProductPage() {
 
   return (
     <MainLayout>
-      <section className="section">
-        <div className="container" data-aos="fade-up">
-          <div className="mb-4">
-            <Link
-              to="/products"
-              style={{
-                color: "#93c5fd",
-                textDecoration: "none",
-                fontWeight: 500,
-              }}
-            >
-              ← Quay lại danh sách sản phẩm
-            </Link>
+      <section
+        className="section"
+        style={{
+          background: "#f5f5f5",
+          minHeight: "100vh",
+          paddingTop: 32,
+          paddingBottom: 48,
+        }}
+      >
+        <div className="container">
+          <div
+            style={{
+              ...pageCard,
+              padding: 20,
+              marginBottom: 20,
+              borderLeft: "5px solid #ee4d2d",
+            }}
+          >
+            <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
+              <div>
+                <div
+                  style={{
+                    fontSize: 14,
+                    color: "#6b7280",
+                    marginBottom: 6,
+                    fontWeight: 600,
+                  }}
+                >
+                  Chi tiết sản phẩm
+                </div>
+
+                <h2
+                  style={{
+                    margin: 0,
+                    fontWeight: 800,
+                    color: "#111827",
+                    fontSize: "clamp(24px, 4vw, 34px)",
+                  }}
+                >
+                  {productTitle}
+                </h2>
+              </div>
+
+              <Link
+                to="/products"
+                style={{
+                  color: "#ee4d2d",
+                  textDecoration: "none",
+                  fontWeight: 700,
+                }}
+              >
+                ← Quay lại danh sách sản phẩm
+              </Link>
+            </div>
           </div>
 
           {err && (
-            <div className="alert alert-danger" role="alert">
+            <div
+              className="alert mb-4"
+              role="alert"
+              style={{
+                background: "#fef2f2",
+                color: "#b91c1c",
+                border: "1px solid #fecaca",
+                borderRadius: 12,
+              }}
+            >
               {err}
             </div>
           )}
 
           {msg && (
-            <div className="alert alert-success" role="alert">
+            <div
+              className="alert mb-4"
+              role="alert"
+              style={{
+                background: "#ecfdf5",
+                color: "#047857",
+                border: "1px solid #a7f3d0",
+                borderRadius: 12,
+              }}
+            >
               {msg}
             </div>
           )}
 
           {loading ? (
-            <div className="text-center py-5">
-              <div className="spinner-border text-info" role="status"></div>
-              <p className="mt-3 mb-0">Đang tải chi tiết sản phẩm...</p>
+            <div style={{ ...pageCard, padding: 40 }} className="text-center">
+              <div className="spinner-border text-danger" role="status"></div>
+              <p className="mt-3 mb-0" style={{ color: "#6b7280" }}>
+                Đang tải chi tiết sản phẩm...
+              </p>
             </div>
           ) : !p ? (
-            <div className="alert alert-warning">Không tìm thấy sản phẩm.</div>
+            <div
+              className="alert"
+              style={{
+                background: "#fff7ed",
+                color: "#9a3412",
+                border: "1px solid #fed7aa",
+                borderRadius: 12,
+              }}
+            >
+              Không tìm thấy sản phẩm.
+            </div>
           ) : (
             <>
               <div className="row g-4 align-items-start">
-                <div className="col-lg-6">
-                  <div
-                    style={{
-                      background: "#fff",
-                      borderRadius: 24,
-                      padding: 16,
-                      boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
-                    }}
-                  >
+                <div className="col-lg-5">
+                  <div style={{ ...pageCard, padding: 16 }}>
                     <div
                       style={{
-                        borderRadius: 20,
+                        borderRadius: 16,
                         overflow: "hidden",
-                        marginBottom: 16,
+                        marginBottom: 14,
+                        border: "1px solid #f1f5f9",
+                        background: "#fff",
                       }}
                     >
                       <img
@@ -241,7 +322,7 @@ export default function DetailProductPage() {
                         alt={productTitle}
                         style={{
                           width: "100%",
-                          height: 500,
+                          height: 480,
                           objectFit: "cover",
                           display: "block",
                         }}
@@ -256,8 +337,8 @@ export default function DetailProductPage() {
                       <div
                         style={{
                           display: "grid",
-                          gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))",
-                          gap: 12,
+                          gridTemplateColumns: "repeat(auto-fill, minmax(84px, 1fr))",
+                          gap: 10,
                         }}
                       >
                         {imageList.map((img, index) => (
@@ -268,9 +349,9 @@ export default function DetailProductPage() {
                             style={{
                               border:
                                 selectedImage === img
-                                  ? "2px solid #2563eb"
+                                  ? "2px solid #ee4d2d"
                                   : "1px solid #e5e7eb",
-                              borderRadius: 14,
+                              borderRadius: 12,
                               padding: 4,
                               background: "#fff",
                               cursor: "pointer",
@@ -281,9 +362,9 @@ export default function DetailProductPage() {
                               alt={`${productTitle}-${index + 1}`}
                               style={{
                                 width: "100%",
-                                height: 80,
+                                height: 74,
                                 objectFit: "cover",
-                                borderRadius: 10,
+                                borderRadius: 8,
                                 display: "block",
                               }}
                               onError={(e) => {
@@ -298,157 +379,251 @@ export default function DetailProductPage() {
                   </div>
                 </div>
 
-                <div className="col-lg-6">
-                  <div
-                    style={{
-                      background: "#fff",
-                      borderRadius: 24,
-                      padding: 28,
-                      boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
-                    }}
-                  >
+                <div className="col-lg-7">
+                  <div style={{ ...pageCard, padding: 24 }}>
                     <div
                       style={{
-                        display: "inline-block",
-                        background: "#eff6ff",
-                        color: "#2563eb",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 8,
+                        background: "#fff7ed",
+                        color: "#c2410c",
                         padding: "6px 12px",
                         borderRadius: 999,
                         fontSize: 14,
-                        fontWeight: 600,
-                        marginBottom: 16,
-                      }}
-                    >
-                      Sản phẩm lưu niệm
-                    </div>
-
-                    <h2
-                      style={{
-                        color: "#0f172a",
                         fontWeight: 700,
                         marginBottom: 14,
                       }}
                     >
+                      <i className="bi bi-bag-heart"></i>
+                      Sản phẩm lưu niệm
+                    </div>
+
+                    <h1
+                      style={{
+                        color: "#111827",
+                        fontWeight: 800,
+                        marginBottom: 16,
+                        fontSize: "clamp(24px, 4vw, 32px)",
+                        lineHeight: 1.4,
+                      }}
+                    >
                       {productTitle}
-                    </h2>
+                    </h1>
 
                     <div
                       style={{
-                        fontSize: 30,
-                        fontWeight: 700,
-                        color: "#2563eb",
+                        background: "#fafafa",
+                        borderRadius: 14,
+                        padding: "18px 20px",
                         marginBottom: 20,
                       }}
                     >
-                      {formatPrice(displayPrice)}
-                    </div>
-
-                    <div
-                      style={{
-                        background: "#f8fafc",
-                        borderRadius: 16,
-                        padding: 16,
-                        marginBottom: 20,
-                        color: "#475569",
-                        lineHeight: 1.8,
-                      }}
-                    >
-                      <div>
-                        <strong>Slug:</strong> {p.slug || "-"}
-                      </div>
-                      <div>
-                        <strong>Giá gốc:</strong> {formatPrice(p.basePrice)}
-                      </div>
-                      <div>
-                        <strong>Số biến thể:</strong> {p.variants?.length || 0}
-                      </div>
-                      <div>
-                        <strong>Số ảnh:</strong> {imageList.length}
-                      </div>
-                    </div>
-
-                    <div className="mb-3">
-                      <label
-                        className="form-label"
-                        style={{ color: "#111827", fontWeight: 600 }}
-                      >
-                        Chọn biến thể
-                      </label>
-                      <select
-                        className="form-select"
-                        value={variantId ?? ""}
-                        onChange={(e) => setVariantId(Number(e.target.value))}
+                      <div
                         style={{
-                          height: 48,
-                          borderRadius: 12,
-                          color: "#111827",
+                          fontSize: 32,
+                          fontWeight: 800,
+                          color: "#ee4d2d",
+                          lineHeight: 1.2,
                         }}
-                        disabled={(p.variants || []).length === 0}
                       >
-                        {(p.variants || []).length > 0 ? (
-                          (p.variants || []).map((v) => (
-                            <option key={v.id} value={v.id}>
-                              {v.variantName} - {formatPrice(v.price ?? p.basePrice)}
-                            </option>
-                          ))
-                        ) : (
-                          <option value="">Không có biến thể</option>
-                        )}
-                      </select>
+                        {formatPrice(displayPrice)}
+                      </div>
+
+                      {p.basePrice !== null && p.basePrice !== undefined && (
+                        <div
+                          style={{
+                            color: "#6b7280",
+                            fontSize: 14,
+                            marginTop: 8,
+                          }}
+                        >
+                          Giá gốc: {formatPrice(p.basePrice)}
+                        </div>
+                      )}
                     </div>
 
-                    <div className="mb-4">
-                      <label
-                        className="form-label"
-                        style={{ color: "#111827", fontWeight: 600 }}
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "160px 1fr",
+                        gap: 14,
+                        alignItems: "center",
+                        marginBottom: 18,
+                      }}
+                    >
+                      <div
+                        style={{
+                          color: "#6b7280",
+                          fontWeight: 700,
+                        }}
+                      >
+                        Biến thể
+                      </div>
+
+                      <div>
+                        <select
+                          className="form-select"
+                          value={variantId ?? ""}
+                          onChange={(e) => setVariantId(Number(e.target.value))}
+                          style={inputStyle}
+                          disabled={(p.variants || []).length === 0}
+                        >
+                          {(p.variants || []).length > 0 ? (
+                            (p.variants || []).map((v) => (
+                              <option key={v.id} value={v.id}>
+                                {v.variantName} - {formatPrice(v.price ?? p.basePrice)}
+                              </option>
+                            ))
+                          ) : (
+                            <option value="">Không có biến thể</option>
+                          )}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "160px 1fr",
+                        gap: 14,
+                        alignItems: "center",
+                        marginBottom: 24,
+                      }}
+                    >
+                      <div
+                        style={{
+                          color: "#6b7280",
+                          fontWeight: 700,
+                        }}
                       >
                         Số lượng
-                      </label>
-                      <input
-                        type="number"
-                        min={1}
-                        className="form-control"
-                        value={qty}
-                        onChange={(e) => setQty(e.target.value)}
+                      </div>
+
+                      <div
                         style={{
-                          height: 48,
-                          borderRadius: 12,
-                          color: "#111827",
-                          maxWidth: 160,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          border: "1px solid #e5e7eb",
+                          borderRadius: 10,
+                          overflow: "hidden",
+                          background: "#fff",
+                          width: "fit-content",
                         }}
-                      />
+                      >
+                        <button
+                          type="button"
+                          onClick={() => setQty((prev) => Math.max(1, Number(prev) - 1))}
+                          style={{
+                            width: 38,
+                            height: 38,
+                            border: "none",
+                            background: "#fff",
+                            color: "#374151",
+                            fontWeight: 700,
+                          }}
+                        >
+                          -
+                        </button>
+
+                        <input
+                          type="number"
+                          min={1}
+                          value={qty}
+                          onChange={(e) =>
+                            setQty(Math.max(1, Number(e.target.value || 1)))
+                          }
+                          style={{
+                            width: 60,
+                            height: 38,
+                            border: "none",
+                            borderLeft: "1px solid #e5e7eb",
+                            borderRight: "1px solid #e5e7eb",
+                            textAlign: "center",
+                            outline: "none",
+                            color: "#111827",
+                          }}
+                        />
+
+                        <button
+                          type="button"
+                          onClick={() => setQty((prev) => Number(prev) + 1)}
+                          style={{
+                            width: 38,
+                            height: 38,
+                            border: "none",
+                            background: "#fff",
+                            color: "#374151",
+                            fontWeight: 700,
+                          }}
+                        >
+                          +
+                        </button>
+                      </div>
                     </div>
 
                     <div className="d-flex gap-3 flex-wrap">
                       <button
                         onClick={addToCart}
-                        className="btn btn-primary"
                         disabled={addingCart || !variantId}
                         style={{
-                          minWidth: 180,
+                          minWidth: 220,
                           height: 48,
-                          borderRadius: 12,
-                          fontWeight: 600,
+                          borderRadius: 10,
+                          border: "1px solid #ee4d2d",
+                          background: "#fff1ee",
+                          color: "#ee4d2d",
+                          fontWeight: 800,
                         }}
                       >
+                        <i className="bi bi-cart-plus me-2"></i>
                         {addingCart ? "Đang thêm..." : "Thêm vào giỏ hàng"}
                       </button>
 
                       <Link
                         to="/cart"
-                        className="btn btn-outline-primary"
                         style={{
-                          minWidth: 150,
+                          minWidth: 180,
                           height: 48,
-                          borderRadius: 12,
-                          fontWeight: 600,
+                          borderRadius: 10,
+                          border: "none",
+                          background: "#ee4d2d",
+                          color: "#fff",
+                          fontWeight: 800,
                           display: "inline-flex",
                           alignItems: "center",
                           justifyContent: "center",
+                          textDecoration: "none",
                         }}
                       >
+                        <i className="bi bi-bag-check me-2"></i>
                         Xem giỏ hàng
                       </Link>
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: 24,
+                        paddingTop: 20,
+                        borderTop: "1px solid #f1f5f9",
+                        display: "grid",
+                        gap: 8,
+                        color: "#4b5563",
+                        lineHeight: 1.8,
+                        fontSize: 14,
+                      }}
+                    >
+                      <div>
+                        <strong style={{ color: "#111827" }}>Slug:</strong> {p.slug || "-"}
+                      </div>
+                      <div>
+                        <strong style={{ color: "#111827" }}>Số biến thể:</strong>{" "}
+                        {p.variants?.length || 0}
+                      </div>
+                      <div>
+                        <strong style={{ color: "#111827" }}>Số ảnh:</strong>{" "}
+                        {imageList.length}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -456,34 +631,44 @@ export default function DetailProductPage() {
 
               <div className="row g-4 mt-2">
                 <div className="col-lg-7">
-                  <div
-                    style={{
-                      background: "#fff",
-                      borderRadius: 24,
-                      padding: 28,
-                      boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
-                    }}
-                  >
+                  <div style={{ ...pageCard, padding: 24 }}>
                     <h3
                       style={{
-                        color: "#0f172a",
-                        fontWeight: 700,
+                        color: "#111827",
+                        fontWeight: 800,
                         marginBottom: 20,
+                        fontSize: 24,
                       }}
                     >
                       Đánh giá sản phẩm
                     </h3>
 
                     {reviewErr && (
-                      <div className="alert alert-warning" role="alert">
+                      <div
+                        className="alert mb-3"
+                        role="alert"
+                        style={{
+                          background: "#fff7ed",
+                          color: "#9a3412",
+                          border: "1px solid #fed7aa",
+                          borderRadius: 12,
+                        }}
+                      >
                         {reviewErr}
                       </div>
                     )}
 
                     {(reviews || []).length === 0 ? (
-                      <p style={{ color: "#64748b", marginBottom: 0 }}>
+                      <div
+                        style={{
+                          background: "#fafafa",
+                          borderRadius: 14,
+                          padding: 20,
+                          color: "#6b7280",
+                        }}
+                      >
                         Chưa có đánh giá nào cho sản phẩm này.
-                      </p>
+                      </div>
                     ) : (
                       <div className="d-grid gap-3">
                         {(reviews || []).map((r) => (
@@ -491,7 +676,7 @@ export default function DetailProductPage() {
                             key={r.id}
                             style={{
                               border: "1px solid #e5e7eb",
-                              borderRadius: 18,
+                              borderRadius: 16,
                               padding: 18,
                               background: "#fff",
                             }}
@@ -507,24 +692,30 @@ export default function DetailProductPage() {
                             >
                               <div
                                 style={{
-                                  fontWeight: 700,
-                                  color: "#0f172a",
+                                  fontWeight: 800,
+                                  color: "#111827",
                                 }}
                               >
-                                {r.rating}★ {r.title}
+                                <span style={{ color: "#f59e0b" }}>
+                                  {"★".repeat(Number(r.rating || 0))}
+                                </span>{" "}
+                                {r.title}
                               </div>
                             </div>
 
-                            <div style={{ color: "#475569" }}>{r.content}</div>
+                            <div style={{ color: "#4b5563", lineHeight: 1.7 }}>
+                              {r.content}
+                            </div>
 
                             {r.replyContent && (
                               <div
                                 style={{
                                   marginTop: 12,
                                   padding: 12,
-                                  background: "#f8fafc",
+                                  background: "#fff7ed",
                                   borderRadius: 12,
-                                  color: "#334155",
+                                  color: "#9a3412",
+                                  border: "1px solid #fed7aa",
                                 }}
                               >
                                 <strong>Phản hồi từ shop:</strong> {r.replyContent}
@@ -538,19 +729,13 @@ export default function DetailProductPage() {
                 </div>
 
                 <div className="col-lg-5">
-                  <div
-                    style={{
-                      background: "#fff",
-                      borderRadius: 24,
-                      padding: 28,
-                      boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
-                    }}
-                  >
+                  <div style={{ ...pageCard, padding: 24 }}>
                     <h3
                       style={{
-                        color: "#0f172a",
-                        fontWeight: 700,
+                        color: "#111827",
+                        fontWeight: 800,
                         marginBottom: 20,
+                        fontSize: 24,
                       }}
                     >
                       Viết đánh giá
@@ -559,14 +744,22 @@ export default function DetailProductPage() {
                     {!token ? (
                       <div
                         style={{
-                          background: "#f8fafc",
-                          borderRadius: 16,
+                          background: "#fafafa",
+                          borderRadius: 14,
                           padding: 16,
-                          color: "#475569",
+                          color: "#4b5563",
+                          lineHeight: 1.7,
                         }}
                       >
                         Bạn cần{" "}
-                        <Link to="/login" style={{ fontWeight: 600 }}>
+                        <Link
+                          to="/login"
+                          style={{
+                            fontWeight: 700,
+                            color: "#ee4d2d",
+                            textDecoration: "none",
+                          }}
+                        >
                           đăng nhập
                         </Link>{" "}
                         để gửi đánh giá.
@@ -576,7 +769,7 @@ export default function DetailProductPage() {
                         <div>
                           <label
                             className="form-label"
-                            style={{ color: "#111827", fontWeight: 600 }}
+                            style={{ color: "#111827", fontWeight: 700 }}
                           >
                             Số sao
                           </label>
@@ -589,18 +782,14 @@ export default function DetailProductPage() {
                             onChange={(e) =>
                               setRv({ ...rv, rating: Number(e.target.value) })
                             }
-                            style={{
-                              height: 48,
-                              borderRadius: 12,
-                              color: "#111827",
-                            }}
+                            style={inputStyle}
                           />
                         </div>
 
                         <div>
                           <label
                             className="form-label"
-                            style={{ color: "#111827", fontWeight: 600 }}
+                            style={{ color: "#111827", fontWeight: 700 }}
                           >
                             Tiêu đề
                           </label>
@@ -611,18 +800,14 @@ export default function DetailProductPage() {
                             onChange={(e) =>
                               setRv({ ...rv, title: e.target.value })
                             }
-                            style={{
-                              height: 48,
-                              borderRadius: 12,
-                              color: "#111827",
-                            }}
+                            style={inputStyle}
                           />
                         </div>
 
                         <div>
                           <label
                             className="form-label"
-                            style={{ color: "#111827", fontWeight: 600 }}
+                            style={{ color: "#111827", fontWeight: 700 }}
                           >
                             Nội dung
                           </label>
@@ -635,20 +820,24 @@ export default function DetailProductPage() {
                               setRv({ ...rv, content: e.target.value })
                             }
                             style={{
-                              borderRadius: 12,
+                              borderRadius: 10,
                               color: "#111827",
+                              border: "1px solid #e5e7eb",
+                              boxShadow: "none",
                             }}
                           />
                         </div>
 
                         <button
                           onClick={submitReview}
-                          className="btn btn-primary"
                           disabled={submittingReview}
                           style={{
                             height: 48,
-                            borderRadius: 12,
-                            fontWeight: 600,
+                            borderRadius: 10,
+                            border: "none",
+                            background: "#ee4d2d",
+                            color: "#fff",
+                            fontWeight: 800,
                           }}
                         >
                           {submittingReview ? "Đang gửi..." : "Gửi đánh giá"}

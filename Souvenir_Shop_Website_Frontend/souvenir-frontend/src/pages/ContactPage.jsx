@@ -17,6 +17,28 @@ const getErrorMessage = (ex, fallback) => {
   return fallback;
 };
 
+const pageCard = {
+  background: "#ffffff",
+  borderRadius: 20,
+  boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
+};
+
+const inputStyle = {
+  height: 44,
+  borderRadius: 10,
+  border: "1px solid #e5e7eb",
+  background: "#fff",
+  color: "#111827",
+  boxShadow: "none",
+};
+
+const labelStyle = {
+  color: "#111827",
+  fontWeight: 700,
+  marginBottom: 8,
+  fontSize: 14,
+};
+
 export default function ContactPage() {
   const [form, setForm] = useState({
     fullName: "",
@@ -82,226 +104,226 @@ export default function ContactPage() {
 
   return (
     <MainLayout>
-<section
-  className="section"
-  style={{
-    background:
-      "radial-gradient(circle at top center, rgba(56,189,248,0.10), transparent 25%), linear-gradient(180deg, #04131f 0%, #071a29 60%, #0a1f31 100%)",
-    paddingTop: 50,
-    paddingBottom: 60,
-  }}
->
-  <div className="container" data-aos="fade-up">
-    <div
-      className="text-center mb-5"
-      style={{
-        paddingTop: 20,
-      }}
-    >
-      {/* Badge */}
-      <span
+      <section
+        className="section"
         style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 8,
-          padding: "10px 20px",
-          borderRadius: 999,
-          background: "rgba(56,189,248,0.12)",
-          color: "#38bdf8",
-          fontSize: 15,
-          fontWeight: 700,
-          marginBottom: 26,
-          border: "1px solid rgba(56,189,248,0.18)",
-          boxShadow: "0 10px 30px rgba(13,110,253,0.15)",
+          background: "#f5f5f5",
+          minHeight: "100vh",
+          paddingTop: 32,
+          paddingBottom: 48,
         }}
       >
-        <i className="bi bi-chat-dots-fill"></i>
-        Liên hệ với SouVN
-      </span>
+        <div className="container">
+          <div
+            style={{
+              ...pageCard,
+              padding: 24,
+              marginBottom: 20,
+              borderLeft: "5px solid #ee4d2d",
+            }}
+          >
+            <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
+              <div>
+                <div
+                  style={{
+                    fontSize: 14,
+                    color: "#6b7280",
+                    marginBottom: 8,
+                    fontWeight: 600,
+                  }}
+                >
+                  Liên hệ SouVN
+                </div>
 
-      {/* Title */}
-      <h2
-        style={{
-          fontWeight: 800,
-          marginBottom: 20,
-          color: "#f8fafc",
-          fontSize: "clamp(34px, 5vw, 60px)",
-          lineHeight: 1.2,
-          letterSpacing: "-0.02em",
-          textShadow: "0 10px 30px rgba(0,0,0,0.35)",
-        }}
-      >
-        Chúng tôi luôn sẵn sàng hỗ trợ bạn
-      </h2>
+                <h2
+                  style={{
+                    margin: 0,
+                    fontWeight: 800,
+                    color: "#111827",
+                    fontSize: "clamp(24px, 4vw, 34px)",
+                  }}
+                >
+                  Chúng tôi luôn sẵn sàng hỗ trợ bạn
+                </h2>
+              </div>
 
-      {/* Description */}
-      <p
-        style={{
-          maxWidth: 820,
-          margin: "0 auto",
-          color: "rgba(226,232,240,0.85)",
-          lineHeight: 1.9,
-          fontSize: 18,
-        }}
-      >
-        Hãy liên hệ với SouVN nếu bạn cần tư vấn sản phẩm lưu niệm, hỗ trợ đơn
-        hàng, hợp tác kinh doanh hoặc giải đáp các thắc mắc trong quá trình mua
-        sắm.
-      </p>
-    </div>
+              <div
+                style={{
+                  fontSize: 14,
+                  color: "#6b7280",
+                  fontWeight: 600,
+                }}
+              >
+                Hỗ trợ nhanh và tiện lợi
+              </div>
+            </div>
+          </div>
 
-          <div className="row g-4">
+          <div className="row g-4 align-items-stretch">
             <div className="col-lg-5">
               <div
                 style={{
-                  background:
-                    "linear-gradient(135deg, rgba(13,110,253,0.18), rgba(255,255,255,0.04))",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  borderRadius: 24,
-                  padding: 32,
-                  color: "#fff",
+                  ...pageCard,
+                  padding: 24,
                   height: "100%",
                 }}
               >
-                <h3 style={{ fontWeight: 700, marginBottom: 20 }}>
+                <h3
+                  style={{
+                    color: "#111827",
+                    fontWeight: 800,
+                    marginBottom: 18,
+                    fontSize: 24,
+                  }}
+                >
                   Thông tin liên hệ
                 </h3>
+
+                <p
+                  style={{
+                    color: "#6b7280",
+                    lineHeight: 1.8,
+                    marginBottom: 20,
+                  }}
+                >
+                  Hãy liên hệ với SouVN nếu bạn cần tư vấn sản phẩm lưu niệm, hỗ
+                  trợ đơn hàng, hợp tác kinh doanh hoặc giải đáp các thắc mắc
+                  trong quá trình mua sắm.
+                </p>
 
                 <div className="d-grid gap-3">
                   <div
                     style={{
-                      padding: "16px 18px",
-                      borderRadius: 16,
-                      background: "rgba(255,255,255,0.06)",
+                      background: "#fafafa",
+                      borderRadius: 14,
+                      padding: 16,
                     }}
                   >
-                    <div style={{ fontWeight: 700, marginBottom: 6 }}>
-                      <i className="bi bi-geo-alt me-2"></i>
+                    <div
+                      style={{
+                        color: "#111827",
+                        fontWeight: 800,
+                        marginBottom: 6,
+                      }}
+                    >
+                      <i
+                        className="bi bi-geo-alt me-2"
+                        style={{ color: "#ee4d2d" }}
+                      ></i>
                       Địa chỉ
                     </div>
-                    <div style={{ color: "rgba(255,255,255,0.85)" }}>
-                      Hà Nội, Việt Nam
-                    </div>
+                    <div style={{ color: "#4b5563" }}>Hà Nội, Việt Nam</div>
                   </div>
 
                   <div
                     style={{
-                      padding: "16px 18px",
-                      borderRadius: 16,
-                      background: "rgba(255,255,255,0.06)",
+                      background: "#fafafa",
+                      borderRadius: 14,
+                      padding: 16,
                     }}
                   >
-                    <div style={{ fontWeight: 700, marginBottom: 6 }}>
-                      <i className="bi bi-telephone me-2"></i>
+                    <div
+                      style={{
+                        color: "#111827",
+                        fontWeight: 800,
+                        marginBottom: 6,
+                      }}
+                    >
+                      <i
+                        className="bi bi-telephone me-2"
+                        style={{ color: "#ee4d2d" }}
+                      ></i>
                       Số điện thoại
                     </div>
-                    <div style={{ color: "rgba(255,255,255,0.85)" }}>
-                      0123 456 789
-                    </div>
+                    <div style={{ color: "#4b5563" }}>0123 456 789</div>
                   </div>
 
                   <div
                     style={{
-                      padding: "16px 18px",
-                      borderRadius: 16,
-                      background: "rgba(255,255,255,0.06)",
+                      background: "#fafafa",
+                      borderRadius: 14,
+                      padding: 16,
                     }}
                   >
-                    <div style={{ fontWeight: 700, marginBottom: 6 }}>
-                      <i className="bi bi-envelope me-2"></i>
+                    <div
+                      style={{
+                        color: "#111827",
+                        fontWeight: 800,
+                        marginBottom: 6,
+                      }}
+                    >
+                      <i
+                        className="bi bi-envelope me-2"
+                        style={{ color: "#ee4d2d" }}
+                      ></i>
                       Email
                     </div>
-                    <div style={{ color: "rgba(255,255,255,0.85)" }}>
-                      souvn@example.com
-                    </div>
+                    <div style={{ color: "#4b5563" }}>souvn@example.com</div>
                   </div>
 
                   <div
                     style={{
-                      padding: "16px 18px",
-                      borderRadius: 16,
-                      background: "rgba(255,255,255,0.06)",
+                      background: "#fafafa",
+                      borderRadius: 14,
+                      padding: 16,
                     }}
                   >
-                    <div style={{ fontWeight: 700, marginBottom: 6 }}>
-                      <i className="bi bi-clock me-2"></i>
+                    <div
+                      style={{
+                        color: "#111827",
+                        fontWeight: 800,
+                        marginBottom: 6,
+                      }}
+                    >
+                      <i
+                        className="bi bi-clock me-2"
+                        style={{ color: "#ee4d2d" }}
+                      ></i>
                       Giờ làm việc
                     </div>
-                    <div style={{ color: "rgba(255,255,255,0.85)" }}>
+                    <div style={{ color: "#4b5563" }}>
                       08:00 - 22:00, tất cả các ngày trong tuần
                     </div>
                   </div>
                 </div>
 
                 <div style={{ marginTop: 24 }}>
-                  <div style={{ fontWeight: 700, marginBottom: 12 }}>
+                  <div
+                    style={{
+                      color: "#111827",
+                      fontWeight: 800,
+                      marginBottom: 12,
+                    }}
+                  >
                     Kết nối với chúng tôi
                   </div>
+
                   <div className="d-flex gap-3 flex-wrap">
-                    <a
-                      href="#"
-                      style={{
-                        width: 42,
-                        height: 42,
-                        borderRadius: "50%",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        background: "rgba(255,255,255,0.08)",
-                        color: "#fff",
-                        textDecoration: "none",
-                      }}
-                    >
-                      <i className="bi bi-facebook"></i>
-                    </a>
-                    <a
-                      href="#"
-                      style={{
-                        width: 42,
-                        height: 42,
-                        borderRadius: "50%",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        background: "rgba(255,255,255,0.08)",
-                        color: "#fff",
-                        textDecoration: "none",
-                      }}
-                    >
-                      <i className="bi bi-instagram"></i>
-                    </a>
-                    <a
-                      href="#"
-                      style={{
-                        width: 42,
-                        height: 42,
-                        borderRadius: "50%",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        background: "rgba(255,255,255,0.08)",
-                        color: "#fff",
-                        textDecoration: "none",
-                      }}
-                    >
-                      <i className="bi bi-tiktok"></i>
-                    </a>
-                    <a
-                      href="#"
-                      style={{
-                        width: 42,
-                        height: 42,
-                        borderRadius: "50%",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        background: "rgba(255,255,255,0.08)",
-                        color: "#fff",
-                        textDecoration: "none",
-                      }}
-                    >
-                      <i className="bi bi-youtube"></i>
-                    </a>
+                    {[
+                      "bi-facebook",
+                      "bi-instagram",
+                      "bi-tiktok",
+                      "bi-youtube",
+                    ].map((icon, index) => (
+                      <a
+                        key={index}
+                        href="#"
+                        style={{
+                          width: 42,
+                          height: 42,
+                          borderRadius: "50%",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          background: "#fff7ed",
+                          color: "#ee4d2d",
+                          textDecoration: "none",
+                          border: "1px solid #fed7aa",
+                        }}
+                      >
+                        <i className={`bi ${icon}`}></i>
+                      </a>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -310,30 +332,48 @@ export default function ContactPage() {
             <div className="col-lg-7">
               <div
                 style={{
-                  background: "#fff",
-                  borderRadius: 24,
-                  padding: 32,
-                  boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
+                  ...pageCard,
+                  padding: 24,
+                  height: "100%",
                 }}
               >
                 <h3
                   style={{
-                    fontWeight: 700,
-                    color: "#0f172a",
+                    color: "#111827",
+                    fontWeight: 800,
                     marginBottom: 20,
+                    fontSize: 24,
                   }}
                 >
                   Gửi thông tin liên hệ
                 </h3>
 
                 {err && (
-                  <div className="alert alert-danger" role="alert">
+                  <div
+                    className="alert mb-3"
+                    role="alert"
+                    style={{
+                      background: "#fef2f2",
+                      color: "#b91c1c",
+                      border: "1px solid #fecaca",
+                      borderRadius: 12,
+                    }}
+                  >
                     {err}
                   </div>
                 )}
 
                 {success && (
-                  <div className="alert alert-success" role="alert">
+                  <div
+                    className="alert mb-3"
+                    role="alert"
+                    style={{
+                      background: "#ecfdf5",
+                      color: "#047857",
+                      border: "1px solid #a7f3d0",
+                      borderRadius: 12,
+                    }}
+                  >
                     {success}
                   </div>
                 )}
@@ -341,10 +381,7 @@ export default function ContactPage() {
                 <form onSubmit={submit}>
                   <div className="row g-3">
                     <div className="col-md-6">
-                      <label
-                        className="form-label"
-                        style={{ color: "#334155", fontWeight: 600 }}
-                      >
+                      <label className="form-label" style={labelStyle}>
                         Họ và tên
                       </label>
                       <input
@@ -353,15 +390,12 @@ export default function ContactPage() {
                         placeholder="Nhập họ và tên"
                         value={form.fullName}
                         onChange={change}
-                        style={{ height: 48, borderRadius: 12 }}
+                        style={inputStyle}
                       />
                     </div>
 
                     <div className="col-md-6">
-                      <label
-                        className="form-label"
-                        style={{ color: "#334155", fontWeight: 600 }}
-                      >
+                      <label className="form-label" style={labelStyle}>
                         Email
                       </label>
                       <input
@@ -371,15 +405,12 @@ export default function ContactPage() {
                         placeholder="Nhập email"
                         value={form.email}
                         onChange={change}
-                        style={{ height: 48, borderRadius: 12 }}
+                        style={inputStyle}
                       />
                     </div>
 
                     <div className="col-md-6">
-                      <label
-                        className="form-label"
-                        style={{ color: "#334155", fontWeight: 600 }}
-                      >
+                      <label className="form-label" style={labelStyle}>
                         Số điện thoại
                       </label>
                       <input
@@ -388,15 +419,12 @@ export default function ContactPage() {
                         placeholder="Nhập số điện thoại"
                         value={form.phone}
                         onChange={change}
-                        style={{ height: 48, borderRadius: 12 }}
+                        style={inputStyle}
                       />
                     </div>
 
                     <div className="col-md-6">
-                      <label
-                        className="form-label"
-                        style={{ color: "#334155", fontWeight: 600 }}
-                      >
+                      <label className="form-label" style={labelStyle}>
                         Chủ đề
                       </label>
                       <input
@@ -405,15 +433,12 @@ export default function ContactPage() {
                         placeholder="Ví dụ: Hỗ trợ đơn hàng"
                         value={form.subject}
                         onChange={change}
-                        style={{ height: 48, borderRadius: 12 }}
+                        style={inputStyle}
                       />
                     </div>
 
                     <div className="col-12">
-                      <label
-                        className="form-label"
-                        style={{ color: "#334155", fontWeight: 600 }}
-                      >
+                      <label className="form-label" style={labelStyle}>
                         Nội dung
                       </label>
                       <textarea
@@ -423,20 +448,28 @@ export default function ContactPage() {
                         placeholder="Nhập nội dung bạn muốn liên hệ"
                         value={form.message}
                         onChange={change}
-                        style={{ borderRadius: 12 }}
+                        style={{
+                          borderRadius: 10,
+                          border: "1px solid #e5e7eb",
+                          color: "#111827",
+                          boxShadow: "none",
+                        }}
                       />
                     </div>
                   </div>
 
                   <button
                     type="submit"
-                    className="btn btn-primary mt-4"
                     disabled={loading}
                     style={{
                       minWidth: 180,
-                      height: 48,
-                      borderRadius: 12,
-                      fontWeight: 600,
+                      height: 46,
+                      borderRadius: 10,
+                      border: "none",
+                      background: "#ee4d2d",
+                      color: "#fff",
+                      fontWeight: 700,
+                      marginTop: 18,
                     }}
                   >
                     {loading ? "Đang gửi..." : "Gửi liên hệ"}
@@ -446,21 +479,30 @@ export default function ContactPage() {
             </div>
           </div>
 
-          <div className="mt-5">
+          <div className="mt-4">
             <div
               style={{
-                background: "#fff",
-                borderRadius: 24,
-                padding: 18,
-                boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
+                ...pageCard,
+                padding: 16,
               }}
             >
+              <div
+                style={{
+                  color: "#111827",
+                  fontWeight: 800,
+                  fontSize: 22,
+                  marginBottom: 14,
+                }}
+              >
+                Bản đồ
+              </div>
+
               <iframe
                 title="SouVN Map"
                 src="https://www.google.com/maps?q=Ha%20Noi%2C%20Viet%20Nam&z=13&output=embed"
                 width="100%"
                 height="360"
-                style={{ border: 0, borderRadius: 18 }}
+                style={{ border: 0, borderRadius: 14 }}
                 allowFullScreen=""
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"

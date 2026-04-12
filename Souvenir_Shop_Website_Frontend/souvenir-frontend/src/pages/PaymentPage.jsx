@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import { paymentService } from "../services/paymentService";
 
@@ -47,8 +47,6 @@ const getMethodText = (method) => {
 
   if (s === "cod") return "Thanh toán khi nhận hàng (COD)";
   if (s === "bank_transfer") return "Chuyển khoản ngân hàng";
-  if (s === "momo") return "Ví MoMo";
-  if (s === "vnpay") return "VNPay";
 
   return method || "Không xác định";
 };
@@ -77,6 +75,7 @@ const inputStyle = {
 
 export default function PaymentPage() {
   const { orderCode } = useParams();
+  const navigate = useNavigate();
 
   const [method, setMethod] = useState("cod");
   const [payment, setPayment] = useState(null);
@@ -114,6 +113,20 @@ export default function PaymentPage() {
     init();
   }, [orderCode]);
 
+  useEffect(() => {
+    if (payment?.paymentMethod) {
+      setMethod(payment.paymentMethod);
+    }
+  }, [payment]);
+
+  const goToOrdersSuccess = () => {
+    navigate("/orders", {
+      state: {
+        successMessage: "Xác nhận đơn hàng thành công.",
+      },
+    });
+  };
+
   const create = async () => {
     setErr("");
     setMsg("");
@@ -124,7 +137,17 @@ export default function PaymentPage() {
         orderCode,
         paymentMethod: method,
       });
-      setPayment(res.data);
+
+      const newPayment = res.data;
+      setPayment(newPayment);
+
+      const createdMethod = String(newPayment?.paymentMethod || method).toLowerCase();
+
+      if (createdMethod === "cod") {
+        goToOrdersSuccess();
+        return;
+      }
+
       setMsg("Tạo thanh toán thành công");
     } catch (ex) {
       setErr(getErrorMessage(ex, "Tạo thanh toán thất bại"));
@@ -139,17 +162,9 @@ export default function PaymentPage() {
 
     try {
       setConfirming(true);
-      const res = await paymentService.confirm({ orderCode });
-
-      if (typeof res.data === "string") {
-        setMsg(res.data);
-      } else if (res.data?.message) {
-        setMsg(res.data.message);
-      } else {
-        setMsg("Xác nhận thanh toán thành công");
-      }
-
+      await paymentService.confirm({ orderCode });
       await loadLatest();
+      goToOrdersSuccess();
     } catch (ex) {
       setErr(getErrorMessage(ex, "Xác nhận thanh toán thất bại"));
     } finally {
@@ -158,6 +173,10 @@ export default function PaymentPage() {
   };
 
   const badge = getStatusBadge(payment?.status);
+  const selectedMethod = payment?.paymentMethod || method;
+  const isCod = String(selectedMethod || "").toLowerCase() === "cod";
+  const isBankTransfer =
+    String(selectedMethod || "").toLowerCase() === "bank_transfer";
 
   return (
     <MainLayout>
@@ -367,8 +386,6 @@ export default function PaymentPage() {
                     >
                       <option value="cod">Thanh toán khi nhận hàng (COD)</option>
                       <option value="bank_transfer">Chuyển khoản ngân hàng</option>
-                      <option value="momo">Ví MoMo</option>
-                      <option value="vnpay">VNPay</option>
                     </select>
                   </div>
 
@@ -387,18 +404,20 @@ export default function PaymentPage() {
                       {creating ? "Đang tạo thanh toán..." : "Tạo thanh toán"}
                     </button>
 
-                    <button
-                      onClick={confirm}
-                      className="btn btn-outline-success"
-                      disabled={confirming}
-                      style={{
-                        height: 48,
-                        borderRadius: 14,
-                        fontWeight: 700,
-                      }}
-                    >
-                      {confirming ? "Đang xác nhận..." : "Xác nhận thanh toán"}
-                    </button>
+                    {!isCod && (
+                      <button
+                        onClick={confirm}
+                        className="btn btn-outline-success"
+                        disabled={confirming}
+                        style={{
+                          height: 48,
+                          borderRadius: 14,
+                          fontWeight: 700,
+                        }}
+                      >
+                        {confirming ? "Đang xác nhận..." : "Xác nhận thanh toán"}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -525,7 +544,61 @@ export default function PaymentPage() {
                         </div>
                       )}
 
-                      {payment.paymentUrl && (
+                      {isBankTransfer && payment.bankName && (
+                        <div
+                          style={{
+                            border: "1px solid #e5e7eb",
+                            borderRadius: 18,
+                            padding: 18,
+                            background: "#fff",
+                          }}
+                        >
+                          <div style={{ color: "#64748b", marginBottom: 8 }}>
+                            Ngân hàng
+                          </div>
+                          <div style={{ color: "#0f172a", fontWeight: 700 }}>
+                            {payment.bankName}
+                          </div>
+                        </div>
+                      )}
+
+                      {isBankTransfer && payment.accountName && (
+                        <div
+                          style={{
+                            border: "1px solid #e5e7eb",
+                            borderRadius: 18,
+                            padding: 18,
+                            background: "#fff",
+                          }}
+                        >
+                          <div style={{ color: "#64748b", marginBottom: 8 }}>
+                            Chủ tài khoản
+                          </div>
+                          <div style={{ color: "#0f172a", fontWeight: 700 }}>
+                            {payment.accountName}
+                          </div>
+                        </div>
+                      )}
+
+                      {isBankTransfer && payment.accountNo && (
+                        <div
+                          style={{
+                            border: "1px solid #e5e7eb",
+                            borderRadius: 18,
+                            padding: 18,
+                            background: "#fff",
+                          }}
+                        >
+                          <div style={{ color: "#64748b", marginBottom: 8 }}>
+                            Số tài khoản
+                          </div>
+                          <div style={{ color: "#0f172a", fontWeight: 700 }}>
+                            {payment.accountNo}
+                          </div>
+                        </div>
+                      )}
+
+                      {payment.paymentUrl && isBankTransfer && (
                         <div
                           style={{
                             border: "1px solid #e5e7eb",
@@ -535,7 +608,7 @@ export default function PaymentPage() {
                           }}
                         >
                           <div style={{ color: "#64748b", marginBottom: 10 }}>
-                            Liên kết thanh toán
+                            Liên kết / mã QR thanh toán
                           </div>
                           <a
                             href={payment.paymentUrl}
@@ -544,8 +617,23 @@ export default function PaymentPage() {
                             className="btn btn-outline-primary"
                             style={{ borderRadius: 12, fontWeight: 700 }}
                           >
-                            Mở trang thanh toán
+                            Mở thông tin thanh toán
                           </a>
+                        </div>
+                      )}
+
+                      {isCod && (
+                        <div
+                          style={{
+                            border: "1px solid #fde68a",
+                            borderRadius: 18,
+                            padding: 18,
+                            background: "#fffbeb",
+                            color: "#92400e",
+                          }}
+                        >
+                          Đơn hàng này sử dụng hình thức thanh toán khi nhận hàng
+                          (COD), nên không cần xác nhận thanh toán trước.
                         </div>
                       )}
                     </div>

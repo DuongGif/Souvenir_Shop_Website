@@ -4,28 +4,35 @@ import { productService } from "../services/productService";
 import ProductCard from "../components/ProductCard";
 import Pagination from "../components/Pagination";
 
-const panelStyle = {
-  border: "1px solid rgba(255,255,255,0.08)",
-  background: "rgba(255,255,255,0.03)",
-  borderRadius: 24,
-  boxShadow: "0 18px 40px rgba(0,0,0,0.14)",
-  backdropFilter: "blur(6px)",
+const pageCard = {
+  background: "#ffffff",
+  borderRadius: 20,
+  boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
 };
 
 const inputStyle = {
-  height: 48,
-  borderRadius: 14,
-  border: "1px solid rgba(255,255,255,0.10)",
-  background: "rgba(255,255,255,0.04)",
-  color: "#e2e8f0",
+  height: 44,
+  borderRadius: 10,
+  border: "1px solid #e5e7eb",
+  background: "#fff",
+  color: "#111827",
   boxShadow: "none",
 };
 
 const labelStyle = {
-  color: "#cbd5e1",
-  fontWeight: 600,
+  color: "#374151",
+  fontWeight: 700,
   marginBottom: 8,
+  fontSize: 14,
 };
+
+const sortOptions = [
+  { value: "newest", label: "Mới nhất" },
+  { value: "price_asc", label: "Giá tăng dần" },
+  { value: "price_desc", label: "Giá giảm dần" },
+  { value: "rating_desc", label: "Đánh giá cao nhất" },
+  { value: "rating_asc", label: "Đánh giá thấp nhất" },
+];
 
 export default function ProductsPage() {
   const [q, setQ] = useState({
@@ -37,14 +44,14 @@ export default function ProductsPage() {
     inStockOnly: false,
     sort: "newest",
     page: 1,
-    pageSize: 12,
+    pageSize: 6,
   });
 
   const [data, setData] = useState({
     items: [],
     totalItems: 0,
     page: 1,
-    pageSize: 12,
+    pageSize: 6,
   });
 
   const [loading, setLoading] = useState(false);
@@ -65,9 +72,22 @@ export default function ProductsPage() {
 
       try {
         const res = await productService.search(params);
-        setData(res.data);
+        setData(
+          res?.data || {
+            items: [],
+            totalItems: 0,
+            page: 1,
+            pageSize: 6,
+          }
+        );
       } catch (ex) {
-        setErr(ex?.response?.data || "Không thể tải danh sách sản phẩm");
+        const message =
+          typeof ex?.response?.data === "string"
+            ? ex.response.data
+            : ex?.response?.data?.message ||
+              ex?.response?.data?.title ||
+              "Không thể tải danh sách sản phẩm";
+        setErr(message);
       } finally {
         setLoading(false);
       }
@@ -78,73 +98,79 @@ export default function ProductsPage() {
 
   const totalPages = Math.max(
     1,
-    Math.ceil((data.totalItems || 0) / (data.pageSize || 12))
+    Math.ceil((data.totalItems || 0) / (data.pageSize || 6))
   );
+
+  const clearFilters = () => {
+    setQ({
+      keyword: "",
+      categoryIds: "",
+      minPrice: "",
+      maxPrice: "",
+      minRating: "",
+      inStockOnly: false,
+      sort: "newest",
+      page: 1,
+      pageSize: 6,
+    });
+  };
 
   return (
     <MainLayout>
       <section
         className="section"
         style={{
-          background:
-            "radial-gradient(circle at top center, rgba(56,189,248,0.10), transparent 24%), linear-gradient(180deg, #04131f 0%, #071a29 60%, #0a1f31 100%)",
-          paddingTop: 50,
-          paddingBottom: 60,
+          background: "#f5f5f5",
+          minHeight: "100vh",
+          paddingTop: 32,
+          paddingBottom: 48,
         }}
       >
-        <div className="container" data-aos="fade-up">
+        <div className="container">
           <div
-            className="text-center mb-5"
             style={{
-              paddingTop: 18,
+              ...pageCard,
+              padding: 24,
+              marginBottom: 20,
+              borderLeft: "5px solid #ee4d2d",
             }}
           >
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "10px 20px",
-                borderRadius: 999,
-                background: "rgba(56,189,248,0.12)",
-                color: "#38bdf8",
-                fontSize: 15,
-                fontWeight: 700,
-                marginBottom: 24,
-                border: "1px solid rgba(56,189,248,0.18)",
-                boxShadow: "0 10px 30px rgba(13,110,253,0.15)",
-              }}
-            >
-              <i className="bi bi-bag-heart-fill"></i>
-              Sản phẩm lưu niệm SouVN
-            </span>
+            <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
+              <div>
+                <div
+                  style={{
+                    fontSize: 14,
+                    color: "#6b7280",
+                    marginBottom: 8,
+                    fontWeight: 600,
+                  }}
+                >
+                  SouVN Shop
+                </div>
 
-            <h2
-              style={{
-                fontWeight: 800,
-                marginBottom: 20,
-                color: "#f8fafc",
-                fontSize: "clamp(34px, 5vw, 58px)",
-                lineHeight: 1.2,
-                letterSpacing: "-0.02em",
-                textShadow: "0 10px 30px rgba(0,0,0,0.35)",
-              }}
-            >
-              Khám phá bộ sưu tập quà lưu niệm
-            </h2>
+                <h2
+                  style={{
+                    margin: 0,
+                    fontWeight: 800,
+                    color: "#111827",
+                    fontSize: "clamp(24px, 4vw, 34px)",
+                  }}
+                >
+                  Danh sách sản phẩm
+                </h2>
+              </div>
 
-            <p
-              style={{
-                maxWidth: 860,
-                margin: "0 auto",
-                color: "rgba(226,232,240,0.86)",
-                lineHeight: 1.9,
-                fontSize: 18,
-              }}
-            >
-              Tìm kiếm, lọc theo mức giá, đánh giá và sắp xếp sản phẩm theo nhu
-              cầu để chọn được món quà lưu niệm phù hợp nhất dành cho bạn.
-            </p>
+              <div
+                style={{
+                  fontSize: 14,
+                  color: "#6b7280",
+                  fontWeight: 600,
+                }}
+              >
+                Tổng số sản phẩm:{" "}
+                <span style={{ color: "#ee4d2d" }}>{data.totalItems || 0}</span>
+              </div>
+            </div>
           </div>
 
           {err && (
@@ -155,7 +181,7 @@ export default function ProductsPage() {
                 background: "#fef2f2",
                 color: "#b91c1c",
                 border: "1px solid #fecaca",
-                borderRadius: 16,
+                borderRadius: 12,
               }}
             >
               {String(err)}
@@ -163,27 +189,18 @@ export default function ProductsPage() {
           )}
 
           <div className="row g-4 align-items-start">
-            <div className="col-lg-4 col-xl-3">
-              <div style={{ ...panelStyle, padding: 24 }}>
-                <div className="d-flex align-items-center justify-content-between mb-3">
-                  <h4
-                    className="mb-0"
-                    style={{ color: "#f8fafc", fontWeight: 700 }}
-                  >
-                    Bộ lọc sản phẩm
-                  </h4>
-                  <span
-                    style={{
-                      fontSize: 13,
-                      color: "#7dd3fc",
-                      background: "rgba(56,189,248,0.10)",
-                      border: "1px solid rgba(56,189,248,0.16)",
-                      padding: "6px 10px",
-                      borderRadius: 999,
-                    }}
-                  >
-                    Tùy chọn
-                  </span>
+            <div className="col-lg-3">
+              <div style={{ ...pageCard, padding: 20, position: "sticky", top: 24 }}>
+                <div
+                  style={{
+                    fontSize: 18,
+                    fontWeight: 800,
+                    color: "#111827",
+                    marginBottom: 18,
+                  }}
+                >
+                  <i className="bi bi-funnel me-2" style={{ color: "#ee4d2d" }}></i>
+                  Bộ lọc tìm kiếm
                 </div>
 
                 <div className="d-grid gap-3">
@@ -219,36 +236,38 @@ export default function ProductsPage() {
                     />
                   </div>
 
-                  <div>
-                    <label className="form-label" style={labelStyle}>
-                      Giá từ
-                    </label>
-                    <input
-                      type="number"
-                      className="form-control"
-                      placeholder="0"
-                      value={q.minPrice}
-                      onChange={(e) =>
-                        setQ({ ...q, minPrice: e.target.value, page: 1 })
-                      }
-                      style={inputStyle}
-                    />
-                  </div>
+                  <div className="row g-2">
+                    <div className="col-6">
+                      <label className="form-label" style={labelStyle}>
+                        Giá từ
+                      </label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        placeholder="0"
+                        value={q.minPrice}
+                        onChange={(e) =>
+                          setQ({ ...q, minPrice: e.target.value, page: 1 })
+                        }
+                        style={inputStyle}
+                      />
+                    </div>
 
-                  <div>
-                    <label className="form-label" style={labelStyle}>
-                      Giá đến
-                    </label>
-                    <input
-                      type="number"
-                      className="form-control"
-                      placeholder="1000000"
-                      value={q.maxPrice}
-                      onChange={(e) =>
-                        setQ({ ...q, maxPrice: e.target.value, page: 1 })
-                      }
-                      style={inputStyle}
-                    />
+                    <div className="col-6">
+                      <label className="form-label" style={labelStyle}>
+                        Giá đến
+                      </label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        placeholder="1000000"
+                        value={q.maxPrice}
+                        onChange={(e) =>
+                          setQ({ ...q, maxPrice: e.target.value, page: 1 })
+                        }
+                        style={inputStyle}
+                      />
+                    </div>
                   </div>
 
                   <div>
@@ -270,32 +289,12 @@ export default function ProductsPage() {
                     />
                   </div>
 
-                  <div>
-                    <label className="form-label" style={labelStyle}>
-                      Sắp xếp
-                    </label>
-                    <select
-                      className="form-select"
-                      value={q.sort}
-                      onChange={(e) =>
-                        setQ({ ...q, sort: e.target.value, page: 1 })
-                      }
-                      style={inputStyle}
-                    >
-                      <option value="newest">Mới nhất</option>
-                      <option value="price_asc">Giá tăng dần</option>
-                      <option value="price_desc">Giá giảm dần</option>
-                      <option value="rating_desc">Đánh giá cao nhất</option>
-                      <option value="rating_asc">Đánh giá thấp nhất</option>
-                    </select>
-                  </div>
-
                   <div
-                    className="form-check mt-1"
+                    className="form-check"
                     style={{
-                      background: "rgba(255,255,255,0.04)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      borderRadius: 14,
+                      background: "#fff7ed",
+                      border: "1px solid #fed7aa",
+                      borderRadius: 12,
                       padding: "12px 14px 12px 38px",
                     }}
                   >
@@ -311,35 +310,24 @@ export default function ProductsPage() {
                     <label
                       className="form-check-label"
                       htmlFor="inStockOnly"
-                      style={{ color: "#e2e8f0" }}
+                      style={{ color: "#9a3412", fontWeight: 600 }}
                     >
                       Chỉ hiển thị sản phẩm còn hàng
                     </label>
                   </div>
 
                   <button
-                    className="btn mt-2"
+                    type="button"
+                    className="btn"
+                    onClick={clearFilters}
                     style={{
-                      borderRadius: 14,
-                      height: 48,
+                      height: 44,
+                      borderRadius: 10,
                       fontWeight: 700,
-                      color: "#e2e8f0",
-                      border: "1px solid rgba(255,255,255,0.14)",
-                      background: "rgba(255,255,255,0.04)",
+                      background: "#ee4d2d",
+                      color: "#fff",
+                      border: "none",
                     }}
-                    onClick={() =>
-                      setQ({
-                        keyword: "",
-                        categoryIds: "",
-                        minPrice: "",
-                        maxPrice: "",
-                        minRating: "",
-                        inStockOnly: false,
-                        sort: "newest",
-                        page: 1,
-                        pageSize: 12,
-                      })
-                    }
                   >
                     <i className="bi bi-arrow-counterclockwise me-2"></i>
                     Xóa bộ lọc
@@ -348,110 +336,124 @@ export default function ProductsPage() {
               </div>
             </div>
 
-            <div className="col-lg-8 col-xl-9">
-              <div
-                style={{
-                  ...panelStyle,
-                  padding: 24,
-                }}
-              >
-                <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-                  <h4
-                    className="mb-0"
-                    style={{ color: "#f8fafc", fontWeight: 700 }}
-                  >
-                    Danh sách sản phẩm{" "}
-                    <span style={{ color: "#94a3b8", fontWeight: 500 }}>
-                      ({data.totalItems || 0} sản phẩm)
-                    </span>
-                  </h4>
-
+            <div className="col-lg-9">
+              <div style={{ ...pageCard, padding: 20, marginBottom: 16 }}>
+                <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
                   <div
                     style={{
-                      color: "#7dd3fc",
-                      fontSize: 14,
-                      background: "rgba(56,189,248,0.10)",
-                      border: "1px solid rgba(56,189,248,0.16)",
-                      padding: "8px 12px",
-                      borderRadius: 999,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      flexWrap: "wrap",
                     }}
                   >
-                    <i className="bi bi-grid-3x3-gap-fill me-2"></i>
-                    Hiển thị {data.items?.length || 0} sản phẩm
-                  </div>
-                </div>
-
-                {loading ? (
-                  <div
-                    className="text-center py-5"
-                    style={{
-                      borderRadius: 20,
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      background: "rgba(255,255,255,0.02)",
-                    }}
-                  >
-                    <div className="spinner-border text-info" role="status"></div>
-                    <p className="mt-3 mb-0" style={{ color: "#cbd5e1" }}>
-                      Đang tải sản phẩm...
-                    </p>
-                  </div>
-                ) : (data.items || []).length === 0 ? (
-                  <div
-                    className="text-center p-5"
-                    style={{
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      background: "rgba(255,255,255,0.02)",
-                      borderRadius: 20,
-                    }}
-                  >
-                    <div
+                    <span
                       style={{
-                        width: 72,
-                        height: 72,
-                        borderRadius: "50%",
-                        margin: "0 auto 16px auto",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        background: "rgba(56,189,248,0.10)",
-                        color: "#7dd3fc",
-                        fontSize: 28,
+                        color: "#6b7280",
+                        fontWeight: 700,
+                        fontSize: 14,
                       }}
                     >
-                      <i className="bi bi-search"></i>
-                    </div>
-                    <h5 style={{ color: "#f8fafc", fontWeight: 700 }}>
-                      Không tìm thấy sản phẩm phù hợp
-                    </h5>
-                    <p className="mb-0" style={{ color: "#94a3b8" }}>
-                      Hãy thử thay đổi từ khóa tìm kiếm hoặc bộ lọc.
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    <div className="row g-4">
-                      {(data.items || []).map((p) => (
-                        <div key={p.id} className="col-md-6 col-xl-4">
-                          <ProductCard p={p} />
-                        </div>
-                      ))}
-                    </div>
+                      Sắp xếp theo
+                    </span>
 
-                    <div className="mt-4 d-flex justify-content-center">
-                      <Pagination
-                        page={q.page}
-                        totalPages={totalPages}
-                        onPrev={() =>
-                          q.page > 1 && setQ({ ...q, page: q.page - 1 })
-                        }
-                        onNext={() =>
-                          q.page < totalPages && setQ({ ...q, page: q.page + 1 })
-                        }
-                      />
-                    </div>
-                  </>
-                )}
+                    {sortOptions.map((option) => {
+                      const isActive = q.sort === option.value;
+
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() =>
+                            setQ({ ...q, sort: option.value, page: 1 })
+                          }
+                          style={{
+                            border: "none",
+                            outline: "none",
+                            background: isActive ? "#ee4d2d" : "#fff",
+                            color: isActive ? "#fff" : "#374151",
+                            fontWeight: 700,
+                            borderRadius: 999,
+                            padding: "10px 16px",
+                            whiteSpace: "nowrap",
+                            boxShadow: isActive
+                              ? "0 8px 18px rgba(238,77,45,0.2)"
+                              : "inset 0 0 0 1px #e5e7eb",
+                          }}
+                        >
+                          {option.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div
+                    style={{
+                      color: "#6b7280",
+                      fontSize: 14,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Hiển thị{" "}
+                    <span style={{ color: "#ee4d2d" }}>
+                      {data.items?.length || 0}
+                    </span>{" "}
+                    sản phẩm
+                  </div>
+                </div>
               </div>
+
+              {loading ? (
+                <div style={{ ...pageCard, padding: 40 }} className="text-center">
+                  <div className="spinner-border text-danger" role="status"></div>
+                  <p className="mt-3 mb-0" style={{ color: "#6b7280" }}>
+                    Đang tải sản phẩm...
+                  </p>
+                </div>
+              ) : (data.items || []).length === 0 ? (
+                <div style={{ ...pageCard, padding: 40 }} className="text-center">
+                  <div
+                    style={{
+                      fontSize: 54,
+                      color: "#d1d5db",
+                      marginBottom: 12,
+                    }}
+                  >
+                    <i className="bi bi-search"></i>
+                  </div>
+
+                  <h4 style={{ color: "#111827", fontWeight: 700 }}>
+                    Không tìm thấy sản phẩm phù hợp
+                  </h4>
+
+                  <p style={{ color: "#6b7280", marginBottom: 0 }}>
+                    Hãy thử thay đổi từ khóa tìm kiếm hoặc bộ lọc.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="row g-3">
+                    {(data.items || []).map((p) => (
+                      <div key={p.id} className="col-sm-6 col-lg-4">
+                        <ProductCard p={p} />
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-4 d-flex justify-content-center">
+                    <Pagination
+                      page={q.page}
+                      totalPages={totalPages}
+                      onPrev={() =>
+                        q.page > 1 && setQ({ ...q, page: q.page - 1 })
+                      }
+                      onNext={() =>
+                        q.page < totalPages && setQ({ ...q, page: q.page + 1 })
+                      }
+                    />
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

@@ -18,6 +18,28 @@ const getErrorMessage = (ex, fallback) => {
   return fallback;
 };
 
+const pageCard = {
+  background: "#ffffff",
+  borderRadius: 20,
+  boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
+};
+
+const labelStyle = {
+  color: "#111827",
+  fontWeight: 700,
+  marginBottom: 8,
+  fontSize: 14,
+};
+
+const inputStyle = {
+  height: 44,
+  borderRadius: 10,
+  border: "1px solid #e5e7eb",
+  background: "#fff",
+  color: "#111827",
+  boxShadow: "none",
+};
+
 export default function AccountPage() {
   const nav = useNavigate();
 
@@ -148,79 +170,166 @@ export default function AccountPage() {
 
   return (
     <MainLayout>
-      <section className="section">
-        <div className="container" data-aos="fade-up">
-          <div className="row justify-content-center align-items-center g-4">
-            <div className="col-lg-5">
-              <div
-                style={{
-                  padding: "36px",
-                  borderRadius: 24,
-                  background:
-                    "linear-gradient(135deg, rgba(13,110,253,0.18), rgba(255,255,255,0.04))",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  color: "#fff",
-                  height: "100%",
-                }}
-              >
-                <span
+      <section
+        className="section"
+        style={{
+          background: "#f5f5f5",
+          minHeight: "100vh",
+          paddingTop: 32,
+          paddingBottom: 48,
+        }}
+      >
+        <div className="container">
+          <div
+            style={{
+              ...pageCard,
+              padding: 24,
+              marginBottom: 20,
+              borderLeft: "5px solid #ee4d2d",
+            }}
+          >
+            <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+              <div>
+                <div style={{ color: "#6b7280", fontSize: 14, fontWeight: 600 }}>
+                  SouVN Shop
+                </div>
+                <h2
                   style={{
-                    display: "inline-block",
-                    padding: "6px 14px",
-                    borderRadius: 999,
-                    background: "rgba(255,255,255,0.08)",
-                    fontSize: 14,
-                    marginBottom: 18,
+                    margin: 0,
+                    fontWeight: 800,
+                    color: "#111827",
                   }}
                 >
-                  Đăng ký bằng OTP email
-                </span>
-
-                <h2 style={{ fontWeight: 700, marginBottom: 16 }}>
-                  Tạo tài khoản SouVN nhanh chóng
+                  Đăng ký tài khoản
                 </h2>
+              </div>
 
-                <p style={{ color: "rgba(255,255,255,0.82)", lineHeight: 1.8 }}>
-                  Bạn chỉ cần nhập email để nhận mã OTP, sau đó xác thực và hoàn tất
-                  đăng ký tài khoản để mua sắm, theo dõi đơn hàng và lưu sản phẩm yêu thích.
+              <div
+                style={{
+                  color: "#6b7280",
+                  fontSize: 14,
+                  fontWeight: 700,
+                }}
+              >
+                Bước {step}/2
+              </div>
+            </div>
+          </div>
+
+          <div className="row justify-content-center g-4">
+            <div className="col-lg-5">
+              <div style={{ ...pageCard, padding: 24, height: "100%" }}>
+                <h3
+                  style={{
+                    fontWeight: 800,
+                    color: "#111827",
+                    marginBottom: 16,
+                  }}
+                >
+                  Tạo tài khoản SouVN
+                </h3>
+
+                <p style={{ color: "#6b7280", lineHeight: 1.8 }}>
+                  Đăng ký nhanh bằng email và mã OTP để bắt đầu mua sắm, theo dõi đơn hàng và quản lý tài khoản dễ dàng.
                 </p>
+
+                <div className="d-grid gap-3 mt-4">
+                  <div
+                    style={{
+                      background: step === 1 ? "#fff7ed" : "#fafafa",
+                      border: step === 1 ? "1px solid #fed7aa" : "1px solid #e5e7eb",
+                      borderRadius: 12,
+                      padding: 14,
+                    }}
+                  >
+                    <div style={{ color: "#111827", fontWeight: 800, marginBottom: 4 }}>
+                      Bước 1
+                    </div>
+                    <div style={{ color: "#6b7280" }}>Nhập email để nhận mã OTP</div>
+                  </div>
+
+                  <div
+                    style={{
+                      background: step === 2 ? "#fff7ed" : "#fafafa",
+                      border: step === 2 ? "1px solid #fed7aa" : "1px solid #e5e7eb",
+                      borderRadius: 12,
+                      padding: 14,
+                    }}
+                  >
+                    <div style={{ color: "#111827", fontWeight: 800, marginBottom: 4 }}>
+                      Bước 2
+                    </div>
+                    <div style={{ color: "#6b7280" }}>
+                      Xác thực OTP và hoàn tất đăng ký
+                    </div>
+                  </div>
+
+                  {[
+                    "Đăng ký nhanh chóng",
+                    "Xác thực email an toàn",
+                    "Bắt đầu mua sắm ngay",
+                  ].map((text, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        background: "#fff7ed",
+                        border: "1px solid #fed7aa",
+                        borderRadius: 12,
+                        padding: 12,
+                        color: "#9a3412",
+                        fontWeight: 600,
+                      }}
+                    >
+                      <i className="bi bi-check-circle me-2"></i>
+                      {text}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
             <div className="col-lg-5">
-              <div
-                style={{
-                  background: "#fff",
-                  borderRadius: 24,
-                  padding: "36px",
-                  boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
-                }}
-              >
-                <div className="text-center mb-4">
-                  <h3
-                    style={{
-                      fontWeight: 700,
-                      color: "#1f2937",
-                      marginBottom: 8,
-                    }}
-                  >
-                    Đăng ký tài khoản
-                  </h3>
-                  <p style={{ color: "#6b7280", marginBottom: 0 }}>
-                    {step === 1
-                      ? "Bước 1: Nhập email để nhận OTP"
-                      : "Bước 2: Nhập OTP và hoàn tất đăng ký"}
-                  </p>
-                </div>
+              <div style={{ ...pageCard, padding: 24 }}>
+                <h3
+                  style={{
+                    fontWeight: 800,
+                    color: "#111827",
+                    marginBottom: 8,
+                  }}
+                >
+                  {step === 1 ? "Nhận mã OTP" : "Hoàn tất đăng ký"}
+                </h3>
+
+                <p style={{ color: "#6b7280", marginBottom: 20 }}>
+                  {step === 1
+                    ? "Nhập email để nhận mã xác thực."
+                    : "Nhập OTP và thông tin tài khoản của bạn."}
+                </p>
 
                 {err && (
-                  <div className="alert alert-danger" role="alert">
+                  <div
+                    className="alert mb-3"
+                    style={{
+                      background: "#fef2f2",
+                      color: "#b91c1c",
+                      border: "1px solid #fecaca",
+                      borderRadius: 12,
+                    }}
+                  >
                     {String(err)}
                   </div>
                 )}
 
                 {success && (
-                  <div className="alert alert-success" role="alert">
+                  <div
+                    className="alert mb-3"
+                    style={{
+                      background: "#ecfdf5",
+                      color: "#047857",
+                      border: "1px solid #a7f3d0",
+                      borderRadius: 12,
+                    }}
+                  >
                     {success}
                   </div>
                 )}
@@ -228,10 +337,7 @@ export default function AccountPage() {
                 {step === 1 ? (
                   <form onSubmit={sendOtp}>
                     <div className="mb-4">
-                      <label
-                        className="form-label"
-                        style={{ color: "#334155", fontWeight: 600 }}
-                      >
+                      <label className="form-label" style={labelStyle}>
                         Email
                       </label>
                       <input
@@ -241,18 +347,21 @@ export default function AccountPage() {
                         placeholder="Nhập email của bạn"
                         value={form.email}
                         onChange={change}
-                        style={{ height: 48, borderRadius: 12 }}
+                        style={inputStyle}
                       />
                     </div>
 
                     <button
                       type="submit"
-                      className="btn btn-primary w-100"
                       disabled={loadingSendOtp}
                       style={{
-                        height: 48,
-                        borderRadius: 12,
-                        fontWeight: 600,
+                        width: "100%",
+                        height: 46,
+                        borderRadius: 10,
+                        border: "none",
+                        background: "#ee4d2d",
+                        color: "#fff",
+                        fontWeight: 700,
                       }}
                     >
                       {loadingSendOtp ? "Đang gửi OTP..." : "Gửi mã OTP"}
@@ -261,10 +370,7 @@ export default function AccountPage() {
                 ) : (
                   <form onSubmit={verifyOtpAndRegister}>
                     <div className="mb-3">
-                      <label
-                        className="form-label"
-                        style={{ color: "#334155", fontWeight: 600 }}
-                      >
+                      <label className="form-label" style={labelStyle}>
                         Email đã nhận OTP
                       </label>
                       <input
@@ -273,20 +379,16 @@ export default function AccountPage() {
                         value={otpEmail}
                         readOnly
                         style={{
-                          height: 48,
-                          borderRadius: 12,
-                          background: "#f8fafc",
-                          color: "#475569",
+                          ...inputStyle,
+                          background: "#f9fafb",
+                          color: "#6b7280",
                           cursor: "not-allowed",
                         }}
                       />
                     </div>
 
                     <div className="mb-3">
-                      <label
-                        className="form-label"
-                        style={{ color: "#334155", fontWeight: 600 }}
-                      >
+                      <label className="form-label" style={labelStyle}>
                         Mã OTP
                       </label>
                       <input
@@ -295,15 +397,12 @@ export default function AccountPage() {
                         placeholder="Nhập mã OTP gồm 6 số"
                         value={form.otp}
                         onChange={change}
-                        style={{ height: 48, borderRadius: 12 }}
+                        style={inputStyle}
                       />
                     </div>
 
                     <div className="mb-3">
-                      <label
-                        className="form-label"
-                        style={{ color: "#334155", fontWeight: 600 }}
-                      >
+                      <label className="form-label" style={labelStyle}>
                         Họ và tên
                       </label>
                       <input
@@ -312,15 +411,12 @@ export default function AccountPage() {
                         placeholder="Nhập họ và tên"
                         value={form.fullName}
                         onChange={change}
-                        style={{ height: 48, borderRadius: 12 }}
+                        style={inputStyle}
                       />
                     </div>
 
                     <div className="mb-3">
-                      <label
-                        className="form-label"
-                        style={{ color: "#334155", fontWeight: 600 }}
-                      >
+                      <label className="form-label" style={labelStyle}>
                         Số điện thoại
                       </label>
                       <input
@@ -329,15 +425,12 @@ export default function AccountPage() {
                         placeholder="Nhập số điện thoại"
                         value={form.phone}
                         onChange={change}
-                        style={{ height: 48, borderRadius: 12 }}
+                        style={inputStyle}
                       />
                     </div>
 
                     <div className="mb-3">
-                      <label
-                        className="form-label"
-                        style={{ color: "#334155", fontWeight: 600 }}
-                      >
+                      <label className="form-label" style={labelStyle}>
                         Mật khẩu
                       </label>
                       <input
@@ -347,19 +440,22 @@ export default function AccountPage() {
                         placeholder="Nhập mật khẩu"
                         value={form.password}
                         onChange={change}
-                        style={{ height: 48, borderRadius: 12 }}
+                        style={inputStyle}
                       />
                     </div>
 
                     <div className="d-grid gap-2">
                       <button
                         type="submit"
-                        className="btn btn-primary w-100"
                         disabled={loadingVerify}
                         style={{
-                          height: 48,
-                          borderRadius: 12,
-                          fontWeight: 600,
+                          width: "100%",
+                          height: 46,
+                          borderRadius: 10,
+                          border: "none",
+                          background: "#ee4d2d",
+                          color: "#fff",
+                          fontWeight: 700,
                         }}
                       >
                         {loadingVerify ? "Đang xác thực..." : "Xác thực OTP và đăng ký"}
@@ -367,13 +463,16 @@ export default function AccountPage() {
 
                       <button
                         type="button"
-                        className="btn btn-outline-secondary w-100"
                         onClick={resendOtp}
                         disabled={loadingSendOtp}
                         style={{
-                          height: 48,
-                          borderRadius: 12,
-                          fontWeight: 600,
+                          width: "100%",
+                          height: 46,
+                          borderRadius: 10,
+                          border: "1px solid #ee4d2d",
+                          background: "#fff",
+                          color: "#ee4d2d",
+                          fontWeight: 700,
                         }}
                       >
                         {loadingSendOtp ? "Đang gửi lại..." : "Gửi lại OTP"}
@@ -381,9 +480,16 @@ export default function AccountPage() {
 
                       <button
                         type="button"
-                        className="btn btn-link"
                         onClick={changeEmail}
-                        style={{ textDecoration: "none" }}
+                        style={{
+                          width: "100%",
+                          height: 44,
+                          borderRadius: 10,
+                          border: "1px solid #d1d5db",
+                          background: "#fff",
+                          color: "#374151",
+                          fontWeight: 700,
+                        }}
                       >
                         Đổi email khác
                       </button>
@@ -393,7 +499,7 @@ export default function AccountPage() {
 
                 <p className="text-center mt-4 mb-0" style={{ color: "#6b7280" }}>
                   Đã có tài khoản?{" "}
-                  <Link to="/login" style={{ fontWeight: 600 }}>
+                  <Link to="/login" style={{ color: "#ee4d2d", fontWeight: 700 }}>
                     Đăng nhập ngay
                   </Link>
                 </p>

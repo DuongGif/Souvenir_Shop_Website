@@ -45,9 +45,9 @@ public class PaymentsController : ControllerBase
 		var userId = CurrentUserId();
 		var method = req.PaymentMethod.Trim().ToLowerInvariant();
 
-		var allowed = new HashSet<string> { "cod", "bank_transfer", "momo", "vnpay" };
+		var allowed = new HashSet<string> { "cod", "bank_transfer" };
 		if (!allowed.Contains(method))
-			return BadRequest("Phương thức phải là: cod, bank_transfer, momo, vnpay.");
+			return BadRequest("Phương thức thanh toán chỉ hỗ trợ: cod, bank_transfer.");
 
 		var order = await _db.Orders
 			.FirstOrDefaultAsync(o => o.OrderCode == req.OrderCode && o.UserId == userId);
@@ -56,9 +56,9 @@ public class PaymentsController : ControllerBase
 			return NotFound("Không tìm thấy đơn hàng.");
 
 		if (order.Status == "canceled" || order.Status == "completed")
-			return BadRequest("Không thể thanh toán đơn đã hủy hoặc hoàn thành.");
+			return BadRequest("Không thể tạo thanh toán cho đơn hàng đã hủy hoặc đã hoàn thành.");
 
-		// Nếu đã thanh toán
+		// Nếu đã thanh toán rồi thì trả về payment đã thanh toán
 		var existingPaid = await _db.Payments
 			.OrderByDescending(p => p.Id)
 			.FirstOrDefaultAsync(p => p.OrderId == order.Id && p.Status == "paid");
@@ -66,7 +66,7 @@ public class PaymentsController : ControllerBase
 		if (existingPaid != null)
 			return Ok(ToDto(existingPaid));
 
-		// Nếu đang chờ thanh toán cùng phương thức
+		// Nếu đã có payment pending cùng phương thức thì trả lại luôn
 		var existingPendingSameMethod = await _db.Payments
 			.OrderByDescending(p => p.Id)
 			.FirstOrDefaultAsync(p => p.OrderId == order.Id && p.Status == "pending" && p.PaymentMethod == method);
@@ -80,7 +80,7 @@ public class PaymentsController : ControllerBase
 			PaymentMethod = method,
 			Amount = order.TotalAmount,
 			Status = "pending",
-			CreatedAt = DateTime.UtcNow
+			CreatedAt = DateTime.Now
 		};
 
 		if (method == "cod")
@@ -118,19 +118,6 @@ public class PaymentsController : ControllerBase
 				note = "Chuyển khoản đúng nội dung để hệ thống xác nhận"
 			});
 		}
-		else
-		{
-			// mock momo/vnpay
-			var fakeTxn = Guid.NewGuid().ToString("N")[..12].ToUpper();
-			payment.TransactionCode = $"{method.ToUpper()}_{fakeTxn}";
-			payment.GatewayResponse = JsonSerializer.Serialize(new
-			{
-				type = method,
-				transactionCode = payment.TransactionCode,
-				paymentUrl = $"https://mock-gateway.local/pay?orderCode={order.OrderCode}&txn={payment.TransactionCode}",
-				note = "Link thanh toán giả lập - dùng API confirm để xác nhận"
-			});
-		}
 
 		_db.Payments.Add(payment);
 		await _db.SaveChangesAsync();
@@ -138,7 +125,8 @@ public class PaymentsController : ControllerBase
 		return Ok(ToDto(payment));
 	}
 
-	// XÁC NHẬN THANH TOÁN (demo)
+	// XÁC NHẬN THANH TOÁN
+	// Chỉ dùng cho chuyển khoản ngân hàng trong môi trường demo/test
 	[HttpPost("confirm")]
 	public async Task<IActionResult> ConfirmPayment([FromBody] ConfirmPaymentRequest req)
 	{
@@ -160,11 +148,18 @@ public class PaymentsController : ControllerBase
 		if (payment == null)
 			return NotFound("Không tìm thấy thanh toán.");
 
+		// COD không được xác nhận thanh toán trước
+		if (payment.PaymentMethod == "cod")
+			return BadRequest("Đơn hàng COD không cần xác nhận thanh toán trước.");
+
+		if (payment.PaymentMethod != "bank_transfer")
+			return BadRequest("Chỉ hỗ trợ xác nhận thanh toán cho chuyển khoản ngân hàng.");
+
 		if (payment.Status == "paid")
 			return Ok(new { message = "Đơn hàng đã được thanh toán trước đó." });
 
 		payment.Status = "paid";
-		payment.PaidAt = DateTime.UtcNow;
+		payment.PaidAt = DateTime.Now;
 
 		if (order.Status == "pending")
 			order.Status = "confirmed";
@@ -237,7 +232,7 @@ public class PaymentsController : ControllerBase
 			}
 			catch
 			{
-				// bỏ qua lỗi parse
+				// Bỏ qua lỗi parse JSON
 			}
 		}
 

@@ -16,12 +16,38 @@ const emptyAddress = {
   isDefault: false,
 };
 
-const labelStyle = { color: "#111827", fontWeight: 600 };
+const pageCard = {
+  background: "#ffffff",
+  borderRadius: 20,
+  boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
+};
+
+const labelStyle = {
+  color: "#111827",
+  fontWeight: 700,
+  marginBottom: 8,
+  fontSize: 14,
+};
+
 const inputStyle = {
-  height: 46,
-  borderRadius: 12,
+  height: 44,
+  borderRadius: 10,
   color: "#111827",
   backgroundColor: "#fff",
+  border: "1px solid #e5e7eb",
+  boxShadow: "none",
+};
+
+const getErrorMessage = (ex, fallback) => {
+  const data = ex?.response?.data;
+  if (typeof data === "string") return data;
+  if (data?.message) return data.message;
+  if (data?.title) return data.title;
+  if (data?.errors) {
+    const firstError = Object.values(data.errors)?.flat?.()[0];
+    if (firstError) return firstError;
+  }
+  return fallback;
 };
 
 export default function AccountDetailPage() {
@@ -76,7 +102,7 @@ export default function AccountDetailPage() {
       });
       setAddresses(addressesRes.data || []);
     } catch (ex) {
-      setErr(ex?.response?.data ?? "Không thể tải thông tin tài khoản");
+      setErr(getErrorMessage(ex, "Không thể tải thông tin tài khoản"));
     } finally {
       setLoading(false);
     }
@@ -140,7 +166,7 @@ export default function AccountDetailPage() {
       setProfileMsg("Cập nhật thông tin cá nhân thành công");
       await loadData();
     } catch (ex) {
-      setErr(ex?.response?.data ?? "Cập nhật thông tin thất bại");
+      setErr(getErrorMessage(ex, "Cập nhật thông tin thất bại"));
     } finally {
       setSavingProfile(false);
     }
@@ -165,7 +191,7 @@ export default function AccountDetailPage() {
       setEditingAddressId(null);
       await loadData();
     } catch (ex) {
-      setErr(ex?.response?.data ?? "Lưu địa chỉ thất bại");
+      setErr(getErrorMessage(ex, "Lưu địa chỉ thất bại"));
     } finally {
       setSavingAddress(false);
     }
@@ -200,7 +226,7 @@ export default function AccountDetailPage() {
       await accountService.deleteAddress(id);
       await loadData();
     } catch (ex) {
-      setErr(ex?.response?.data ?? "Xóa địa chỉ thất bại");
+      setErr(getErrorMessage(ex, "Xóa địa chỉ thất bại"));
     }
   };
 
@@ -209,71 +235,140 @@ export default function AccountDetailPage() {
       await accountService.setDefaultAddress(id);
       await loadData();
     } catch (ex) {
-      setErr(ex?.response?.data ?? "Không thể đặt địa chỉ mặc định");
+      setErr(getErrorMessage(ex, "Không thể đặt địa chỉ mặc định"));
     }
   };
 
   return (
     <MainLayout>
-      <section className="section">
-        <div className="container" data-aos="fade-up">
-          <div className="section-title">
-            <h2>Tài khoản của tôi</h2>
-            <p>
-              Xem và cập nhật thông tin cá nhân, đồng thời quản lý danh sách địa
-              chỉ nhận hàng của bạn.
-            </p>
+      <section
+        className="section"
+        style={{
+          background: "#f5f5f5",
+          minHeight: "100vh",
+          paddingTop: 32,
+          paddingBottom: 48,
+        }}
+      >
+        <div className="container">
+          <div
+            style={{
+              ...pageCard,
+              padding: 24,
+              marginBottom: 20,
+              borderLeft: "5px solid #ee4d2d",
+            }}
+          >
+            <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
+              <div>
+                <div
+                  style={{
+                    fontSize: 14,
+                    color: "#6b7280",
+                    marginBottom: 8,
+                    fontWeight: 600,
+                  }}
+                >
+                  Tài khoản SouVN
+                </div>
+
+                <h2
+                  style={{
+                    margin: 0,
+                    fontWeight: 800,
+                    color: "#111827",
+                    fontSize: "clamp(24px, 4vw, 34px)",
+                  }}
+                >
+                  Tài khoản của tôi
+                </h2>
+              </div>
+
+              <div
+                style={{
+                  fontSize: 14,
+                  color: "#6b7280",
+                  fontWeight: 600,
+                }}
+              >
+                Số địa chỉ:{" "}
+                <span style={{ color: "#ee4d2d" }}>{addresses.length}</span>
+              </div>
+            </div>
           </div>
 
           {err && (
-            <div className="alert alert-danger" role="alert">
+            <div
+              className="alert mb-4"
+              role="alert"
+              style={{
+                background: "#fef2f2",
+                color: "#b91c1c",
+                border: "1px solid #fecaca",
+                borderRadius: 12,
+              }}
+            >
               {String(err)}
             </div>
           )}
 
           {loading ? (
-            <div className="text-center py-5">
-              <div className="spinner-border text-info" role="status"></div>
-              <p className="mt-3 mb-0">Đang tải thông tin tài khoản...</p>
+            <div style={{ ...pageCard, padding: 40 }} className="text-center">
+              <div className="spinner-border text-danger" role="status"></div>
+              <p className="mt-3 mb-0" style={{ color: "#6b7280" }}>
+                Đang tải thông tin tài khoản...
+              </p>
             </div>
           ) : (
-            <div className="row g-4">
+            <div className="row g-4 align-items-start">
               <div className="col-lg-5">
-                <div
-                  style={{
-                    background: "#fff",
-                    borderRadius: 24,
-                    padding: 28,
-                    boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
-                  }}
-                >
-                  <h4 style={{ color: "#1f2937", fontWeight: 700 }}>
+                <div style={{ ...pageCard, padding: 24 }}>
+                  <h4
+                    style={{
+                      color: "#111827",
+                      fontWeight: 800,
+                      marginBottom: 18,
+                    }}
+                  >
                     Thông tin cá nhân
                   </h4>
 
                   {profileMsg && (
-                    <div className="alert alert-success mt-3" role="alert">
+                    <div
+                      className="alert mb-3"
+                      role="alert"
+                      style={{
+                        background: "#ecfdf5",
+                        color: "#047857",
+                        border: "1px solid #a7f3d0",
+                        borderRadius: 12,
+                      }}
+                    >
                       {profileMsg}
                     </div>
                   )}
 
                   <div
-                    className="mt-3 mb-4"
+                    className="mb-4"
                     style={{
+                      background: "#fafafa",
+                      borderRadius: 14,
                       padding: 16,
-                      borderRadius: 16,
-                      background: "#f8fafc",
-                      color: "#475569",
+                      color: "#4b5563",
+                      lineHeight: 1.8,
                     }}
                   >
                     <div>
-                      <strong>Email:</strong> {profile?.email}
+                      <strong style={{ color: "#111827" }}>Email:</strong>{" "}
+                      {profile?.email || "-"}
                     </div>
                     <div>
-                      <strong>Vai trò:</strong> {profile?.role}
+                      <strong style={{ color: "#111827" }}>Vai trò:</strong>{" "}
+                      {profile?.role || "-"}
                     </div>
                     <div>
-                      <strong>Trạng thái:</strong> {profile?.status}
+                      <strong style={{ color: "#111827" }}>Trạng thái:</strong>{" "}
+                      {profile?.status || "-"}
                     </div>
                   </div>
 
@@ -287,7 +382,7 @@ export default function AccountDetailPage() {
                         className="form-control"
                         value={profileForm.fullName}
                         onChange={handleProfileChange}
-                        style={{ ...inputStyle, height: 48 }}
+                        style={inputStyle}
                       />
                     </div>
 
@@ -300,15 +395,22 @@ export default function AccountDetailPage() {
                         className="form-control"
                         value={profileForm.phone}
                         onChange={handleProfileChange}
-                        style={{ ...inputStyle, height: 48 }}
+                        style={inputStyle}
                       />
                     </div>
 
                     <button
                       type="submit"
-                      className="btn btn-primary w-100"
                       disabled={savingProfile}
-                      style={{ height: 48, borderRadius: 12, fontWeight: 600 }}
+                      style={{
+                        width: "100%",
+                        height: 46,
+                        borderRadius: 10,
+                        border: "none",
+                        background: "#ee4d2d",
+                        color: "#fff",
+                        fontWeight: 700,
+                      }}
                     >
                       {savingProfile
                         ? "Đang cập nhật..."
@@ -321,24 +423,54 @@ export default function AccountDetailPage() {
               <div className="col-lg-7">
                 <div
                   style={{
-                    background: "#fff",
-                    borderRadius: 24,
-                    padding: 28,
-                    boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
-                    marginBottom: 24,
+                    ...pageCard,
+                    padding: 24,
+                    marginBottom: 18,
                   }}
                 >
-                  <h4 style={{ color: "#1f2937", fontWeight: 700 }}>
-                    {editingAddressId ? "Chỉnh sửa địa chỉ" : "Thêm địa chỉ mới"}
-                  </h4>
+                  <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+                    <h4
+                      style={{
+                        color: "#111827",
+                        fontWeight: 800,
+                        margin: 0,
+                      }}
+                    >
+                      {editingAddressId ? "Chỉnh sửa địa chỉ" : "Thêm địa chỉ mới"}
+                    </h4>
+
+                    {editingAddressId && (
+                      <span
+                        style={{
+                          background: "#fff7ed",
+                          color: "#c2410c",
+                          borderRadius: 999,
+                          padding: "6px 12px",
+                          fontSize: 13,
+                          fontWeight: 700,
+                        }}
+                      >
+                        Đang chỉnh sửa
+                      </span>
+                    )}
+                  </div>
 
                   {addressMsg && (
-                    <div className="alert alert-success mt-3" role="alert">
+                    <div
+                      className="alert mb-3"
+                      role="alert"
+                      style={{
+                        background: "#ecfdf5",
+                        color: "#047857",
+                        border: "1px solid #a7f3d0",
+                        borderRadius: 12,
+                      }}
+                    >
                       {addressMsg}
                     </div>
                   )}
 
-                  <form className="mt-3" onSubmit={submitAddress}>
+                  <form onSubmit={submitAddress}>
                     <div className="row g-3">
                       <div className="col-md-6">
                         <label className="form-label" style={labelStyle}>
@@ -481,7 +613,15 @@ export default function AccountDetailPage() {
                       </div>
 
                       <div className="col-12">
-                        <div className="form-check mt-2">
+                        <div
+                          className="form-check"
+                          style={{
+                            background: "#fff7ed",
+                            border: "1px solid #fed7aa",
+                            borderRadius: 12,
+                            padding: "12px 14px 12px 38px",
+                          }}
+                        >
                           <input
                             id="isDefault"
                             name="isDefault"
@@ -493,19 +633,26 @@ export default function AccountDetailPage() {
                           <label
                             className="form-check-label"
                             htmlFor="isDefault"
-                            style={{ color: "#111827", fontWeight: 500 }}
+                            style={{ color: "#9a3412", fontWeight: 600 }}
                           >
                             Đặt làm địa chỉ mặc định
                           </label>
                         </div>
                       </div>
 
-                      <div className="col-12 d-flex gap-2">
+                      <div className="col-12 d-flex gap-2 flex-wrap">
                         <button
                           type="submit"
-                          className="btn btn-primary"
                           disabled={savingAddress}
-                          style={{ borderRadius: 12, minWidth: 160 }}
+                          style={{
+                            minWidth: 160,
+                            height: 44,
+                            borderRadius: 10,
+                            border: "none",
+                            background: "#ee4d2d",
+                            color: "#fff",
+                            fontWeight: 700,
+                          }}
                         >
                           {savingAddress
                             ? "Đang lưu..."
@@ -517,9 +664,16 @@ export default function AccountDetailPage() {
                         {editingAddressId && (
                           <button
                             type="button"
-                            className="btn btn-outline-secondary"
-                            style={{ borderRadius: 12 }}
                             onClick={cancelEditAddress}
+                            style={{
+                              minWidth: 130,
+                              height: 44,
+                              borderRadius: 10,
+                              border: "1px solid #d1d5db",
+                              background: "#fff",
+                              color: "#374151",
+                              fontWeight: 700,
+                            }}
                           >
                             Hủy chỉnh sửa
                           </button>
@@ -529,64 +683,86 @@ export default function AccountDetailPage() {
                   </form>
                 </div>
 
-                <div
-                  style={{
-                    background: "#fff",
-                    borderRadius: 24,
-                    padding: 28,
-                    boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
-                  }}
-                >
-                  <h4 style={{ color: "#1f2937", fontWeight: 700 }}>
+                <div style={{ ...pageCard, padding: 24 }}>
+                  <h4
+                    style={{
+                      color: "#111827",
+                      fontWeight: 800,
+                      marginBottom: 18,
+                    }}
+                  >
                     Danh sách địa chỉ
                   </h4>
 
                   {addresses.length === 0 ? (
-                    <p className="mt-3 mb-0" style={{ color: "#64748b" }}>
+                    <div
+                      style={{
+                        background: "#fafafa",
+                        borderRadius: 14,
+                        padding: 18,
+                        color: "#6b7280",
+                      }}
+                    >
                       Bạn chưa có địa chỉ nào.
-                    </p>
+                    </div>
                   ) : (
-                    <div className="mt-3 d-grid gap-3">
+                    <div className="d-grid gap-3">
                       {addresses.map((addr) => (
                         <div
                           key={addr.id}
                           style={{
-                            border: "1px solid #e5e7eb",
-                            borderRadius: 18,
+                            border: addr.isDefault
+                              ? "1px solid #fdba74"
+                              : "1px solid #e5e7eb",
+                            borderRadius: 16,
                             padding: 18,
-                            background: addr.isDefault ? "#f8fbff" : "#fff",
+                            background: "#fff",
                           }}
                         >
-                          <div className="d-flex justify-content-between align-items-start flex-wrap gap-2">
-                            <div>
-                              <h6
+                          <div className="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                            <div style={{ flex: 1 }}>
+                              <div
+                                className="d-flex align-items-center flex-wrap gap-2 mb-2"
                                 style={{
-                                  marginBottom: 6,
-                                  color: "#1f2937",
-                                  fontWeight: 700,
+                                  color: "#111827",
+                                  fontWeight: 800,
+                                  fontSize: 16,
                                 }}
                               >
-                                {addr.recipientName}
+                                <span>{addr.recipientName}</span>
+
                                 {addr.isDefault && (
                                   <span
                                     style={{
-                                      marginLeft: 10,
-                                      background: "#198754",
-                                      color: "#fff",
+                                      background: "#fff7ed",
+                                      color: "#c2410c",
                                       fontSize: 12,
-                                      padding: "4px 8px",
+                                      padding: "4px 10px",
                                       borderRadius: 999,
+                                      fontWeight: 700,
+                                      border: "1px solid #fdba74",
                                     }}
                                   >
                                     Mặc định
                                   </span>
                                 )}
-                              </h6>
+                              </div>
 
-                              <div style={{ color: "#475569" }}>
+                              <div
+                                style={{
+                                  color: "#4b5563",
+                                  marginBottom: 4,
+                                }}
+                              >
                                 {addr.recipientPhone}
                               </div>
-                              <div style={{ color: "#475569" }}>
+
+                              <div
+                                style={{
+                                  color: "#4b5563",
+                                  lineHeight: 1.7,
+                                }}
+                              >
                                 {[
                                   addr.addressLine1,
                                   addr.addressLine2,
@@ -604,26 +780,50 @@ export default function AccountDetailPage() {
                             <div className="d-flex gap-2 flex-wrap">
                               {!addr.isDefault && (
                                 <button
-                                  className="btn btn-sm btn-outline-success"
-                                  style={{ borderRadius: 10 }}
+                                  type="button"
                                   onClick={() => handleSetDefault(addr.id)}
+                                  style={{
+                                    borderRadius: 10,
+                                    border: "1px solid #ee4d2d",
+                                    background: "#fff",
+                                    color: "#ee4d2d",
+                                    fontWeight: 700,
+                                    height: 38,
+                                    padding: "0 14px",
+                                  }}
                                 >
                                   Đặt mặc định
                                 </button>
                               )}
 
                               <button
-                                className="btn btn-sm btn-outline-primary"
-                                style={{ borderRadius: 10 }}
+                                type="button"
                                 onClick={() => startEditAddress(addr)}
+                                style={{
+                                  borderRadius: 10,
+                                  border: "1px solid #d1d5db",
+                                  background: "#fff",
+                                  color: "#374151",
+                                  fontWeight: 700,
+                                  height: 38,
+                                  padding: "0 14px",
+                                }}
                               >
                                 Sửa
                               </button>
 
                               <button
-                                className="btn btn-sm btn-outline-danger"
-                                style={{ borderRadius: 10 }}
+                                type="button"
                                 onClick={() => handleDeleteAddress(addr.id)}
+                                style={{
+                                  borderRadius: 10,
+                                  border: "1px solid #fecaca",
+                                  background: "#fff",
+                                  color: "#dc2626",
+                                  fontWeight: 700,
+                                  height: 38,
+                                  padding: "0 14px",
+                                }}
                               >
                                 Xóa
                               </button>

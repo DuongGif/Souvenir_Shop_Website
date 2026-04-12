@@ -276,24 +276,7 @@ export default function AdminReviewsPage() {
                   </div>
                 )}
 
-                <div className="d-flex gap-2 flex-wrap mb-3">
-                  <button
-                    onClick={() => approve(r.id)}
-                    className="btn btn-outline-success btn-sm"
-                    style={{ borderRadius: 10, fontWeight: 600 }}
-                  >
-                    Duyệt
-                  </button>
-
-                  <button
-                    onClick={() => reject(r.id)}
-                    className="btn btn-outline-danger btn-sm"
-                    style={{ borderRadius: 10, fontWeight: 600 }}
-                  >
-                    Từ chối
-                  </button>
-                </div>
-
+               
                 <div>
                   <label
                     className="form-label"

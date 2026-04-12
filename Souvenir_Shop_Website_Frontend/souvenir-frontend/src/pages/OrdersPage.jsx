@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import { orderService } from "../services/orderService";
 
@@ -24,32 +24,32 @@ const getStatusBadge = (status) => {
   const s = String(status || "").toLowerCase();
 
   if (s === "pending" || s === "cho_xu_ly" || s === "cho_xac_nhan") {
-    return { text: "Chờ xử lý", bg: "#fef3c7", color: "#92400e" };
+    return { text: "Chờ xử lý", bg: "#fff7ed", color: "#c2410c" };
   }
 
   if (s === "confirmed" || s === "da_xac_nhan") {
-    return { text: "Đã xác nhận", bg: "#dbeafe", color: "#1d4ed8" };
+    return { text: "Đã xác nhận", bg: "#eff6ff", color: "#1d4ed8" };
   }
 
   if (s === "paid" || s === "da_thanh_toan") {
-    return { text: "Đã thanh toán", bg: "#dcfce7", color: "#166534" };
+    return { text: "Đã thanh toán", bg: "#ecfdf5", color: "#047857" };
   }
 
   if (s === "shipping" || s === "dang_giao") {
-    return { text: "Đang giao hàng", bg: "#dbeafe", color: "#1d4ed8" };
+    return { text: "Đang giao hàng", bg: "#eff6ff", color: "#1d4ed8" };
   }
 
   if (s === "completed" || s === "hoan_thanh") {
-    return { text: "Hoàn thành", bg: "#dcfce7", color: "#166534" };
+    return { text: "Hoàn thành", bg: "#ecfdf5", color: "#047857" };
   }
 
   if (s === "cancelled" || s === "canceled" || s === "da_huy") {
-    return { text: "Đã hủy", bg: "#fee2e2", color: "#991b1b" };
+    return { text: "Đã hủy", bg: "#fef2f2", color: "#b91c1c" };
   }
 
   return {
     text: "Không xác định",
-    bg: "#e5e7eb",
+    bg: "#f3f4f6",
     color: "#374151",
   };
 };
@@ -59,29 +59,73 @@ const getFulfillmentText = (value) => {
 
   if (s === "delivery" || s === "giao_hang") return "Giao hàng tận nơi";
   if (s === "pickup" || s === "nhan_tai_diem") return "Nhận tại điểm";
-  if (s === "hotel_delivery" || s === "giao_khach_san") return "Giao tại khách sạn";
+  if (s === "hotel" || s === "hotel_delivery" || s === "giao_khach_san") {
+    return "Giao tại khách sạn";
+  }
 
   return value || "Không xác định";
 };
 
-const glassCard = {
-  border: "1px solid rgba(255,255,255,0.08)",
-  background: "rgba(255,255,255,0.03)",
-  borderRadius: 24,
-  boxShadow: "0 18px 40px rgba(0,0,0,0.14)",
-  backdropFilter: "blur(6px)",
+const normalizeStatus = (status) => String(status || "").toLowerCase();
+
+const matchesFilter = (status, filterKey) => {
+  const s = normalizeStatus(status);
+
+  if (filterKey === "all") return true;
+  if (filterKey === "pending") {
+    return s === "pending" || s === "cho_xu_ly" || s === "cho_xac_nhan";
+  }
+  if (filterKey === "confirmed") {
+    return s === "confirmed" || s === "da_xac_nhan" || s === "paid" || s === "da_thanh_toan";
+  }
+  if (filterKey === "shipping") {
+    return s === "shipping" || s === "dang_giao";
+  }
+  if (filterKey === "completed") {
+    return s === "completed" || s === "hoan_thanh";
+  }
+  if (filterKey === "cancelled") {
+    return s === "cancelled" || s === "canceled" || s === "da_huy";
+  }
+
+  return true;
 };
 
-const whiteCard = {
+const pageCard = {
   background: "#ffffff",
-  borderRadius: 24,
-  boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
+  borderRadius: 20,
+  boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
 };
+
+const filterTabs = [
+  { key: "all", label: "Tất cả" },
+  { key: "pending", label: "Chờ xử lý" },
+  { key: "confirmed", label: "Đã xác nhận" },
+  { key: "shipping", label: "Đang giao" },
+  { key: "completed", label: "Hoàn thành" },
+  { key: "cancelled", label: "Đã hủy" },
+];
 
 export default function OrdersPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
   const [orders, setOrders] = useState([]);
-  const [err, setErr] = useState("");
+  const [activeTab, setActiveTab] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState("");
+  const [msg, setMsg] = useState("");
+
+  useEffect(() => {
+    if (location.state?.successMessage) {
+      setMsg(location.state.successMessage);
+
+      navigate(location.pathname, {
+        replace: true,
+        state: {},
+      });
+    }
+  }, [location, navigate]);
 
   useEffect(() => {
     const loadOrders = async () => {
@@ -90,9 +134,9 @@ export default function OrdersPage() {
 
       try {
         const res = await orderService.my();
-        setOrders(res.data || []);
+        setOrders(Array.isArray(res.data) ? res.data : []);
       } catch (ex) {
-        setErr(getErrorMessage(ex, "Không thể tải danh sách đơn hàng"));
+        setErr(getErrorMessage(ex, "Không thể tải danh sách đơn hàng."));
       } finally {
         setLoading(false);
       }
@@ -101,70 +145,91 @@ export default function OrdersPage() {
     loadOrders();
   }, []);
 
+  const filteredOrders = useMemo(() => {
+    return orders.filter((order) => matchesFilter(order.status, activeTab));
+  }, [orders, activeTab]);
+
+  const counts = useMemo(() => {
+    return {
+      all: orders.length,
+      pending: orders.filter((o) => matchesFilter(o.status, "pending")).length,
+      confirmed: orders.filter((o) => matchesFilter(o.status, "confirmed")).length,
+      shipping: orders.filter((o) => matchesFilter(o.status, "shipping")).length,
+      completed: orders.filter((o) => matchesFilter(o.status, "completed")).length,
+      cancelled: orders.filter((o) => matchesFilter(o.status, "cancelled")).length,
+    };
+  }, [orders]);
+
   return (
     <MainLayout>
       <section
         className="section"
         style={{
-          background:
-            "radial-gradient(circle at top center, rgba(56,189,248,0.10), transparent 24%), linear-gradient(180deg, #04131f 0%, #071a29 60%, #0a1f31 100%)",
-          paddingTop: 50,
-          paddingBottom: 60,
+          background: "#f5f5f5",
+          minHeight: "100vh",
+          paddingTop: 32,
+          paddingBottom: 48,
         }}
       >
-        <div className="container" data-aos="fade-up">
+        <div className="container">
           <div
-            className="text-center mb-5"
             style={{
-              paddingTop: 18,
+              ...pageCard,
+              padding: 24,
+              marginBottom: 20,
+              borderLeft: "5px solid #ee4d2d",
             }}
           >
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "10px 20px",
-                borderRadius: 999,
-                background: "rgba(56,189,248,0.12)",
-                color: "#38bdf8",
-                fontSize: 15,
-                fontWeight: 700,
-                marginBottom: 24,
-                border: "1px solid rgba(56,189,248,0.18)",
-                boxShadow: "0 10px 30px rgba(13,110,253,0.15)",
-              }}
-            >
-              <i className="bi bi-receipt-cutoff"></i>
-              Đơn hàng của tôi
-            </span>
+            <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
+              <div>
+                <div
+                  style={{
+                    fontSize: 14,
+                    color: "#6b7280",
+                    marginBottom: 8,
+                  }}
+                >
+                  Quản lý đơn hàng
+                </div>
 
-            <h2
-              style={{
-                fontWeight: 800,
-                marginBottom: 18,
-                color: "#f8fafc",
-                fontSize: "clamp(32px, 5vw, 54px)",
-                lineHeight: 1.2,
-                letterSpacing: "-0.02em",
-              }}
-            >
-              Theo dõi đơn hàng của bạn
-            </h2>
+                <h2
+                  style={{
+                    margin: 0,
+                    fontWeight: 800,
+                    color: "#111827",
+                    fontSize: "clamp(24px, 4vw, 34px)",
+                  }}
+                >
+                  Đơn mua của tôi
+                </h2>
+              </div>
 
-            <p
-              style={{
-                maxWidth: 820,
-                margin: "0 auto",
-                color: "rgba(226,232,240,0.86)",
-                lineHeight: 1.9,
-                fontSize: 18,
-              }}
-            >
-              Xem danh sách đơn hàng, trạng thái xử lý, thời gian tạo đơn và truy
-              cập chi tiết từng đơn một cách nhanh chóng.
-            </p>
+              <div
+                style={{
+                  fontSize: 14,
+                  color: "#6b7280",
+                  fontWeight: 600,
+                }}
+              >
+                Tổng số đơn: <span style={{ color: "#ee4d2d" }}>{orders.length}</span>
+              </div>
+            </div>
           </div>
+
+          {msg && (
+            <div
+              className="alert mb-4"
+              role="alert"
+              style={{
+                background: "#ecfdf5",
+                color: "#047857",
+                border: "1px solid #a7f3d0",
+                borderRadius: 12,
+              }}
+            >
+              {msg}
+            </div>
+          )}
 
           {err && (
             <div
@@ -174,101 +239,146 @@ export default function OrdersPage() {
                 background: "#fef2f2",
                 color: "#b91c1c",
                 border: "1px solid #fecaca",
-                borderRadius: 16,
+                borderRadius: 12,
               }}
             >
               {err}
             </div>
           )}
 
-          {loading ? (
+          <div
+            style={{
+              ...pageCard,
+              padding: 12,
+              marginBottom: 20,
+            }}
+          >
             <div
-              className="text-center py-5"
               style={{
-                ...glassCard,
-                padding: 40,
+                display: "flex",
+                gap: 8,
+                overflowX: "auto",
+                paddingBottom: 4,
               }}
             >
-              <div className="spinner-border text-info" role="status"></div>
-              <p className="mt-3 mb-0" style={{ color: "#cbd5e1" }}>
+              {filterTabs.map((tab) => {
+                const isActive = activeTab === tab.key;
+
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => setActiveTab(tab.key)}
+                    style={{
+                      border: "none",
+                      outline: "none",
+                      background: isActive ? "#ee4d2d" : "#fff",
+                      color: isActive ? "#fff" : "#374151",
+                      fontWeight: 700,
+                      borderRadius: 999,
+                      padding: "10px 16px",
+                      whiteSpace: "nowrap",
+                      boxShadow: isActive ? "0 8px 18px rgba(238,77,45,0.2)" : "none",
+                      borderColor: "#e5e7eb",
+                    }}
+                  >
+                    {tab.label} ({counts[tab.key] || 0})
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {loading ? (
+            <div style={{ ...pageCard, padding: 40 }} className="text-center">
+              <div className="spinner-border text-danger" role="status"></div>
+              <p className="mt-3 mb-0" style={{ color: "#6b7280" }}>
                 Đang tải danh sách đơn hàng...
               </p>
             </div>
-          ) : orders.length === 0 ? (
-            <div
-              style={{
-                ...whiteCard,
-                padding: 40,
-                textAlign: "center",
-              }}
-            >
+          ) : filteredOrders.length === 0 ? (
+            <div style={{ ...pageCard, padding: 40 }} className="text-center">
               <div
                 style={{
-                  width: 78,
-                  height: 78,
-                  borderRadius: "50%",
-                  margin: "0 auto 18px auto",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: "rgba(13,110,253,0.10)",
-                  color: "#0d6efd",
-                  fontSize: 30,
+                  fontSize: 54,
+                  color: "#d1d5db",
+                  marginBottom: 12,
                 }}
               >
                 <i className="bi bi-bag-x"></i>
               </div>
 
-              <h4 style={{ color: "#0f172a", fontWeight: 800 }}>
-                Bạn chưa có đơn hàng nào
+              <h4 style={{ color: "#111827", fontWeight: 700 }}>
+                Không có đơn hàng phù hợp
               </h4>
-              <p style={{ color: "#64748b", marginBottom: 20 }}>
-                Hãy khám phá các sản phẩm lưu niệm và tạo đơn hàng đầu tiên của bạn.
+
+              <p style={{ color: "#6b7280", marginBottom: 20 }}>
+                Không có đơn hàng nào trong mục{" "}
+                <strong>{filterTabs.find((x) => x.key === activeTab)?.label}</strong>.
               </p>
+
               <Link
                 to="/products"
-                className="btn btn-primary"
-                style={{ borderRadius: 14, padding: "11px 24px", fontWeight: 700 }}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  padding: "12px 18px",
+                  borderRadius: 10,
+                  border: "none",
+                  background: "#ee4d2d",
+                  color: "#fff",
+                  fontWeight: 700,
+                  textDecoration: "none",
+                }}
               >
+                <i className="bi bi-bag"></i>
                 Mua sắm ngay
               </Link>
             </div>
           ) : (
             <div className="d-grid gap-3">
-              {orders.map((o) => {
-                const badge = getStatusBadge(o.status);
+              {filteredOrders.map((order) => {
+                const badge = getStatusBadge(order.status);
 
                 return (
                   <div
-                    key={o.orderCode}
+                    key={order.id || order.orderCode}
                     style={{
-                      ...whiteCard,
-                      padding: 24,
+                      ...pageCard,
+                      padding: 20,
                     }}
                   >
-                    <div className="row g-3 align-items-center">
-                      <div className="col-lg-8">
-                        <div className="d-flex align-items-center flex-wrap gap-3 mb-3">
+                    <div className="d-flex flex-wrap justify-content-between align-items-start gap-3">
+                      <div style={{ flex: 1 }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            flexWrap: "wrap",
+                            gap: 10,
+                            marginBottom: 10,
+                          }}
+                        >
                           <h4
                             style={{
-                              marginBottom: 0,
-                              color: "#0f172a",
+                              margin: 0,
+                              color: "#111827",
                               fontWeight: 800,
-                              fontSize: 22,
-                              lineHeight: 1.35,
-                              wordBreak: "break-word",
+                              fontSize: 20,
                             }}
                           >
-                            Đơn hàng: {o.orderCode}
+                            {order.orderCode}
                           </h4>
 
                           <span
                             style={{
                               background: badge.bg,
                               color: badge.color,
-                              padding: "7px 14px",
+                              padding: "6px 12px",
                               borderRadius: 999,
-                              fontSize: 14,
+                              fontSize: 13,
                               fontWeight: 700,
                             }}
                           >
@@ -276,55 +386,77 @@ export default function OrdersPage() {
                           </span>
                         </div>
 
-                        <div
-                          style={{
-                            color: "#475569",
-                            lineHeight: 1.9,
-                            fontSize: 15,
-                          }}
-                        >
+                        <div style={{ color: "#4b5563", lineHeight: 1.9 }}>
+                          {order.createdAt && (
+                            <div>
+                              <strong style={{ color: "#111827" }}>Ngày tạo:</strong>{" "}
+                              {new Date(order.createdAt).toLocaleString("vi-VN")}
+                            </div>
+                          )}
+
+                          {order.fulfillmentType && (
+                            <div>
+                              <strong style={{ color: "#111827" }}>Hình thức nhận:</strong>{" "}
+                              {getFulfillmentText(order.fulfillmentType)}
+                            </div>
+                          )}
+
                           <div>
-                            <strong style={{ color: "#0f172a" }}>Tổng tiền:</strong>{" "}
-                            {formatPrice(o.totalAmount)}
+                            <strong style={{ color: "#111827" }}>Tạm tính:</strong>{" "}
+                            {formatPrice(order.subtotal)}
                           </div>
 
-                          {o.createdAt && (
-                            <div>
-                              <strong style={{ color: "#0f172a" }}>Ngày tạo:</strong>{" "}
-                              {new Date(o.createdAt).toLocaleString("vi-VN")}
-                            </div>
-                          )}
-
-                          {o.fulfillmentType && (
-                            <div>
-                              <strong style={{ color: "#0f172a" }}>
-                                Hình thức nhận:
-                              </strong>{" "}
-                              {getFulfillmentText(o.fulfillmentType)}
-                            </div>
-                          )}
+                          {order.shippingFee !== undefined &&
+                            order.shippingFee !== null && (
+                              <div>
+                                <strong style={{ color: "#111827" }}>Phí vận chuyển:</strong>{" "}
+                                {formatPrice(order.shippingFee)}
+                              </div>
+                            )}
                         </div>
                       </div>
 
-                      <div className="col-lg-4">
-                        <div className="d-flex justify-content-lg-end flex-wrap gap-2">
-                          <Link
-                            to={`/orders/${o.orderCode}`}
-                            className="btn btn-primary"
-                            style={{
-                              borderRadius: 14,
-                              minWidth: 170,
-                              height: 48,
-                              display: "inline-flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontWeight: 700,
-                              boxShadow: "0 12px 24px rgba(13,110,253,0.18)",
-                            }}
-                          >
-                            Xem chi tiết
-                          </Link>
+                      <div className="text-md-end" style={{ minWidth: 220 }}>
+                        <div
+                          style={{
+                            color: "#6b7280",
+                            fontSize: 14,
+                            marginBottom: 8,
+                          }}
+                        >
+                          Tổng thanh toán
                         </div>
+
+                        <div
+                          style={{
+                            color: "#ee4d2d",
+                            fontSize: 26,
+                            fontWeight: 800,
+                            marginBottom: 14,
+                          }}
+                        >
+                          {formatPrice(order.totalAmount)}
+                        </div>
+
+                        <Link
+                          to={`/orders/${order.orderCode}`}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: 8,
+                            padding: "10px 16px",
+                            borderRadius: 10,
+                            border: "1px solid #ee4d2d",
+                            background: "#fff",
+                            color: "#ee4d2d",
+                            fontWeight: 700,
+                            textDecoration: "none",
+                          }}
+                        >
+                          <i className="bi bi-eye"></i>
+                          Xem chi tiết
+                        </Link>
                       </div>
                     </div>
                   </div>

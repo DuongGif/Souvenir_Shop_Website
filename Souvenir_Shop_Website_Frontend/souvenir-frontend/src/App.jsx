@@ -7,7 +7,7 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import AccountDetailPage from "./pages/AccountDetailPage";
 import ContactPage from "./pages/ContactPage";
-import Wishlist from "./pages/Wishlist";
+
 import ProductsPage from "./pages/ProductsPage";
 import DetailProductPage from "./pages/DetailProductPage";
 import CartPage from "./pages/CartPage";
@@ -54,7 +54,7 @@ export default function App() {
       <Route path="/products" element={<ProductsPage />} />
       <Route path="/products/:id" element={<DetailProductPage />} />
       <Route path="/contact" element={<ContactPage />} />
-      <Route path="/wishlist" element={<Wishlist />} />
+      
 
       {/* Auth */}
       <Route path="/login" element={<LoginPage />} />
