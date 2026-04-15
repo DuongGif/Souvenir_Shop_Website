@@ -1,6 +1,6 @@
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import ScrollTop from "../components/ScrollTop";
+import ScrollTop from "../components/ScrollToTop";
 import Preloader from "../components/Preloader";
 
 export default function MainLayout({ children }) {

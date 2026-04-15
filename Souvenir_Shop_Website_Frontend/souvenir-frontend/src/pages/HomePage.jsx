@@ -1,54 +1,134 @@
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import MainLayout from "../layouts/MainLayout";
 import heroImg from "../assets/img/profile/profile-square-11.webp";
+import { productService } from "../services/productService";
+import ProductCard from "../components/ProductCard";
+
+const pageCard = {
+  background: "#ffffff",
+  borderRadius: 24,
+  boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
+};
+
+const sectionTitle = {
+  fontSize: "clamp(22px, 4vw, 32px)",
+  fontWeight: 700,
+  color: "#111827",
+  margin: 0,
+};
+
+const sectionSubTitle = {
+  fontSize: 14,
+  color: "#6b7280",
+  fontWeight: 600,
+  marginBottom: 8,
+};
+
+const getErrorMessage = (ex, fallback) => {
+  const data = ex?.response?.data;
+  if (typeof data === "string") return data;
+  if (data?.message) return data.message;
+  if (data?.title) return data.title;
+  if (data?.errors) {
+    const firstError = Object.values(data.errors)?.flat?.()[0];
+    if (firstError) return firstError;
+  }
+  return fallback;
+};
 
 export default function HomePage() {
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [newProducts, setNewProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [productErr, setProductErr] = useState("");
+
+const categories = [
+  { icon: "bi bi-gift", text: "Quà lưu niệm", categoryIds: "1" },
+  { icon: "bi bi-palette", text: "Đồ thủ công", categoryIds: "2" },
+  { icon: "bi bi-key", text: "Móc khóa", categoryIds: "3" },
+  { icon: "bi bi-handbag", text: "Áo du lịch", categoryIds: "4" },
+  { icon: "bi bi-stars", text: "Phụ kiện", categoryIds: "5" },
+  { icon: "bi bi-box-seam", text: "Đặc sản", categoryIds: "6" },
+  
+];
+
+  const reasons = [
+    {
+      icon: "bi bi-grid",
+      title: "Sản phẩm đa dạng",
+      desc: "Nhiều lựa chọn quà tặng và đồ lưu niệm phù hợp cho khách tham quan.",
+    },
+    {
+      icon: "bi bi-cash-coin",
+      title: "Giá cả hợp lý",
+      desc: "Mức giá rõ ràng, phù hợp với nhiều nhu cầu mua sắm khác nhau.",
+    },
+    {
+      icon: "bi bi-truck",
+      title: "Giao hàng nhanh",
+      desc: "Hỗ trợ xử lý đơn hàng nhanh chóng và thuận tiện cho khách hàng.",
+    },
+    {
+      icon: "bi bi-credit-card",
+      title: "Thanh toán tiện lợi",
+      desc: "Nhiều hình thức thanh toán giúp quá trình mua hàng dễ dàng hơn.",
+    },
+  ];
+
+  useEffect(() => {
+    const loadHomeProducts = async () => {
+      setLoadingProducts(true);
+      setProductErr("");
+
+      try {
+        const res = await productService.search({
+          page: 1,
+          pageSize: 12,
+          sort: "newest",
+        });
+
+        const items = Array.isArray(res?.data?.items) ? res.data.items : [];
+        setFeaturedProducts(items.slice(0, 6));
+        setNewProducts(items.slice(6, 12));
+      } catch (ex) {
+        setProductErr(getErrorMessage(ex, "Không thể tải sản phẩm trang chủ."));
+      } finally {
+        setLoadingProducts(false);
+      }
+    };
+
+    loadHomeProducts();
+  }, []);
+
   return (
     <MainLayout>
-      <main className="main">
-        <section
-          id="hero"
-          className="section"
-          style={{
-            background: "#f5f5f5",
-            minHeight: "100vh",
-            paddingTop: 32,
-            paddingBottom: 48,
-            display: "flex",
-            alignItems: "center",
-          }}
-        >
-          <div className="container">
+      <main
+        className="main"
+        style={{
+          background: "#f5f5f5",
+          paddingTop: 32,
+          paddingBottom: 48,
+        }}
+      >
+        <div className="container">
+          {/* HERO */}
+          <section style={{ marginBottom: 28 }}>
             <div
               style={{
-                background: "#ffffff",
-                borderRadius: 24,
-                boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
+                ...pageCard,
                 overflow: "hidden",
               }}
             >
               <div className="row g-0 align-items-center">
                 <div className="col-lg-6">
-                  <div
-                    style={{
-                      padding: "40px 32px",
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: 14,
-                        color: "#6b7280",
-                        marginBottom: 10,
-                        fontWeight: 600,
-                      }}
-                    >
-                      Chào mừng đến với SouVN Shop
-                    </div>
+                  <div style={{ padding: "42px 34px" }}>
+                    <div style={sectionSubTitle}>Chào mừng đến với SouVN Shop</div>
 
                     <h1
                       style={{
-                        fontSize: "clamp(30px, 5vw, 52px)",
-                        fontWeight: 800,
+                        fontSize: "clamp(30px, 5vw, 50px)",
+                        fontWeight: 700,
                         lineHeight: 1.2,
                         color: "#111827",
                         marginBottom: 16,
@@ -58,33 +138,18 @@ export default function HomePage() {
                       cho khách tham quan
                     </h1>
 
-                    <h2
-                      style={{
-                        fontSize: "clamp(18px, 3vw, 26px)",
-                        fontWeight: 700,
-                        color: "#374151",
-                        lineHeight: 1.5,
-                        marginBottom: 18,
-                      }}
-                    >
-                      Dự án xây dựng hệ thống thương mại điện tử hiện đại, trực quan và
-                      dễ sử dụng
-                    </h2>
-
                     <p
                       style={{
                         color: "#4b5563",
                         fontSize: 16,
                         lineHeight: 1.8,
                         marginBottom: 24,
+                        maxWidth: 560,
                       }}
                     >
-                      Đây là dự án xây dựng website thương mại điện tử chuyên cung cấp
-                      các sản phẩm lưu niệm dành cho khách du lịch và khách tham quan.
-                      Hệ thống hỗ trợ người dùng tìm kiếm sản phẩm, xem chi tiết, thêm
-                      vào giỏ hàng, đặt hàng và thanh toán thuận tiện. Ngoài ra, website
-                      còn hỗ trợ quản lý sản phẩm, đơn hàng, người dùng và đánh giá,
-                      giúp việc vận hành cửa hàng hiệu quả hơn.
+                      Khám phá hàng ngàn sản phẩm lưu niệm độc đáo dành cho khách du lịch
+                      và khách tham quan. Tìm kiếm, chọn mua và đặt hàng nhanh chóng
+                      trên SouVN với giao diện hiện đại, dễ sử dụng.
                     </p>
 
                     <div
@@ -92,7 +157,7 @@ export default function HomePage() {
                         display: "flex",
                         flexWrap: "wrap",
                         gap: 12,
-                        marginBottom: 28,
+                        marginBottom: 24,
                       }}
                     >
                       <Link
@@ -112,7 +177,7 @@ export default function HomePage() {
                         }}
                       >
                         <i className="bi bi-bag-heart"></i>
-                        Xem sản phẩm
+                        Mua ngay
                       </Link>
 
                       <Link
@@ -140,15 +205,15 @@ export default function HomePage() {
                       style={{
                         display: "flex",
                         flexWrap: "wrap",
-                        gap: 12,
+                        gap: 10,
                       }}
                     >
                       {[
-                        { icon: "bi bi-gift", text: "Quà lưu niệm" },
-                        { icon: "bi bi-cart3", text: "Mua sắm dễ dàng" },
-                        { icon: "bi bi-box-seam", text: "Nhiều sản phẩm" },
-                        { icon: "bi bi-stars", text: "Trải nghiệm tốt" },
-                      ].map((item, index) => (
+                        "Quà lưu niệm đẹp",
+                        "Mua sắm dễ dàng",
+                        "Nhiều sản phẩm",
+                        "Trải nghiệm tốt",
+                      ].map((text, index) => (
                         <div
                           key={index}
                           style={{
@@ -163,8 +228,8 @@ export default function HomePage() {
                             fontSize: 14,
                           }}
                         >
-                          <i className={item.icon}></i>
-                          <span>{item.text}</span>
+                          <i className="bi bi-check-circle"></i>
+                          <span>{text}</span>
                         </div>
                       ))}
                     </div>
@@ -239,10 +304,7 @@ export default function HomePage() {
                           color: "#111827",
                         }}
                       >
-                        <i
-                          className="bi bi-cart-check"
-                          style={{ color: "#ee4d2d" }}
-                        ></i>
+                        <i className="bi bi-cart-check" style={{ color: "#ee4d2d" }}></i>
                         <span>Mua sắm</span>
                       </div>
 
@@ -270,8 +332,274 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+
+          {/* DANH MỤC NỔI BẬT */}
+          <section style={{ marginBottom: 28 }}>
+            <div style={{ ...pageCard, padding: 24 }}>
+              <div style={{ marginBottom: 20 }}>
+                <div style={sectionSubTitle}>Mua sắm theo nhóm</div>
+                <h2 style={sectionTitle}>Danh mục nổi bật</h2>
+              </div>
+
+              <div className="row g-3">
+  {categories.map((item, index) => (
+    <div key={index} className="col-6 col-md-4 col-lg-2">
+      <Link
+        to={`/products?categoryIds=${item.categoryIds}`}
+        style={{
+          background: "#fff7ed",
+          borderRadius: 16,
+          padding: "18px 14px",
+          textAlign: "center",
+          border: "1px solid #fed7aa",
+          height: "100%",
+          display: "block",
+          textDecoration: "none",
+          transition: "0.2s ease",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = "translateY(-4px)";
+          e.currentTarget.style.boxShadow = "0 10px 20px rgba(238,77,45,0.12)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = "translateY(0)";
+          e.currentTarget.style.boxShadow = "none";
+        }}
+      >
+        <div
+          style={{
+            width: 48,
+            height: 48,
+            margin: "0 auto 12px",
+            borderRadius: "50%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "#ffffff",
+            color: "#ee4d2d",
+            fontSize: 20,
+            border: "1px solid #fed7aa",
+          }}
+        >
+          <i className={item.icon}></i>
+        </div>
+
+        <div
+          style={{
+            color: "#c2410c",
+            fontWeight: 700,
+            fontSize: 15,
+            lineHeight: 1.5,
+          }}
+        >
+          {item.text}
+        </div>
+      </Link>
+    </div>
+  ))}
+</div>
+            </div>
+          </section>
+
+          {/* SẢN PHẨM */}
+          <section style={{ marginBottom: 28 }}>
+            <div style={{ ...pageCard, padding: 24 }}>
+              <div
+                className="d-flex flex-wrap justify-content-between align-items-center gap-3"
+                style={{ marginBottom: 20 }}
+              >
+                <div>
+                  <div style={sectionSubTitle}>Gợi ý cho bạn</div>
+                  <h2 style={sectionTitle}>Sản phẩm nổi bật</h2>
+                </div>
+
+                <Link
+                  to="/products"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    color: "#ee4d2d",
+                    textDecoration: "none",
+                    fontWeight: 700,
+                  }}
+                >
+                  Xem tất cả
+                  <i className="bi bi-arrow-right"></i>
+                </Link>
+              </div>
+
+              {productErr && (
+                <div
+                  className="alert mb-3"
+                  role="alert"
+                  style={{
+                    background: "#fef2f2",
+                    color: "#b91c1c",
+                    border: "1px solid #fecaca",
+                    borderRadius: 12,
+                  }}
+                >
+                  {productErr}
+                </div>
+              )}
+
+              {loadingProducts ? (
+                <div className="text-center py-4">
+                  <div className="spinner-border text-danger" role="status"></div>
+                  <p className="mt-3 mb-0" style={{ color: "#6b7280" }}>
+                    Đang tải sản phẩm...
+                  </p>
+                </div>
+              ) : featuredProducts.length === 0 ? (
+                <div
+                  style={{
+                    background: "#fafafa",
+                    borderRadius: 16,
+                    padding: 24,
+                    textAlign: "center",
+                    color: "#6b7280",
+                  }}
+                >
+                  Hiện chưa có sản phẩm để hiển thị.
+                </div>
+              ) : (
+                <div className="row g-3">
+                  {featuredProducts.map((p) => (
+                    <div key={p.id} className="col-sm-6 col-lg-4">
+                      <ProductCard p={p} />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* SẢN PHẨM MỚI */}
+          <section style={{ marginBottom: 28 }}>
+            <div style={{ ...pageCard, padding: 24 }}>
+              <div
+                className="d-flex flex-wrap justify-content-between align-items-center gap-3"
+                style={{ marginBottom: 20 }}
+              >
+                <div>
+                  <div style={sectionSubTitle}>Cập nhật gần đây</div>
+                  <h2 style={sectionTitle}>Sản phẩm mới</h2>
+                </div>
+
+                <Link
+                  to="/products"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    color: "#ee4d2d",
+                    textDecoration: "none",
+                    fontWeight: 700,
+                  }}
+                >
+                  Xem tất cả
+                  <i className="bi bi-arrow-right"></i>
+                </Link>
+              </div>
+
+              {loadingProducts ? (
+                <div className="text-center py-4">
+                  <div className="spinner-border text-danger" role="status"></div>
+                  <p className="mt-3 mb-0" style={{ color: "#6b7280" }}>
+                    Đang tải sản phẩm mới...
+                  </p>
+                </div>
+              ) : newProducts.length === 0 ? (
+                <div
+                  style={{
+                    background: "#fafafa",
+                    borderRadius: 16,
+                    padding: 24,
+                    textAlign: "center",
+                    color: "#6b7280",
+                  }}
+                >
+                  Hiện chưa có sản phẩm mới để hiển thị.
+                </div>
+              ) : (
+                <div className="row g-3">
+                  {newProducts.map((p) => (
+                    <div key={p.id} className="col-sm-6 col-lg-4">
+                      <ProductCard p={p} />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* LÝ DO CHỌN SOUVN */}
+          <section>
+            <div style={{ ...pageCard, padding: 24 }}>
+              <div style={{ marginBottom: 20 }}>
+                <div style={sectionSubTitle}>Cam kết của chúng tôi</div>
+                <h2 style={sectionTitle}>Vì sao chọn SouVN?</h2>
+              </div>
+
+              <div className="row g-3">
+                {reasons.map((item, index) => (
+                  <div key={index} className="col-md-6 col-lg-3">
+                    <div
+                      style={{
+                        background: "#fff7ed",
+                        borderRadius: 16,
+                        padding: 20,
+                        height: "100%",
+                        border: "1px solid #fed7aa",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 52,
+                          height: 52,
+                          borderRadius: "50%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          background: "#ffffff",
+                          color: "#ee4d2d",
+                          fontSize: 22,
+                          marginBottom: 14,
+                          border: "1px solid #fed7aa",
+                        }}
+                      >
+                        <i className={item.icon}></i>
+                      </div>
+
+                      <div
+                        style={{
+                          color: "#111827",
+                          fontWeight: 700,
+                          fontSize: 18,
+                          marginBottom: 8,
+                        }}
+                      >
+                        {item.title}
+                      </div>
+
+                      <div
+                        style={{
+                          color: "#6b7280",
+                          lineHeight: 1.7,
+                          fontSize: 14,
+                        }}
+                      >
+                        {item.desc}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        </div>
       </main>
     </MainLayout>
   );

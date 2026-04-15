@@ -23,18 +23,38 @@ const STATUS_OPTIONS = [
   { value: "confirmed", label: "Đã xác nhận" },
   { value: "paid", label: "Đã thanh toán" },
   { value: "shipping", label: "Đang giao hàng" },
-  { value: "shipped", label: "Đã giao vận" },
   { value: "completed", label: "Hoàn thành" },
+  { value: "cancel_requested", label: "Chờ duyệt hủy" },
+  { value: "return_requested", label: "Yêu cầu hoàn hàng" },
+  { value: "returned", label: "Đã hoàn hàng" },
   { value: "cancelled", label: "Đã hủy" },
 ];
 
+const normalizeStatus = (status) => {
+  const s = String(status || "").trim().toLowerCase();
+
+  if (s === "dang_giao" || s === "đang giao" || s === "da_giao_van" || s === "shipped") {
+    return "shipping";
+  }
+
+  if (s === "canceled") return "cancelled";
+  if (s === "pending_cancel") return "cancel_requested";
+  if (s === "cho_duyet_huy") return "cancel_requested";
+  if (s === "yeu_cau_huy") return "cancel_requested";
+  if (s === "yeu_cau_hoan_hang") return "return_requested";
+  if (s === "da_hoan_hang") return "returned";
+
+  return s || "pending";
+};
+
 const getStatusLabel = (status) => {
-  const found = STATUS_OPTIONS.find((x) => x.value === String(status || "").toLowerCase());
+  const normalized = normalizeStatus(status);
+  const found = STATUS_OPTIONS.find((x) => x.value === normalized);
   return found ? found.label : status || "Không xác định";
 };
 
 const getStatusBadge = (status) => {
-  const s = String(status || "").toLowerCase();
+  const s = normalizeStatus(status);
 
   if (s === "pending") {
     return { text: "Chờ xử lý", bg: "#fef3c7", color: "#92400e" };
@@ -48,17 +68,23 @@ const getStatusBadge = (status) => {
   if (s === "shipping") {
     return { text: "Đang giao hàng", bg: "#dbeafe", color: "#1d4ed8" };
   }
-  if (s === "shipped") {
-    return { text: "Đã giao vận", bg: "#e0e7ff", color: "#4338ca" };
-  }
   if (s === "completed") {
     return { text: "Hoàn thành", bg: "#dcfce7", color: "#166534" };
   }
-  if (s === "cancelled" || s === "canceled") {
+  if (s === "cancel_requested") {
+    return { text: "Chờ duyệt hủy", bg: "#fff7ed", color: "#9a3412" };
+  }
+  if (s === "return_requested") {
+    return { text: "Yêu cầu hoàn hàng", bg: "#f3e8ff", color: "#7e22ce" };
+  }
+  if (s === "returned") {
+    return { text: "Đã hoàn hàng", bg: "#ede9fe", color: "#5b21b6" };
+  }
+  if (s === "cancelled") {
     return { text: "Đã hủy", bg: "#fee2e2", color: "#991b1b" };
   }
 
-  return { text: status || "Không xác định", bg: "#e5e7eb", color: "#374151" };
+  return { text: getStatusLabel(status), bg: "#e5e7eb", color: "#374151" };
 };
 
 export default function AdminOrdersPage() {
@@ -81,7 +107,7 @@ export default function AdminOrdersPage() {
 
       const initialStatusMap = {};
       data.forEach((o) => {
-        initialStatusMap[o.id] = o.status || "pending";
+        initialStatusMap[o.id] = normalizeStatus(o.status);
       });
       setStatusMap(initialStatusMap);
     } catch (ex) {
@@ -101,7 +127,10 @@ export default function AdminOrdersPage() {
 
     try {
       setSavingId(id);
-      await adminOrdersService.updateStatus(id, statusMap[id]);
+
+      const normalizedStatus = normalizeStatus(statusMap[id]);
+
+      await adminOrdersService.updateStatus(id, normalizedStatus);
       setMsg(`Đã cập nhật trạng thái đơn hàng #${id}`);
       await load();
     } catch (ex) {
@@ -235,7 +264,7 @@ export default function AdminOrdersPage() {
                         <div className="d-flex gap-2 flex-wrap">
                           <select
                             className="form-select form-select-sm"
-                            value={statusMap[o.id] || o.status || "pending"}
+                            value={statusMap[o.id] || normalizeStatus(o.status) || "pending"}
                             onChange={(e) =>
                               setStatusMap({
                                 ...statusMap,
@@ -243,7 +272,7 @@ export default function AdminOrdersPage() {
                               })
                             }
                             style={{
-                              width: 170,
+                              width: 190,
                               borderRadius: 10,
                               color: "#111827",
                             }}

@@ -1,5 +1,6 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
+import ScrollToTop from "./components/ScrollToTop";
 
 // User pages
 import HomePage from "./pages/HomePage";
@@ -48,96 +49,102 @@ function AdminOnly({ children }) {
 
 export default function App() {
   return (
-    <Routes>
-      {/* Public */}
-      <Route path="/" element={<HomePage />} />
-      <Route path="/products" element={<ProductsPage />} />
-      <Route path="/products/:id" element={<DetailProductPage />} />
-      <Route path="/contact" element={<ContactPage />} />
-      
+    <>
+      <ScrollToTop />
 
-      {/* Auth */}
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route
-      path="/account"
-      element={
-        <Protected>
-          <AccountDetailPage />
-        </Protected>
-        }
-      />
+      <Routes>
+        {/* Public */}
+        <Route path="/" element={<HomePage />} />
+        <Route path="/products" element={<ProductsPage />} />
+        <Route path="/products/:id" element={<DetailProductPage />} />
+        <Route path="/contact" element={<ContactPage />} />
 
-      {/* User protected */}
-      <Route
-        path="/cart"
-        element={
-          <Protected>
-            <CartPage />
-          </Protected>
-        }
-      />
-      <Route
-        path="/orders"
-        element={
-          <Protected>
-            <OrdersPage />
-          </Protected>
-        }
-      />
-      <Route
-        path="/orders/:orderCode"
-        element={
-          <Protected>
-            <OrderDetailPage />
-          </Protected>
-        }
-      />
-      <Route
-        path="/payment/:orderCode"
-        element={
-          <Protected>
-            <PaymentPage />
-          </Protected>
-        }
-      />
-      <Route
-        path="/payment-success"
-        element={
-          <Protected>
-            <PaymentSuccess />
-          </Protected>
-        }
-      />
-      <Route
-        path="/payment-cancel"
-        element={
-          <Protected>
-            <PaymentCancel />
-          </Protected>
-        }
-      />
+        {/* Auth */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route
+          path="/account"
+          element={
+            <Protected>
+              <AccountDetailPage />
+            </Protected>
+          }
+        />
 
-      {/* Admin */}
-      <Route
-        path="/admin"
-        element={
-          <AdminOnly>
-            <AdminPage />
-          </AdminOnly>
-        }
-      >
-        <Route index element={<AdminDashboard />} />
-        <Route path="users" element={<AdminUsersPage />} />
-        <Route path="products" element={<AdminProductsPage />} />
-        <Route path="orders" element={<AdminOrdersPage />} />
-        <Route path="coupons" element={<AdminCouponsPage />} />
-        <Route path="reviews" element={<AdminReviewsPage />} />
-        <Route path="products/:productId/variants" element={<AdminProductVariantsPage />} />
-      </Route>
+        {/* User protected */}
+        <Route
+          path="/cart"
+          element={
+            <Protected>
+              <CartPage />
+            </Protected>
+          }
+        />
+        <Route
+          path="/orders"
+          element={
+            <Protected>
+              <OrdersPage />
+            </Protected>
+          }
+        />
+        <Route
+          path="/orders/:orderCode"
+          element={
+            <Protected>
+              <OrderDetailPage />
+            </Protected>
+          }
+        />
+        <Route
+          path="/payment/:orderCode"
+          element={
+            <Protected>
+              <PaymentPage />
+            </Protected>
+          }
+        />
+        <Route
+          path="/payment-success"
+          element={
+            <Protected>
+              <PaymentSuccess />
+            </Protected>
+          }
+        />
+        <Route
+          path="/payment-cancel"
+          element={
+            <Protected>
+              <PaymentCancel />
+            </Protected>
+          }
+        />
 
-      {/* Fallback */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        {/* Admin */}
+        <Route
+          path="/admin"
+          element={
+            <AdminOnly>
+              <AdminPage />
+            </AdminOnly>
+          }
+        >
+          <Route index element={<AdminDashboard />} />
+          <Route path="users" element={<AdminUsersPage />} />
+          <Route path="products" element={<AdminProductsPage />} />
+          <Route path="orders" element={<AdminOrdersPage />} />
+          <Route path="coupons" element={<AdminCouponsPage />} />
+          <Route path="reviews" element={<AdminReviewsPage />} />
+          <Route
+            path="products/:productId/variants"
+            element={<AdminProductVariantsPage />}
+          />
+        </Route>
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
   );
 }

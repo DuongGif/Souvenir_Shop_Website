@@ -35,9 +35,9 @@ const getStatusBadge = (status) => {
     return { text: "Đã thanh toán", bg: "#ecfdf5", color: "#047857" };
   }
 
-  if (s === "shipping" || s === "dang_giao") {
-    return { text: "Đang giao hàng", bg: "#eff6ff", color: "#1d4ed8" };
-  }
+ if (s === "shipping") {
+  return { text: "Đang giao hàng", bg: "#eff6ff", color: "#1d4ed8" };
+}
 
   if (s === "completed" || s === "hoan_thanh") {
     return { text: "Hoàn thành", bg: "#ecfdf5", color: "#047857" };

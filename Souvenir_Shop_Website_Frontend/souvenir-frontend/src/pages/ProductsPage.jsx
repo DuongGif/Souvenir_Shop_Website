@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import { productService } from "../services/productService";
 import ProductCard from "../components/ProductCard";
@@ -34,17 +35,41 @@ const sortOptions = [
   { value: "rating_asc", label: "Đánh giá thấp nhất" },
 ];
 
+const categoryOptions = [
+  { id: "1", label: "Quà lưu niệm", icon: "bi bi-gift" },
+  { id: "2", label: "Đồ thủ công", icon: "bi bi-palette" },
+  { id: "3", label: "Móc khóa", icon: "bi bi-key" },
+  { id: "4", label: "Áo du lịch", icon: "bi bi-handbag" },
+  { id: "5", label: "Phụ kiện", icon: "bi bi-stars" },
+  { id: "6", label: "Đặc sản", icon: "bi bi-box-seam" },
+  { id: "7", label: "Khác", icon: "bi bi-three-dots" },
+];
+
+const getErrorMessage = (ex, fallback) => {
+  const data = ex?.response?.data;
+  if (typeof data === "string") return data;
+  if (data?.message) return data.message;
+  if (data?.title) return data.title;
+  if (data?.errors) {
+    const firstError = Object.values(data.errors)?.flat?.()[0];
+    if (firstError) return firstError;
+  }
+  return fallback;
+};
+
 export default function ProductsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const [q, setQ] = useState({
-    keyword: "",
-    categoryIds: "",
-    minPrice: "",
-    maxPrice: "",
-    minRating: "",
-    inStockOnly: false,
-    sort: "newest",
-    page: 1,
-    pageSize: 6,
+    keyword: searchParams.get("keyword") || "",
+    categoryIds: searchParams.get("categoryIds") || "",
+    minPrice: searchParams.get("minPrice") || "",
+    maxPrice: searchParams.get("maxPrice") || "",
+    minRating: searchParams.get("minRating") || "",
+    inStockOnly: searchParams.get("inStockOnly") === "true",
+    sort: searchParams.get("sort") || "newest",
+    page: Number(searchParams.get("page") || 1),
+    pageSize: Number(searchParams.get("pageSize") || 6),
   });
 
   const [data, setData] = useState({
@@ -56,6 +81,20 @@ export default function ProductsPage() {
 
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
+
+  useEffect(() => {
+    setQ({
+      keyword: searchParams.get("keyword") || "",
+      categoryIds: searchParams.get("categoryIds") || "",
+      minPrice: searchParams.get("minPrice") || "",
+      maxPrice: searchParams.get("maxPrice") || "",
+      minRating: searchParams.get("minRating") || "",
+      inStockOnly: searchParams.get("inStockOnly") === "true",
+      sort: searchParams.get("sort") || "newest",
+      page: Number(searchParams.get("page") || 1),
+      pageSize: Number(searchParams.get("pageSize") || 6),
+    });
+  }, [searchParams]);
 
   const params = useMemo(() => {
     const p = { ...q };
@@ -81,13 +120,7 @@ export default function ProductsPage() {
           }
         );
       } catch (ex) {
-        const message =
-          typeof ex?.response?.data === "string"
-            ? ex.response.data
-            : ex?.response?.data?.message ||
-              ex?.response?.data?.title ||
-              "Không thể tải danh sách sản phẩm";
-        setErr(message);
+        setErr(getErrorMessage(ex, "Không thể tải danh sách sản phẩm"));
       } finally {
         setLoading(false);
       }
@@ -95,6 +128,22 @@ export default function ProductsPage() {
 
     fetchProducts();
   }, [params]);
+
+  useEffect(() => {
+    const nextParams = {};
+
+    if (q.keyword) nextParams.keyword = q.keyword;
+    if (q.categoryIds) nextParams.categoryIds = q.categoryIds;
+    if (q.minPrice) nextParams.minPrice = q.minPrice;
+    if (q.maxPrice) nextParams.maxPrice = q.maxPrice;
+    if (q.minRating) nextParams.minRating = q.minRating;
+    if (q.inStockOnly) nextParams.inStockOnly = "true";
+    if (q.sort) nextParams.sort = q.sort;
+    if (q.page && q.page !== 1) nextParams.page = String(q.page);
+    if (q.pageSize && q.pageSize !== 6) nextParams.pageSize = String(q.pageSize);
+
+    setSearchParams(nextParams, { replace: true });
+  }, [q, setSearchParams]);
 
   const totalPages = Math.max(
     1,
@@ -114,6 +163,16 @@ export default function ProductsPage() {
       pageSize: 6,
     });
   };
+
+  const toggleCategory = (categoryId) => {
+    setQ((prev) => ({
+      ...prev,
+      categoryIds: prev.categoryIds === categoryId ? "" : categoryId,
+      page: 1,
+    }));
+  };
+
+  const selectedCategory = categoryOptions.find((x) => x.id === q.categoryIds);
 
   return (
     <MainLayout>
@@ -151,7 +210,7 @@ export default function ProductsPage() {
                 <h2
                   style={{
                     margin: 0,
-                    fontWeight: 800,
+                    fontWeight: 700,
                     color: "#111827",
                     fontSize: "clamp(24px, 4vw, 34px)",
                   }}
@@ -194,7 +253,7 @@ export default function ProductsPage() {
                 <div
                   style={{
                     fontSize: 18,
-                    fontWeight: 800,
+                    fontWeight: 700,
                     color: "#111827",
                     marginBottom: 18,
                   }}
@@ -224,16 +283,55 @@ export default function ProductsPage() {
                     <label className="form-label" style={labelStyle}>
                       Danh mục
                     </label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Ví dụ: 1,2,3"
-                      value={q.categoryIds}
-                      onChange={(e) =>
-                        setQ({ ...q, categoryIds: e.target.value, page: 1 })
-                      }
-                      style={inputStyle}
-                    />
+
+                    <div className="d-grid gap-2">
+                      {categoryOptions.map((item) => {
+                        const isActive = q.categoryIds === item.id;
+
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => toggleCategory(item.id)}
+                            style={{
+                              border: "none",
+                              outline: "none",
+                              background: isActive ? "#ee4d2d" : "#fff7ed",
+                              color: isActive ? "#fff" : "#c2410c",
+                              fontWeight: 700,
+                              borderRadius: 12,
+                              padding: "12px 14px",
+                              textAlign: "left",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 10,
+                              boxShadow: isActive
+                                ? "0 8px 18px rgba(238,77,45,0.2)"
+                                : "inset 0 0 0 1px #fed7aa",
+                            }}
+                          >
+                            <i className={item.icon}></i>
+                            <span>{item.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {selectedCategory && (
+                      <div
+                        style={{
+                          marginTop: 10,
+                          fontSize: 13,
+                          color: "#6b7280",
+                          fontWeight: 600,
+                        }}
+                      >
+                        Đang chọn:{" "}
+                        <span style={{ color: "#ee4d2d" }}>
+                          {selectedCategory.label}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="row g-2">

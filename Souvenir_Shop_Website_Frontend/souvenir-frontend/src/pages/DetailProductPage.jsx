@@ -106,6 +106,17 @@ export default function DetailProductPage() {
     loadReviews();
   }, [id]);
 
+  useEffect(() => {
+    if (!msg && !err) return;
+
+    const timer = setTimeout(() => {
+      setMsg("");
+      setErr("");
+    }, 2500);
+
+    return () => clearTimeout(timer);
+  }, [msg, err]);
+
   const currentVariant = useMemo(() => {
     return (p?.variants || []).find((v) => v.id === Number(variantId)) || null;
   }, [p, variantId]);
@@ -153,15 +164,28 @@ export default function DetailProductPage() {
       return;
     }
 
+    if (!variantId) {
+      setErr("Vui lòng chọn biến thể sản phẩm.");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
     try {
       setAddingCart(true);
+
       await cartService.addItem({
         variantId,
         quantity: Number(qty),
       });
-      setMsg("Đã thêm sản phẩm vào giỏ hàng");
+
+      setMsg("Đã thêm sản phẩm vào giỏ hàng.");
+      setQty(1);
+
+      window.dispatchEvent(new Event("cart-updated"));
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (ex) {
       setErr(getErrorMessage(ex, "Thêm vào giỏ hàng thất bại"));
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setAddingCart(false);
     }
@@ -189,8 +213,11 @@ export default function DetailProductPage() {
         setReviews([]);
         setReviewErr(getErrorMessage(ex, "Không thể tải lại danh sách đánh giá"));
       }
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (ex) {
       setErr(getErrorMessage(ex, "Gửi đánh giá thất bại"));
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setSubmittingReview(false);
     }

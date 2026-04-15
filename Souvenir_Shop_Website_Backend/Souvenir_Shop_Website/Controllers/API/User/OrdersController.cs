@@ -33,6 +33,43 @@ public class OrdersController : ControllerBase
 		return null;
 	}
 
+	private static string NormalizeStatus(string? status)
+	{
+		return (status ?? "").Trim().ToLowerInvariant();
+	}
+
+	private async Task<OrderDto> BuildOrderDtoAsync(Order order)
+	{
+		var items = await (
+			from i in _db.OrderItems.AsNoTracking()
+			join v in _db.ProductVariants on i.VariantId equals v.Id
+			join p in _db.Products on v.ProductId equals p.Id
+			where i.OrderId == order.Id
+			select new OrderItemDto
+			{
+				ProductId = p.Id,
+				VariantId = v.Id,
+				ProductSlug = p.Slug,
+				ProductName = i.ProductNameSnapshot,
+				VariantName = i.VariantNameSnapshot,
+				UnitPrice = i.UnitPrice,
+				Quantity = i.Quantity,
+				LineTotal = i.LineTotal
+			}
+		).ToListAsync();
+
+		return new OrderDto
+		{
+			Id = order.Id,
+			OrderCode = order.OrderCode,
+			Status = order.Status,
+			Subtotal = order.Subtotal,
+			ShippingFee = order.ShippingFee,
+			TotalAmount = order.TotalAmount,
+			Items = items
+		};
+	}
+
 	// =======================
 	// TẠO ĐƠN HÀNG
 	// =======================
@@ -45,7 +82,7 @@ public class OrdersController : ControllerBase
 		// kiểm tra địa chỉ giao hàng
 		if (req.FulfillmentType == "delivery" || req.FulfillmentType == "hotel")
 		{
-			if (req.ShippingAddressId == null || req.ShippingAddressId <= 0)
+			if (req.ShippingAddressId <= 0)
 				return BadRequest("Cần cung cấp địa chỉ giao hàng.");
 
 			var addressOk = await _db.Addresses
@@ -315,33 +352,132 @@ public class OrdersController : ControllerBase
 		if (order == null)
 			return NotFound("Không tìm thấy đơn hàng.");
 
-		var items = await (
-		from i in _db.OrderItems.AsNoTracking()
-		join v in _db.ProductVariants on i.VariantId equals v.Id
-		join p in _db.Products on v.ProductId equals p.Id
-		where i.OrderId == order.Id
-		select new OrderItemDto
-		{
-			ProductId = p.Id,
-			VariantId = v.Id,
-			ProductSlug = p.Slug,
-			ProductName = i.ProductNameSnapshot,
-			VariantName = i.VariantNameSnapshot,
-			UnitPrice = i.UnitPrice,
-			Quantity = i.Quantity,
-			LineTotal = i.LineTotal
-		}
-	).ToListAsync();
+		var dto = await BuildOrderDtoAsync(order);
+		return Ok(dto);
+	}
 
-		return Ok(new OrderDto
+	// =======================
+	// HỦY ĐƠN NGAY
+	// Chỉ áp dụng khi: pending
+	// =======================
+
+	[HttpPut("{orderCode}/cancel")]
+	public async Task<IActionResult> CancelByCode(string orderCode)
+	{
+		var userId = CurrentUserId();
+
+		var order = await _db.Orders
+			.FirstOrDefaultAsync(o => o.OrderCode == orderCode && o.UserId == userId);
+
+		if (order == null)
+			return NotFound("Không tìm thấy đơn hàng.");
+
+		var status = NormalizeStatus(order.Status);
+
+		if (status != "pending")
+			return BadRequest("Chỉ đơn hàng ở trạng thái chờ xử lý mới được hủy ngay.");
+
+		order.Status = "cancelled";
+		order.UpdatedAt = DateTime.Now;
+
+		var payments = await _db.Payments
+			.Where(p => p.OrderId == order.Id)
+			.ToListAsync();
+
+		foreach (var p in payments)
 		{
-			Id = order.Id,
-			OrderCode = order.OrderCode,
-			Status = order.Status,
-			Subtotal = order.Subtotal,
-			ShippingFee = order.ShippingFee,
-			TotalAmount = order.TotalAmount,
-			Items = items
+			var ps = NormalizeStatus(p.Status);
+
+			if (ps != "paid" && ps != "refunded" && ps != "cancelled")
+			{
+				p.Status = "cancelled";
+			}
+		}
+
+		await _db.SaveChangesAsync();
+
+		return Ok(new
+		{
+			message = "Đã hủy đơn hàng thành công.",
+			data = await BuildOrderDtoAsync(order)
+		});
+	}
+
+	// =======================
+	// YÊU CẦU HỦY ĐƠN
+	// confirmed / paid / shipping
+	// =======================
+
+	[HttpPut("{orderCode}/cancel-request")]
+	public async Task<IActionResult> RequestCancel(string orderCode)
+	{
+		var userId = CurrentUserId();
+
+		var order = await _db.Orders
+			.FirstOrDefaultAsync(o => o.OrderCode == orderCode && o.UserId == userId);
+
+		if (order == null)
+			return NotFound("Không tìm thấy đơn hàng.");
+
+		var status = NormalizeStatus(order.Status);
+
+		if (status == "cancel_requested" || status == "pending_cancel")
+			return BadRequest("Đơn hàng này đã có yêu cầu hủy trước đó.");
+
+		if (status == "cancelled" || status == "canceled")
+			return BadRequest("Đơn hàng này đã bị hủy.");
+
+		if (status == "completed")
+			return BadRequest("Đơn hàng đã hoàn thành, không thể yêu cầu hủy.");
+
+		if (status != "confirmed" && status != "paid" && status != "shipping")
+			return BadRequest("Chỉ đơn đã xác nhận, đã thanh toán hoặc đang giao mới gửi yêu cầu hủy.");
+
+		order.Status = "cancel_requested";
+		order.UpdatedAt = DateTime.Now;
+
+		await _db.SaveChangesAsync();
+
+		return Ok(new
+		{
+			message = "Đã gửi yêu cầu hủy đơn. Vui lòng chờ admin duyệt.",
+			data = await BuildOrderDtoAsync(order)
+		});
+	}
+
+	// =======================
+	// YÊU CẦU HOÀN HÀNG
+	// completed
+	// =======================
+
+	[HttpPut("{orderCode}/return-request")]
+	public async Task<IActionResult> RequestReturn(string orderCode)
+	{
+		var userId = CurrentUserId();
+
+		var order = await _db.Orders
+			.FirstOrDefaultAsync(o => o.OrderCode == orderCode && o.UserId == userId);
+
+		if (order == null)
+			return NotFound("Không tìm thấy đơn hàng.");
+
+		var status = NormalizeStatus(order.Status);
+
+		if (status == "return_requested")
+			return BadRequest("Đơn hàng này đã có yêu cầu hoàn hàng.");
+
+		if (status != "completed")
+			return BadRequest("Chỉ đơn hàng đã hoàn thành mới được yêu cầu hoàn hàng.");
+
+		order.Status = "return_requested";
+		order.UpdatedAt = DateTime.Now;
+
+		await _db.SaveChangesAsync();
+
+		return Ok(new
+		{
+			message = "Đã gửi yêu cầu hoàn hàng.",
+			data = await BuildOrderDtoAsync(order)
 		});
 	}
 }

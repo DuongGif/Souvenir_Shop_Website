@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import { paymentService } from "../services/paymentService";
@@ -51,26 +51,36 @@ const getMethodText = (method) => {
   return method || "Không xác định";
 };
 
-const glassCard = {
-  border: "1px solid rgba(255,255,255,0.08)",
-  background: "rgba(255,255,255,0.03)",
-  borderRadius: 24,
-  boxShadow: "0 18px 40px rgba(0,0,0,0.14)",
-  backdropFilter: "blur(6px)",
-};
-
-const whiteCard = {
+const pageCard = {
   background: "#ffffff",
-  borderRadius: 24,
-  boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
+  borderRadius: 20,
+  boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
 };
 
-const inputStyle = {
-  height: 48,
-  borderRadius: 14,
-  color: "#111827",
-  border: "1px solid #e2e8f0",
-  boxShadow: "none",
+const getInlineQrImage = (payment) => {
+  return (
+    payment?.qrCodeUrl ||
+    payment?.qrUrl ||
+    payment?.paymentQrUrl ||
+    payment?.vietQrUrl ||
+    ""
+  );
+};
+
+const isImageLikeUrl = (url) => {
+  if (!url) return false;
+
+  const u = String(url).toLowerCase();
+
+  return (
+    u.includes("img.vietqr.io") ||
+    u.endsWith(".png") ||
+    u.endsWith(".jpg") ||
+    u.endsWith(".jpeg") ||
+    u.endsWith(".webp") ||
+    u.endsWith(".gif") ||
+    u.endsWith(".svg")
+  );
 };
 
 export default function PaymentPage() {
@@ -91,8 +101,10 @@ export default function PaymentPage() {
     try {
       const res = await paymentService.byOrderCode(orderCode);
       setPayment(res.data);
+      return res.data;
     } catch {
       setPayment(null);
+      return null;
     }
   };
 
@@ -102,7 +114,10 @@ export default function PaymentPage() {
       setErr("");
 
       try {
-        await loadLatest();
+        const latest = await loadLatest();
+        if (latest?.paymentMethod) {
+          setMethod(String(latest.paymentMethod).toLowerCase());
+        }
       } catch (ex) {
         setErr(getErrorMessage(ex, "Không thể tải thông tin thanh toán"));
       } finally {
@@ -113,12 +128,6 @@ export default function PaymentPage() {
     init();
   }, [orderCode]);
 
-  useEffect(() => {
-    if (payment?.paymentMethod) {
-      setMethod(payment.paymentMethod);
-    }
-  }, [payment]);
-
   const goToOrdersSuccess = () => {
     navigate("/orders", {
       state: {
@@ -127,33 +136,57 @@ export default function PaymentPage() {
     });
   };
 
-  const create = async () => {
+  const create = async (forceMethod) => {
+    const methodToUse = (forceMethod || method || "cod").toLowerCase();
+
     setErr("");
     setMsg("");
 
     try {
       setCreating(true);
+
       const res = await paymentService.create({
         orderCode,
-        paymentMethod: method,
+        paymentMethod: methodToUse,
       });
 
       const newPayment = res.data;
       setPayment(newPayment);
+      setMethod(methodToUse);
 
-      const createdMethod = String(newPayment?.paymentMethod || method).toLowerCase();
-
-      if (createdMethod === "cod") {
+      if (methodToUse === "cod") {
         goToOrdersSuccess();
         return;
       }
 
-      setMsg("Tạo thanh toán thành công");
+      setMsg("Đã tạo QR / thông tin chuyển khoản ngay trên trang này.");
     } catch (ex) {
       setErr(getErrorMessage(ex, "Tạo thanh toán thất bại"));
     } finally {
       setCreating(false);
     }
+  };
+
+  const handleSelectMethod = async (value) => {
+    setMethod(value);
+    setErr("");
+    setMsg("");
+
+    if (value !== "bank_transfer") return;
+
+    const currentMethod = String(payment?.paymentMethod || "").toLowerCase();
+    const currentStatus = String(payment?.status || "").toLowerCase();
+
+    const canReuseCurrentBankTransfer =
+      currentMethod === "bank_transfer" &&
+      (currentStatus === "pending" || currentStatus === "paid");
+
+    if (canReuseCurrentBankTransfer) {
+      setMsg("Đã hiển thị thông tin chuyển khoản cho đơn hàng này.");
+      return;
+    }
+
+    await create("bank_transfer");
   };
 
   const confirm = async () => {
@@ -173,87 +206,94 @@ export default function PaymentPage() {
   };
 
   const badge = getStatusBadge(payment?.status);
-  const selectedMethod = payment?.paymentMethod || method;
-  const isCod = String(selectedMethod || "").toLowerCase() === "cod";
-  const isBankTransfer =
-    String(selectedMethod || "").toLowerCase() === "bank_transfer";
+  const selectedMethod = String(method || "").toLowerCase();
+  const paymentMethod = String(payment?.paymentMethod || "").toLowerCase();
+
+  const isCod = selectedMethod === "cod";
+  const isBankTransfer = selectedMethod === "bank_transfer";
+
+  const inlineQrImage = useMemo(() => {
+    return (
+      getInlineQrImage(payment) ||
+      (isImageLikeUrl(payment?.paymentUrl) ? payment?.paymentUrl : "")
+    );
+  }, [payment]);
+
+  const canEmbedIframe =
+    !inlineQrImage &&
+    isBankTransfer &&
+    payment?.paymentUrl &&
+    String(payment.paymentUrl).startsWith("http") &&
+    !isImageLikeUrl(payment?.paymentUrl);
 
   return (
     <MainLayout>
       <section
         className="section"
         style={{
-          background:
-            "radial-gradient(circle at top center, rgba(56,189,248,0.10), transparent 24%), linear-gradient(180deg, #04131f 0%, #071a29 60%, #0a1f31 100%)",
-          paddingTop: 50,
-          paddingBottom: 60,
+          background: "#f5f5f5",
+          minHeight: "100vh",
+          paddingTop: 32,
+          paddingBottom: 48,
         }}
       >
-        <div className="container" data-aos="fade-up">
-          <div className="mb-4">
-            <Link
-              to="/orders"
-              style={{
-                color: "#93c5fd",
-                textDecoration: "none",
-                fontWeight: 600,
-              }}
-            >
-              ← Quay lại đơn hàng
-            </Link>
-          </div>
-
+        <div className="container">
           <div
-            className="text-center mb-5"
             style={{
-              paddingTop: 8,
+              ...pageCard,
+              padding: 24,
+              marginBottom: 20,
+              borderLeft: "5px solid #ee4d2d",
             }}
           >
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "10px 20px",
-                borderRadius: 999,
-                background: "rgba(56,189,248,0.12)",
-                color: "#38bdf8",
-                fontSize: 15,
-                fontWeight: 700,
-                marginBottom: 24,
-                border: "1px solid rgba(56,189,248,0.18)",
-                boxShadow: "0 10px 30px rgba(13,110,253,0.15)",
-              }}
-            >
-              <i className="bi bi-credit-card-2-front-fill"></i>
-              Thanh toán đơn hàng
-            </span>
+            <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
+              <div>
+                <div
+                  style={{
+                    fontSize: 14,
+                    color: "#6b7280",
+                    marginBottom: 8,
+                    fontWeight: 600,
+                  }}
+                >
+                  Thanh toán đơn hàng
+                </div>
 
-            <h2
-              style={{
-                fontWeight: 800,
-                marginBottom: 18,
-                color: "#f8fafc",
-                fontSize: "clamp(30px, 5vw, 52px)",
-                lineHeight: 1.2,
-                letterSpacing: "-0.02em",
-              }}
-            >
-              Thanh toán cho đơn hàng: {orderCode}
-            </h2>
+                <h2
+                  style={{
+                    margin: 0,
+                    fontWeight: 700,
+                    color: "#111827",
+                    fontSize: "clamp(24px, 4vw, 34px)",
+                    lineHeight: 1.3,
+                  }}
+                >
+                  Thanh toán cho đơn hàng
+                </h2>
 
-            <p
-              style={{
-                maxWidth: 820,
-                margin: "0 auto",
-                color: "rgba(226,232,240,0.86)",
-                lineHeight: 1.9,
-                fontSize: 18,
-              }}
-            >
-              Chọn phương thức thanh toán phù hợp và theo dõi trạng thái thanh
-              toán của đơn hàng một cách nhanh chóng.
-            </p>
+                <div
+                  style={{
+                    marginTop: 10,
+                    color: "#ee4d2d",
+                    fontWeight: 700,
+                    wordBreak: "break-word",
+                  }}
+                >
+                  {orderCode}
+                </div>
+              </div>
+
+              <Link
+                to="/orders"
+                style={{
+                  color: "#ee4d2d",
+                  textDecoration: "none",
+                  fontWeight: 700,
+                }}
+              >
+                ← Quay lại đơn hàng
+              </Link>
+            </div>
           </div>
 
           {err && (
@@ -264,7 +304,7 @@ export default function PaymentPage() {
                 background: "#fef2f2",
                 color: "#b91c1c",
                 border: "1px solid #fecaca",
-                borderRadius: 16,
+                borderRadius: 12,
               }}
             >
               {err}
@@ -279,7 +319,7 @@ export default function PaymentPage() {
                 background: "#ecfdf5",
                 color: "#047857",
                 border: "1px solid #a7f3d0",
-                borderRadius: 16,
+                borderRadius: 12,
               }}
             >
               {msg}
@@ -287,33 +327,22 @@ export default function PaymentPage() {
           )}
 
           {loading ? (
-            <div
-              className="text-center py-5"
-              style={{
-                ...glassCard,
-                padding: 40,
-              }}
-            >
-              <div className="spinner-border text-info" role="status"></div>
-              <p className="mt-3 mb-0" style={{ color: "#cbd5e1" }}>
+            <div style={{ ...pageCard, padding: 40 }} className="text-center">
+              <div className="spinner-border text-danger" role="status"></div>
+              <p className="mt-3 mb-0" style={{ color: "#6b7280" }}>
                 Đang tải thông tin thanh toán...
               </p>
             </div>
           ) : (
-            <div className="row g-4">
+            <div className="row g-4 align-items-start">
               <div className="col-lg-5">
-                <div
-                  style={{
-                    ...whiteCard,
-                    padding: 28,
-                  }}
-                >
+                <div style={{ ...pageCard, padding: 24 }}>
                   <h3
                     style={{
-                      color: "#0f172a",
-                      fontWeight: 800,
-                      marginBottom: 16,
-                      fontSize: 24,
+                      color: "#111827",
+                      fontWeight: 700,
+                      marginBottom: 18,
+                      fontSize: 28,
                     }}
                   >
                     Thông tin thanh toán
@@ -321,31 +350,31 @@ export default function PaymentPage() {
 
                   <div
                     style={{
-                      background: "#f8fafc",
-                      borderRadius: 16,
+                      background: "#fafafa",
+                      borderRadius: 14,
                       padding: 16,
-                      color: "#475569",
+                      color: "#4b5563",
                       lineHeight: 1.9,
                       marginBottom: 20,
-                      border: "1px solid #e2e8f0",
+                      border: "1px solid #e5e7eb",
                     }}
                   >
                     <div>
-                      <strong style={{ color: "#0f172a" }}>Mã đơn hàng:</strong> {orderCode}
+                      <strong style={{ color: "#111827" }}>Mã đơn hàng:</strong> {orderCode}
                     </div>
 
                     {payment && (
                       <>
                         <div>
-                          <strong style={{ color: "#0f172a" }}>Phương thức:</strong>{" "}
+                          <strong style={{ color: "#111827" }}>Phương thức:</strong>{" "}
                           {getMethodText(payment.paymentMethod)}
                         </div>
                         <div>
-                          <strong style={{ color: "#0f172a" }}>Số tiền:</strong>{" "}
+                          <strong style={{ color: "#111827" }}>Số tiền:</strong>{" "}
                           {formatPrice(payment.amount)}
                         </div>
                         <div>
-                          <strong style={{ color: "#0f172a" }}>Trạng thái:</strong>{" "}
+                          <strong style={{ color: "#111827" }}>Trạng thái:</strong>{" "}
                           <span
                             style={{
                               background: badge.bg,
@@ -362,7 +391,7 @@ export default function PaymentPage() {
                         </div>
                         {payment.transactionCode && (
                           <div>
-                            <strong style={{ color: "#0f172a" }}>Mã giao dịch:</strong>{" "}
+                            <strong style={{ color: "#111827" }}>Mã giao dịch:</strong>{" "}
                             {payment.transactionCode}
                           </div>
                         )}
@@ -378,41 +407,135 @@ export default function PaymentPage() {
                       Chọn phương thức thanh toán
                     </label>
 
-                    <select
-                      value={method}
-                      onChange={(e) => setMethod(e.target.value)}
-                      className="form-select"
-                      style={inputStyle}
-                    >
-                      <option value="cod">Thanh toán khi nhận hàng (COD)</option>
-                      <option value="bank_transfer">Chuyển khoản ngân hàng</option>
-                    </select>
+                    <div className="d-grid gap-2">
+                      {[
+                        {
+                          value: "cod",
+                          title: "Thanh toán khi nhận hàng (COD)",
+                          desc: "Thanh toán trực tiếp khi nhận sản phẩm.",
+                          icon: "bi bi-cash-stack",
+                        },
+                        {
+                          value: "bank_transfer",
+                          title: "Chuyển khoản ngân hàng",
+                          desc: "Bấm vào đây để tạo và hiển thị QR ngay trên trang.",
+                          icon: "bi bi-bank",
+                        },
+                      ].map((item) => {
+                        const isActive = method === item.value;
+
+                        return (
+                          <button
+                            key={item.value}
+                            type="button"
+                            onClick={() => handleSelectMethod(item.value)}
+                            disabled={creating}
+                            style={{
+                              border: "none",
+                              outline: "none",
+                              background: isActive ? "#fff1ee" : "#fff",
+                              color: "#111827",
+                              borderRadius: 14,
+                              padding: "14px 16px",
+                              textAlign: "left",
+                              display: "flex",
+                              alignItems: "flex-start",
+                              gap: 12,
+                              boxShadow: isActive
+                                ? "inset 0 0 0 2px #ee4d2d"
+                                : "inset 0 0 0 1px #e5e7eb",
+                              opacity: creating && item.value === "bank_transfer" ? 0.8 : 1,
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: 42,
+                                height: 42,
+                                borderRadius: "50%",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                background: isActive ? "#ee4d2d" : "#fff7ed",
+                                color: isActive ? "#fff" : "#ee4d2d",
+                                fontSize: 18,
+                                flexShrink: 0,
+                              }}
+                            >
+                              <i className={item.icon}></i>
+                            </div>
+
+                            <div>
+                              <div
+                                style={{
+                                  fontWeight: 700,
+                                  color: "#111827",
+                                  marginBottom: 4,
+                                }}
+                              >
+                                {item.title}
+                              </div>
+                              <div
+                                style={{
+                                  color: "#6b7280",
+                                  fontSize: 14,
+                                  lineHeight: 1.6,
+                                }}
+                              >
+                                {item.desc}
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
 
-                  <div className="d-grid gap-3">
-                    <button
-                      onClick={create}
-                      className="btn btn-primary"
-                      disabled={creating}
-                      style={{
-                        height: 48,
-                        borderRadius: 14,
-                        fontWeight: 700,
-                        boxShadow: "0 12px 24px rgba(13,110,253,0.18)",
-                      }}
-                    >
-                      {creating ? "Đang tạo thanh toán..." : "Tạo thanh toán"}
-                    </button>
+                  <div className="d-grid gap-3 mt-4">
+                    {isCod && (
+                      <button
+                        onClick={() => create("cod")}
+                        disabled={creating}
+                        style={{
+                          height: 46,
+                          borderRadius: 10,
+                          fontWeight: 700,
+                          background: "#ee4d2d",
+                          color: "#fff",
+                          border: "none",
+                        }}
+                      >
+                        {creating ? "Đang xử lý..." : "Xác nhận đơn COD"}
+                      </button>
+                    )}
 
-                    {!isCod && (
+                    {isBankTransfer && (
+                      <button
+                        onClick={() => create("bank_transfer")}
+                        disabled={creating}
+                        style={{
+                          height: 46,
+                          borderRadius: 10,
+                          fontWeight: 700,
+                          background: "#fff",
+                          color: "#ee4d2d",
+                          border: "1px solid #ee4d2d",
+                        }}
+                      >
+                        {creating ? "Đang tạo QR..." : "Tạo lại QR thanh toán"}
+                      </button>
+                    )}
+
+                    {isBankTransfer && paymentMethod === "bank_transfer" && (
                       <button
                         onClick={confirm}
-                        className="btn btn-outline-success"
                         disabled={confirming}
                         style={{
-                          height: 48,
-                          borderRadius: 14,
+                          height: 46,
+                          borderRadius: 10,
                           fontWeight: 700,
+                          background: "#fff",
+                          color: "#166534",
+                          border: "1px solid #86efac",
                         }}
                       >
                         {confirming ? "Đang xác nhận..." : "Xác nhận thanh toán"}
@@ -423,213 +546,255 @@ export default function PaymentPage() {
               </div>
 
               <div className="col-lg-7">
-                <div
-                  style={{
-                    ...whiteCard,
-                    padding: 28,
-                  }}
-                >
+                <div style={{ ...pageCard, padding: 24 }}>
                   <h3
                     style={{
-                      color: "#0f172a",
-                      fontWeight: 800,
-                      marginBottom: 16,
-                      fontSize: 24,
+                      color: "#111827",
+                      fontWeight: 700,
+                      marginBottom: 18,
+                      fontSize: 28,
                     }}
                   >
                     Chi tiết thanh toán
                   </h3>
 
-                  {!payment ? (
+                  {!payment && !isBankTransfer ? (
                     <div
                       style={{
-                        background: "#f8fafc",
-                        borderRadius: 16,
+                        background: "#fafafa",
+                        borderRadius: 14,
                         padding: 20,
-                        color: "#475569",
-                        border: "1px solid #e2e8f0",
+                        color: "#4b5563",
+                        border: "1px solid #e5e7eb",
+                        lineHeight: 1.8,
                       }}
                     >
                       Chưa có thông tin thanh toán cho đơn hàng này. Hãy chọn
-                      phương thức và tạo thanh toán trước.
+                      phương thức thanh toán phù hợp.
                     </div>
                   ) : (
                     <div className="d-grid gap-3">
                       <div
                         style={{
                           border: "1px solid #e5e7eb",
-                          borderRadius: 18,
+                          borderRadius: 16,
                           padding: 18,
                           background: "#fff",
                         }}
                       >
-                        <div style={{ color: "#64748b", marginBottom: 8 }}>
+                        <div style={{ color: "#6b7280", marginBottom: 8 }}>
                           Phương thức thanh toán
                         </div>
-                        <div style={{ color: "#0f172a", fontWeight: 700 }}>
-                          {getMethodText(payment.paymentMethod)}
+                        <div style={{ color: "#111827", fontWeight: 700 }}>
+                          {getMethodText(payment?.paymentMethod || method)}
                         </div>
                       </div>
 
-                      <div
-                        style={{
-                          border: "1px solid #e5e7eb",
-                          borderRadius: 18,
-                          padding: 18,
-                          background: "#fff",
-                        }}
-                      >
-                        <div style={{ color: "#64748b", marginBottom: 8 }}>
-                          Trạng thái thanh toán
-                        </div>
-                        <div>
-                          <span
-                            style={{
-                              background: badge.bg,
-                              color: badge.color,
-                              padding: "6px 12px",
-                              borderRadius: 999,
-                              fontSize: 14,
-                              fontWeight: 700,
-                            }}
-                          >
-                            {badge.text}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div
-                        style={{
-                          border: "1px solid #e5e7eb",
-                          borderRadius: 18,
-                          padding: 18,
-                          background: "#fff",
-                        }}
-                      >
-                        <div style={{ color: "#64748b", marginBottom: 8 }}>
-                          Số tiền thanh toán
-                        </div>
-                        <div
-                          style={{
-                            color: "#2563eb",
-                            fontWeight: 800,
-                            fontSize: 24,
-                          }}
-                        >
-                          {formatPrice(payment.amount)}
-                        </div>
-                      </div>
-
-                      {payment.transactionCode && (
-                        <div
-                          style={{
-                            border: "1px solid #e5e7eb",
-                            borderRadius: 18,
-                            padding: 18,
-                            background: "#fff",
-                          }}
-                        >
-                          <div style={{ color: "#64748b", marginBottom: 8 }}>
-                            Mã giao dịch
-                          </div>
+                      {payment && (
+                        <>
                           <div
                             style={{
-                              color: "#0f172a",
-                              fontWeight: 700,
-                              wordBreak: "break-word",
+                              border: "1px solid #e5e7eb",
+                              borderRadius: 16,
+                              padding: 18,
+                              background: "#fff",
                             }}
                           >
-                            {payment.transactionCode}
+                            <div style={{ color: "#6b7280", marginBottom: 8 }}>
+                              Trạng thái thanh toán
+                            </div>
+                            <div>
+                              <span
+                                style={{
+                                  background: badge.bg,
+                                  color: badge.color,
+                                  padding: "6px 12px",
+                                  borderRadius: 999,
+                                  fontSize: 14,
+                                  fontWeight: 700,
+                                }}
+                              >
+                                {badge.text}
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      )}
 
-                      {isBankTransfer && payment.bankName && (
-                        <div
-                          style={{
-                            border: "1px solid #e5e7eb",
-                            borderRadius: 18,
-                            padding: 18,
-                            background: "#fff",
-                          }}
-                        >
-                          <div style={{ color: "#64748b", marginBottom: 8 }}>
-                            Ngân hàng
-                          </div>
-                          <div style={{ color: "#0f172a", fontWeight: 700 }}>
-                            {payment.bankName}
-                          </div>
-                        </div>
-                      )}
-
-                      {isBankTransfer && payment.accountName && (
-                        <div
-                          style={{
-                            border: "1px solid #e5e7eb",
-                            borderRadius: 18,
-                            padding: 18,
-                            background: "#fff",
-                          }}
-                        >
-                          <div style={{ color: "#64748b", marginBottom: 8 }}>
-                            Chủ tài khoản
-                          </div>
-                          <div style={{ color: "#0f172a", fontWeight: 700 }}>
-                            {payment.accountName}
-                          </div>
-                        </div>
-                      )}
-
-                      {isBankTransfer && payment.accountNo && (
-                        <div
-                          style={{
-                            border: "1px solid #e5e7eb",
-                            borderRadius: 18,
-                            padding: 18,
-                            background: "#fff",
-                          }}
-                        >
-                          <div style={{ color: "#64748b", marginBottom: 8 }}>
-                            Số tài khoản
-                          </div>
-                          <div style={{ color: "#0f172a", fontWeight: 700 }}>
-                            {payment.accountNo}
-                          </div>
-                        </div>
-                      )}
-
-                      {payment.paymentUrl && isBankTransfer && (
-                        <div
-                          style={{
-                            border: "1px solid #e5e7eb",
-                            borderRadius: 18,
-                            padding: 18,
-                            background: "#fff",
-                          }}
-                        >
-                          <div style={{ color: "#64748b", marginBottom: 10 }}>
-                            Liên kết / mã QR thanh toán
-                          </div>
-                          <a
-                            href={payment.paymentUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="btn btn-outline-primary"
-                            style={{ borderRadius: 12, fontWeight: 700 }}
+                          <div
+                            style={{
+                              border: "1px solid #e5e7eb",
+                              borderRadius: 16,
+                              padding: 18,
+                              background: "#fff",
+                            }}
                           >
-                            Mở thông tin thanh toán
-                          </a>
+                            <div style={{ color: "#6b7280", marginBottom: 8 }}>
+                              Số tiền thanh toán
+                            </div>
+                            <div
+                              style={{
+                                color: "#ee4d2d",
+                                fontWeight: 700,
+                                fontSize: 28,
+                              }}
+                            >
+                              {formatPrice(payment.amount)}
+                            </div>
+                          </div>
+
+                          {payment.transactionCode && (
+                            <div
+                              style={{
+                                border: "1px solid #e5e7eb",
+                                borderRadius: 16,
+                                padding: 18,
+                                background: "#fff",
+                              }}
+                            >
+                              <div style={{ color: "#6b7280", marginBottom: 8 }}>
+                                Mã giao dịch / nội dung chuyển khoản
+                              </div>
+                              <div
+                                style={{
+                                  color: "#111827",
+                                  fontWeight: 700,
+                                  wordBreak: "break-word",
+                                }}
+                              >
+                                {payment.transactionCode}
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      )}
+
+                      {isBankTransfer && (
+                        <div
+                          style={{
+                            border: "1px solid #fed7aa",
+                            borderRadius: 16,
+                            padding: 18,
+                            background: "#fff7ed",
+                          }}
+                        >
+                          <div
+                            style={{
+                              color: "#c2410c",
+                              fontWeight: 700,
+                              marginBottom: 12,
+                              fontSize: 16,
+                            }}
+                          >
+                            QR / thông tin chuyển khoản ngay trên trang
+                          </div>
+
+                          {payment?.bankName && (
+                            <div style={{ color: "#7c2d12", marginBottom: 6 }}>
+                              <strong>Ngân hàng:</strong> {payment.bankName}
+                            </div>
+                          )}
+
+                          {payment?.accountName && (
+                            <div style={{ color: "#7c2d12", marginBottom: 6 }}>
+                              <strong>Chủ tài khoản:</strong> {payment.accountName}
+                            </div>
+                          )}
+
+                          {payment?.accountNo && (
+                            <div style={{ color: "#7c2d12", marginBottom: 6 }}>
+                              <strong>Số tài khoản:</strong> {payment.accountNo}
+                            </div>
+                          )}
+
+                          {payment?.amount !== null && payment?.amount !== undefined && (
+                            <div style={{ color: "#7c2d12", marginBottom: 10 }}>
+                              <strong>Số tiền:</strong> {formatPrice(payment.amount)}
+                            </div>
+                          )}
+
+                          {inlineQrImage ? (
+                            <div
+                              style={{
+                                marginTop: 12,
+                                background: "#fff",
+                                borderRadius: 14,
+                                padding: 16,
+                                border: "1px solid #fed7aa",
+                                textAlign: "center",
+                              }}
+                            >
+                              <img
+                                src={inlineQrImage}
+                                alt="QR thanh toán"
+                                style={{
+                                  width: "100%",
+                                  maxWidth: 320,
+                                  borderRadius: 12,
+                                  border: "1px solid #e5e7eb",
+                                }}
+                              />
+                            </div>
+                          ) : canEmbedIframe ? (
+                            <div
+                              style={{
+                                marginTop: 12,
+                                background: "#fff",
+                                borderRadius: 14,
+                                padding: 12,
+                                border: "1px solid #fed7aa",
+                              }}
+                            >
+                              <iframe
+                                src={payment.paymentUrl}
+                                title="Thông tin thanh toán"
+                                style={{
+                                  width: "100%",
+                                  minHeight: 420,
+                                  border: "1px solid #e5e7eb",
+                                  borderRadius: 12,
+                                  background: "#fff",
+                                }}
+                              />
+                              <div
+                                style={{
+                                  marginTop: 10,
+                                  color: "#7c2d12",
+                                  fontSize: 13,
+                                  lineHeight: 1.6,
+                                }}
+                              >
+                                Nếu khung không hiển thị được do giới hạn từ phía cổng thanh toán,
+                                bạn hãy dùng nút “Tạo lại QR thanh toán”.
+                              </div>
+                            </div>
+                          ) : (
+                            <div
+                              style={{
+                                marginTop: 12,
+                                background: "#fff",
+                                borderRadius: 14,
+                                padding: 16,
+                                border: "1px solid #fed7aa",
+                                color: "#7c2d12",
+                                lineHeight: 1.8,
+                              }}
+                            >
+                              {paymentMethod === "bank_transfer"
+                                ? "Đã tạo thanh toán chuyển khoản. Nếu backend của bạn chưa trả về ảnh QR, hãy hiển thị thêm qrCodeUrl hoặc qrUrl từ API để QR hiện trực tiếp tại đây."
+                                : "Hãy bấm vào “Chuyển khoản ngân hàng” ở bên trái để tạo QR ngay trên trang này."}
+                            </div>
+                          )}
                         </div>
                       )}
 
                       {isCod && (
                         <div
                           style={{
-                            border: "1px solid #fde68a",
-                            borderRadius: 18,
+                            border: "1px solid #fed7aa",
+                            borderRadius: 16,
                             padding: 18,
-                            background: "#fffbeb",
+                            background: "#fff7ed",
                             color: "#92400e",
+                            lineHeight: 1.8,
                           }}
                         >
                           Đơn hàng này sử dụng hình thức thanh toán khi nhận hàng
