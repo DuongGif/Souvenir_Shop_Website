@@ -510,6 +510,38 @@
   },
   {
     "ContainingType": "Souvenir_Shop_Website.Controllers.API.Admin.AdminProductsController",
+    "Method": "SeedRealisticProducts",
+    "RelativePath": "api/admin/products/seed-realistic",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "count",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Souvenir_Shop_Website.Controllers.API.Admin.AdminProductsController",
+    "Method": "DeleteSeedRealisticProducts",
+    "RelativePath": "api/admin/products/seed-realistic",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "take",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Souvenir_Shop_Website.Controllers.API.Admin.AdminProductsController",
     "Method": "UploadImage",
     "RelativePath": "api/admin/products/upload-image",
     "HttpMethod": "POST",

@@ -26,16 +26,17 @@ const renderStars = (rating = 0) => {
   ));
 };
 
-const slugToTitle = (slug = "") => {
-  if (!slug) return "Sản phẩm lưu niệm";
-  return slug
+const getProductTitle = (p) => {
+  const raw = p?.name || p?.slug || "Sản phẩm lưu niệm";
+
+  return String(raw)
     .replace(/-/g, " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
+    .replace(/\s+/g, " ")
+    .trim();
 };
 
 export default function ProductCard({ p }) {
-  const title = p?.name || slugToTitle(p?.slug);
-
+  const title = getProductTitle(p);
   const imageUrl = getImageSrc(p?.imageUrl);
 
   const price = p?.price;
@@ -105,6 +106,9 @@ export default function ProductCard({ p }) {
               lineHeight: 1.4,
               minHeight: 50,
               color: "#1f2937",
+              textTransform: "none",
+              letterSpacing: 0,
+              wordBreak: "break-word",
             }}
           >
             {title}

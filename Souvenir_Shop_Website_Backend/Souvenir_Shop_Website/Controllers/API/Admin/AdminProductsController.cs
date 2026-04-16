@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SouvenirShop.DTOs.Product;
 using Souvenir_Shop_Website.Models;
+using System.Text;
 
 namespace Souvenir_Shop_Website.Controllers.API.Admin;
 
@@ -85,12 +86,204 @@ public class AdminProductsController : ControllerBase
 
 	private async Task<int> GetVariantStockAsync(long variantId)
 	{
-		// Nếu model InventoryTransaction của bạn có tên field khác
-		// thì đổi lại cho đúng scaffold hiện tại.
 		return await _db.InventoryTransactions
 			.Where(x => x.VariantId == variantId)
 			.SumAsync(x => (int?)x.Quantity) ?? 0;
 	}
+
+	private static string NormalizeVietnameseText(string value)
+	{
+		return (value ?? string.Empty).Trim().Normalize(NormalizationForm.FormC);
+	}
+
+	private static string GetUniqueDisplayName(HashSet<string> usedNames, string baseName)
+	{
+		var cleanBase = NormalizeVietnameseText(baseName);
+		var candidate = cleanBase;
+		var index = 2;
+
+		while (usedNames.Contains(candidate))
+		{
+			candidate = $"{cleanBase} {index}";
+			index++;
+		}
+
+		usedNames.Add(candidate);
+		return candidate;
+	}
+
+	private static string GetUniqueSku(HashSet<string> usedSkus, string baseSku)
+	{
+		var cleanBase = baseSku.Trim().ToUpperInvariant();
+		var candidate = cleanBase;
+		var index = 2;
+
+		while (usedSkus.Contains(candidate))
+		{
+			candidate = $"{cleanBase}-{index}";
+			index++;
+		}
+
+		usedSkus.Add(candidate);
+		return candidate;
+	}
+
+	private static decimal GetSeedBasePrice(int groupIndex, Random rnd)
+	{
+		return groupIndex switch
+		{
+			0 => rnd.Next(49000, 199001),   // quà lưu niệm
+			1 => rnd.Next(89000, 399001),   // đồ thủ công
+			2 => rnd.Next(19000, 99001),    // móc khóa
+			3 => rnd.Next(99000, 499001),   // áo du lịch
+			4 => rnd.Next(49000, 299001),   // phụ kiện
+			5 => rnd.Next(39000, 249001),   // đặc sản/quà set
+			_ => rnd.Next(69000, 599001)    // khác
+		};
+	}
+
+	private static readonly string[][] CategoryProductNameGroups =
+	{
+		new[]
+		{
+			"Cờ Việt Nam Mini Để Bàn",
+			"Huy Hiệu Cờ Đỏ Sao Vàng",
+			"Huy Hiệu Bản Đồ Việt Nam",
+			"Nam Châm Tủ Lạnh Hà Nội",
+			"Nam Châm Tủ Lạnh Đà Nẵng",
+			"Nam Châm Tủ Lạnh Hải Phòng",
+			"Bưu Thiếp Danh Lam Việt Nam",
+			"Bộ Postcard Hà Nội Xưa",
+			"Khung Ảnh Gỗ Việt Nam",
+			"Lịch Để Bàn Phong Cảnh Việt Nam",
+			"Bộ Sưu Tập Postcard Việt Nam",
+			"Mô Hình Tháp Rùa Mini",
+			"Mô Hình Nhà Hát Lớn Mini",
+			"Mô Hình Cầu Rồng Mini",
+			"Mô Hình Cột Cờ Hà Nội Mini"
+		},
+		new[]
+		{
+			"Tượng Gỗ Cô Gái Áo Dài",
+			"Tượng Gỗ Chùa Một Cột",
+			"Tượng Gỗ Trống Đồng Mini",
+			"Quạt Tay Họa Tiết Dân Gian",
+			"Quạt Giấy In Phong Cảnh Huế",
+			"Ví Thổ Cẩm Mini",
+			"Túi Thổ Cẩm Handmade",
+			"Đĩa Gốm Trang Trí Bát Tràng",
+			"Chén Sứ Hoa Sen",
+			"Bộ Đũa Gỗ Khắc Tên Thành Phố",
+			"Khay Gỗ Trang Trí Du Lịch",
+			"Hộp Bút Tre Khắc Chữ Việt Nam",
+			"Bookmark Tre Khắc Bản Đồ Việt Nam",
+			"Bookmark Gỗ Hoa Sen",
+			"Khăn Tay Thêu Hoa Sen"
+		},
+		new[]
+		{
+			"Móc Khóa Hình Chùa Một Cột",
+			"Móc Khóa Hình Nón Lá",
+			"Móc Khóa Hình Trống Đồng",
+			"Móc Khóa Da Khắc Tên Thành Phố",
+			"Mô Hình Xe Xích Lô Lưu Niệm",
+			"Mô Hình Nón Lá Mini",
+			"Mô Hình Trống Đồng Mini",
+			"Móc Khóa Cờ Việt Nam",
+			"Móc Khóa Phố Cổ Hà Nội",
+			"Móc Khóa Cầu Rồng Đà Nẵng",
+			"Móc Khóa Chợ Bến Thành",
+			"Móc Khóa Bản Đồ Việt Nam",
+			"Móc Khóa Áo Dài Mini",
+			"Móc Khóa Gỗ Khắc Tên",
+			"Móc Khóa Du Lịch SouVN"
+		},
+		new[]
+		{
+			"Áo Thun Du Lịch Hà Nội",
+			"Áo Thun Du Lịch Hải Phòng",
+			"Áo Hoodie Du Lịch Việt Nam",
+			"Áo Polo SouVN",
+			"Áo Sơ Mi Du Lịch",
+			"Mũ Lưỡi Trai Việt Nam",
+			"Mũ Bucket Du Lịch",
+			"Khăn Choàng Du Lịch",
+			"Áo Trẻ Em In Cờ Việt Nam",
+			"Mũ Trẻ Em Du Lịch",
+			"Túi Canvas Du Lịch Sài Gòn",
+			"Túi Vải In Bản Đồ Việt Nam",
+			"Balo Mini Du Lịch",
+			"Túi Đeo Chéo Canvas",
+			"Dép Đi Biển Du Lịch"
+		},
+		new[]
+		{
+			"Ly Giữ Nhiệt SouVN",
+			"Bình Nước In Họa Tiết Việt",
+			"Khăn Lụa In Họa Tiết Sen",
+			"Khăn Lụa Phố Cổ",
+			"Dây Đeo Thẻ Du Lịch",
+			"Ốp Điện Thoại Họa Tiết Việt Nam",
+			"Vòng Tay Thổ Cẩm",
+			"Vòng Tay Hạt Gỗ Lưu Niệm",
+			"Dây Chuyền Mặt Trống Đồng",
+			"Bông Tai Gỗ Họa Tiết Dân Tộc",
+			"Khóa Sổ Da Du Lịch",
+			"Túi Đựng Hộ Chiếu Việt Nam",
+			"Ví Passport Du Lịch",
+			"Ví Zip Họa Tiết Việt",
+			"Thẻ Hành Lý Du Lịch"
+		},
+		new[]
+		{
+			"Set Quà Cà Phê Việt Nam",
+			"Set Quà Trà Sen",
+			"Set Đặc Sản Miền Bắc",
+			"Set Đặc Sản Miền Trung",
+			"Set Đặc Sản Miền Nam",
+			"Hộp Quà Lưu Niệm Việt Nam",
+			"Bộ Quà Tặng Du Lịch Cao Cấp",
+			"Hộp Trà Gỗ Khắc Hoa Sen",
+			"Khay Trà Gỗ Việt Nam",
+			"Set 4 Lót Ly Việt Nam",
+			"Lót Ly Gỗ Khắc Bản Đồ",
+			"Hộp Nhạc Phong Cảnh Việt Nam",
+			"Chuông Gió Tre Lưu Niệm",
+			"Set Quà Doanh Nghiệp SouVN",
+			"Set Quà Hội Nghị Du Lịch"
+		},
+		new[]
+		{
+			"Sticker Du Lịch Việt Nam",
+			"Set Sticker Thành Phố Nổi Tiếng",
+			"Tranh Canvas Ruộng Bậc Thang",
+			"Tranh Canvas Vịnh Hạ Long",
+			"Tranh Canvas Hồ Gươm",
+			"Tranh Gỗ Khắc Phố Cổ",
+			"Đèn Ngủ Gỗ Khắc Hình Việt Nam",
+			"Ống Đựng Bút Tre",
+			"Bút Tre Khắc Tên",
+			"Bút Kim Loại SouVN",
+			"Chuỗi Hạt Trang Trí",
+			"Gấu Bông Mặc Áo Dài",
+			"Gấu Bông Đội Nón Lá",
+			"Đèn Lồng Hội An Mini",
+			"Lịch Gỗ Handmade"
+		}
+	};
+
+	private static readonly string[] VariantSeeds =
+	{
+		"Mặc định",
+		"Bản tiêu chuẩn",
+		"Bản cao cấp",
+		"Màu đỏ",
+		"Màu xanh",
+		"Màu vàng",
+		"Cỡ S",
+		"Cỡ M",
+		"Cỡ L"
+	};
 
 	[HttpPut("{id:long}/images")]
 	public async Task<IActionResult> ReplaceImages(long id, [FromBody] List<string> imageUrls)
@@ -200,7 +393,218 @@ public class AdminProductsController : ControllerBase
 		});
 	}
 
-	// GET all products + first image + all images + variants
+	[HttpPost("seed-realistic")]
+	public async Task<IActionResult> SeedRealisticProducts([FromQuery] int count = 100)
+	{
+		if (count <= 0 || count > 500)
+			return BadRequest("Số lượng sản phẩm phải trong khoảng từ 1 đến 500.");
+
+		var categoryIds = await _db.Categories
+			.AsNoTracking()
+			.OrderBy(x => x.Id)
+			.Select(x => x.Id)
+			.ToListAsync();
+
+		if (categoryIds.Count == 0)
+			return BadRequest("Chưa có danh mục nào. Hãy tạo danh mục trước.");
+
+		var existingNames = await _db.Products
+			.AsNoTracking()
+			.Where(x => !string.IsNullOrWhiteSpace(x.Slug))
+			.Select(x => x.Slug)
+			.ToListAsync();
+
+		var existingSkus = await _db.ProductVariants
+			.AsNoTracking()
+			.Where(x => !string.IsNullOrWhiteSpace(x.Sku))
+			.Select(x => x.Sku)
+			.ToListAsync();
+
+		var usedNames = new HashSet<string>(
+			existingNames.Select(NormalizeVietnameseText),
+			StringComparer.OrdinalIgnoreCase
+		);
+
+		var usedSkus = new HashSet<string>(existingSkus, StringComparer.OrdinalIgnoreCase);
+
+		var rnd = new Random();
+		var now = DateTime.Now;
+		var createdIds = new List<long>();
+
+		using var tx = await _db.Database.BeginTransactionAsync();
+
+		try
+		{
+			for (int i = 0; i < count; i++)
+			{
+				var categoryIndex = i % categoryIds.Count;
+				var categoryId = categoryIds[categoryIndex];
+
+				var group = CategoryProductNameGroups[categoryIndex % CategoryProductNameGroups.Length];
+				var roundIndex = i / categoryIds.Count;
+				var rawName = group[roundIndex % group.Length];
+
+				var displayName = GetUniqueDisplayName(usedNames, rawName);
+				var basePrice = GetSeedBasePrice(categoryIndex % CategoryProductNameGroups.Length, rnd);
+				var isFeatured = i < 16;
+
+				var product = new Product
+				{
+					CategoryId = categoryId,
+					Slug = NormalizeVietnameseText(displayName),
+					BasePrice = basePrice,
+					Status = "active",
+					IsFeatured = isFeatured,
+					CreatedAt = now,
+					UpdatedAt = now
+				};
+
+				_db.Products.Add(product);
+				await _db.SaveChangesAsync();
+				createdIds.Add(product.Id);
+
+				_db.ProductImages.Add(new ProductImage
+				{
+					ProductId = product.Id,
+					ImageUrl = $"https://placehold.co/600x600/png?text={Uri.EscapeDataString(displayName)}"
+				});
+
+				_db.ProductImages.Add(new ProductImage
+				{
+					ProductId = product.Id,
+					ImageUrl = $"https://placehold.co/600x600/png?text={Uri.EscapeDataString(displayName + " - SouVN")}"
+				});
+
+				var variantCount = rnd.Next(1, 4);
+				for (int v = 0; v < variantCount; v++)
+				{
+					var variantName = VariantSeeds[(i + v) % VariantSeeds.Length];
+					var sku = GetUniqueSku(usedSkus, $"SP{now:yyMMdd}{product.Id:D4}V{v + 1}");
+					var variantPrice = basePrice + rnd.Next(0, 150000);
+
+					var variant = new ProductVariant
+					{
+						ProductId = product.Id,
+						Sku = sku,
+						VariantName = NormalizeVietnameseText(variantName),
+						Price = variantPrice,
+						WeightGrams = rnd.Next(100, 1501),
+						IsActive = true,
+						CreatedAt = now
+					};
+
+					_db.ProductVariants.Add(variant);
+					await _db.SaveChangesAsync();
+
+					_db.InventoryTransactions.Add(new InventoryTransaction
+					{
+						VariantId = variant.Id,
+						Type = "in",
+						Quantity = rnd.Next(10, 101),
+						ReferenceType = "seed_realistic",
+						ReferenceId = product.Id,
+						Note = "Nhập kho ban đầu khi tạo sản phẩm mẫu thực tế có dấu",
+						CreatedAt = now
+					});
+				}
+
+				await _db.SaveChangesAsync();
+			}
+
+			await tx.CommitAsync();
+
+			return Ok(new
+			{
+				message = $"Đã tạo thành công {count} sản phẩm mẫu có dấu, chia đều cho tất cả danh mục.",
+				createdCount = count,
+				productIds = createdIds
+			});
+		}
+		catch
+		{
+			await tx.RollbackAsync();
+			throw;
+		}
+	}
+
+	[HttpDelete("seed-realistic")]
+	public async Task<IActionResult> DeleteSeedRealisticProducts([FromQuery] int take = 100)
+	{
+		if (take <= 0 || take > 500)
+			return BadRequest("Số lượng xóa phải trong khoảng từ 1 đến 500.");
+
+		var targetProductIds = await (
+			from p in _db.Products.AsNoTracking()
+			join v in _db.ProductVariants.AsNoTracking() on p.Id equals v.ProductId
+			join it in _db.InventoryTransactions.AsNoTracking() on v.Id equals it.VariantId
+			where it.ReferenceType == "seed_realistic"
+			group p by new { p.Id, p.CreatedAt } into g
+			orderby g.Key.CreatedAt descending
+			select g.Key.Id
+		)
+		.Take(take)
+		.ToListAsync();
+
+		if (targetProductIds.Count == 0)
+		{
+			return Ok(new
+			{
+				message = "Không có sản phẩm có dấu nào do seed-realistic tạo ra để xóa.",
+				deletedCount = 0
+			});
+		}
+
+		var products = await _db.Products
+			.Where(p => targetProductIds.Contains(p.Id))
+			.ToListAsync();
+
+		var variants = await _db.ProductVariants
+			.Where(v => targetProductIds.Contains(v.ProductId))
+			.ToListAsync();
+
+		var variantIds = variants.Select(v => v.Id).ToList();
+
+		var inventoryTransactions = await _db.InventoryTransactions
+			.Where(x => variantIds.Contains(x.VariantId))
+			.ToListAsync();
+
+		var images = await _db.ProductImages
+			.Where(x => targetProductIds.Contains(x.ProductId))
+			.ToListAsync();
+
+		using var tx = await _db.Database.BeginTransactionAsync();
+
+		try
+		{
+			if (inventoryTransactions.Count > 0)
+				_db.InventoryTransactions.RemoveRange(inventoryTransactions);
+
+			if (images.Count > 0)
+				_db.ProductImages.RemoveRange(images);
+
+			if (variants.Count > 0)
+				_db.ProductVariants.RemoveRange(variants);
+
+			if (products.Count > 0)
+				_db.Products.RemoveRange(products);
+
+			await _db.SaveChangesAsync();
+			await tx.CommitAsync();
+
+			return Ok(new
+			{
+				message = $"Đã xóa thành công {products.Count} sản phẩm có dấu do seed-realistic tạo ra.",
+				deletedCount = products.Count,
+				productIds = targetProductIds
+			});
+		}
+		catch
+		{
+			await tx.RollbackAsync();
+			throw;
+		}
+	}
+
 	[HttpGet]
 	public async Task<IActionResult> GetAll()
 	{
@@ -262,7 +666,6 @@ public class AdminProductsController : ControllerBase
 		return Ok(result);
 	}
 
-	// GET one product + images + variants
 	[HttpGet("{id:long}")]
 	public async Task<IActionResult> GetById(long id)
 	{
@@ -321,7 +724,6 @@ public class AdminProductsController : ControllerBase
 		});
 	}
 
-	// POST create product + at least 1 variant
 	[HttpPost]
 	public async Task<IActionResult> Create([FromBody] ProductCreateUpdateDto dto)
 	{
@@ -353,7 +755,7 @@ public class AdminProductsController : ControllerBase
 			var product = new Product
 			{
 				CategoryId = dto.CategoryId,
-				Slug = slug,
+				Slug = NormalizeVietnameseText(dto.Slug),
 				BasePrice = dto.BasePrice,
 				Status = string.IsNullOrWhiteSpace(dto.Status) ? "active" : dto.Status.Trim(),
 				IsFeatured = dto.IsFeatured,
@@ -381,7 +783,7 @@ public class AdminProductsController : ControllerBase
 				{
 					ProductId = product.Id,
 					Sku = item.Sku.Trim(),
-					VariantName = item.VariantName.Trim(),
+					VariantName = NormalizeVietnameseText(item.VariantName.Trim()),
 					Price = item.Price ?? dto.BasePrice,
 					WeightGrams = item.WeightGrams,
 					IsActive = item.IsActive,
@@ -418,7 +820,6 @@ public class AdminProductsController : ControllerBase
 		}
 	}
 
-	// PUT update product info only
 	[HttpPut("{id:long}")]
 	public async Task<IActionResult> Update(long id, [FromBody] ProductCreateUpdateDto dto)
 	{
@@ -443,7 +844,7 @@ public class AdminProductsController : ControllerBase
 		var product = await _db.Products.FindAsync(id);
 		if (product == null) return NotFound("Không tìm thấy sản phẩm.");
 
-		var slug = dto.Slug.Trim();
+		var slug = NormalizeVietnameseText(dto.Slug);
 
 		var existedSlug = await _db.Products
 			.AnyAsync(x => x.Id != id && x.Slug == slug);
@@ -485,13 +886,9 @@ public class AdminProductsController : ControllerBase
 			await _db.SaveChangesAsync();
 		}
 
-		// Không update variants ở đây.
-		// Variants nên quản lý ở API riêng để tránh xóa/sửa nhầm dữ liệu tồn kho.
-
 		return await GetById(id);
 	}
 
-	// DELETE product
 	[HttpDelete("{id:long}")]
 	public async Task<IActionResult> Delete(long id)
 	{

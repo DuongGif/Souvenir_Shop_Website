@@ -19,11 +19,18 @@ const formatPrice = (value) => {
   return Number(value).toLocaleString("vi-VN") + " ₫";
 };
 
-const slugToTitle = (slug = "") => {
-  if (!slug) return "Sản phẩm lưu niệm";
-  return slug
+const normalizeDisplayText = (value = "") => {
+  return String(value || "")
+    .normalize("NFC")
     .replace(/-/g, " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
+    .replace(/\s+/g, " ")
+    .trim();
+};
+
+const getProductTitle = (item) => {
+  const raw = item?.productName || item?.name || item?.productSlug || "";
+  const normalized = normalizeDisplayText(raw);
+  return normalized || "Sản phẩm lưu niệm";
 };
 
 const getErrorMessage = (ex, fallback) => {
@@ -252,6 +259,8 @@ export default function CartPage() {
                     fontWeight: 800,
                     color: "#111827",
                     fontSize: "clamp(24px, 4vw, 34px)",
+                    textTransform: "none",
+                    letterSpacing: 0,
                   }}
                 >
                   Giỏ hàng của bạn
@@ -374,172 +383,181 @@ export default function CartPage() {
                   </div>
 
                   <div className="d-grid">
-                    {(cart.items || []).map((it, index) => (
-                      <div
-                        key={it.id}
-                        style={{
-                          padding: 20,
-                          borderBottom:
-                            index !== cart.items.length - 1
-                              ? "1px solid #f1f5f9"
-                              : "none",
-                        }}
-                      >
-                       <div className="row g-3 align-items-center">
-  <div className="col-md-3 col-lg-2">
-    <div
-      style={{
-        background: "#f9fafb",
-        borderRadius: 14,
-        overflow: "hidden",
-        border: "1px solid #e5e7eb",
-      }}
-    >
-      <img
-        src={getImageSrc(it.imageUrl)}
-        alt={it.variantName}
-        style={{
-          width: "100%",
-          height: 130,
-          objectFit: "cover",
-        }}
-        onError={(e) => {
-          e.currentTarget.src = "/no-image.png";
-        }}
-      />
-    </div>
-  </div>
+                    {(cart.items || []).map((it, index) => {
+                      const productTitle = getProductTitle(it);
+                      const variantTitle = normalizeDisplayText(it.variantName);
 
-  <div className="col-md-9 col-lg-4">
-    <h5
-      style={{
-        color: "#111827",
-        fontWeight: 700,
-        marginBottom: 8,
-        fontSize: 18,
-        lineHeight: 1.4,
-      }}
-    >
-      {slugToTitle(it.productSlug)}
-    </h5>
+                      return (
+                        <div
+                          key={it.id}
+                          style={{
+                            padding: 20,
+                            borderBottom:
+                              index !== cart.items.length - 1
+                                ? "1px solid #f1f5f9"
+                                : "none",
+                          }}
+                        >
+                          <div className="row g-3 align-items-center">
+                            <div className="col-md-3 col-lg-2">
+                              <div
+                                style={{
+                                  background: "#f9fafb",
+                                  borderRadius: 14,
+                                  overflow: "hidden",
+                                  border: "1px solid #e5e7eb",
+                                }}
+                              >
+                                <img
+                                  src={getImageSrc(it.imageUrl)}
+                                  alt={productTitle}
+                                  style={{
+                                    width: "100%",
+                                    height: 130,
+                                    objectFit: "cover",
+                                  }}
+                                  onError={(e) => {
+                                    e.currentTarget.src = "/no-image.png";
+                                  }}
+                                />
+                              </div>
+                            </div>
 
-    <div
-      style={{
-        color: "#6b7280",
-        fontSize: 14,
-        marginBottom: 8,
-      }}
-    >
-      Phân loại: {it.variantName}
-    </div>
+                            <div className="col-md-9 col-lg-4">
+                              <h5
+                                style={{
+                                  color: "#111827",
+                                  fontWeight: 700,
+                                  marginBottom: 8,
+                                  fontSize: 18,
+                                  lineHeight: 1.4,
+                                  textTransform: "none",
+                                  letterSpacing: 0,
+                                  wordBreak: "break-word",
+                                }}
+                              >
+                                {productTitle}
+                              </h5>
 
-    <button
-      onClick={() => removeItem(it.id)}
-      type="button"
-      style={{
-        border: "none",
-        background: "transparent",
-        color: "#ef4444",
-        padding: 0,
-        fontWeight: 600,
-      }}
-    >
-      <i className="bi bi-trash3 me-1"></i>
-      Xóa
-    </button>
-  </div>
+                              <div
+                                style={{
+                                  color: "#6b7280",
+                                  fontSize: 14,
+                                  marginBottom: 8,
+                                  textTransform: "none",
+                                }}
+                              >
+                                Phân loại: {variantTitle || "Mặc định"}
+                              </div>
 
-  <div className="col-4 col-lg-2">
-    <div
-      style={{
-        color: "#111827",
-        fontWeight: 700,
-        fontSize: 16,
-        whiteSpace: "nowrap",
-        textAlign: "right",
-      }}
-    >
-      {formatPrice(it.price)}
-    </div>
-  </div>
+                              <button
+                                onClick={() => removeItem(it.id)}
+                                type="button"
+                                style={{
+                                  border: "none",
+                                  background: "transparent",
+                                  color: "#ef4444",
+                                  padding: 0,
+                                  fontWeight: 600,
+                                }}
+                              >
+                                <i className="bi bi-trash3 me-1"></i>
+                                Xóa
+                              </button>
+                            </div>
 
-  <div className="col-4 col-lg-2 d-flex justify-content-center">
-    <div
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        border: "1px solid #e5e7eb",
-        borderRadius: 10,
-        overflow: "hidden",
-        background: "#fff",
-      }}
-    >
-      <button
-        type="button"
-        onClick={() => updateQty(it.id, Number(it.quantity) - 1)}
-        disabled={Number(it.quantity) <= 1}
-        style={{
-          width: 34,
-          height: 34,
-          border: "none",
-          background: "#fff",
-          color: "#374151",
-          fontWeight: 700,
-        }}
-      >
-        -
-      </button>
+                            <div className="col-4 col-lg-2">
+                              <div
+                                style={{
+                                  color: "#111827",
+                                  fontWeight: 700,
+                                  fontSize: 16,
+                                  whiteSpace: "nowrap",
+                                  textAlign: "right",
+                                }}
+                              >
+                                {formatPrice(it.price)}
+                              </div>
+                            </div>
 
-      <input
-        type="number"
-        min={1}
-        value={it.quantity}
-        onChange={(e) => updateQty(it.id, Number(e.target.value || 1))}
-        style={{
-          width: 52,
-          height: 34,
-          border: "none",
-          borderLeft: "1px solid #e5e7eb",
-          borderRight: "1px solid #e5e7eb",
-          textAlign: "center",
-          outline: "none",
-          color: "#111827",
-        }}
-      />
+                            <div className="col-4 col-lg-2 d-flex justify-content-center">
+                              <div
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  border: "1px solid #e5e7eb",
+                                  borderRadius: 10,
+                                  overflow: "hidden",
+                                  background: "#fff",
+                                }}
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() => updateQty(it.id, Number(it.quantity) - 1)}
+                                  disabled={Number(it.quantity) <= 1}
+                                  style={{
+                                    width: 34,
+                                    height: 34,
+                                    border: "none",
+                                    background: "#fff",
+                                    color: "#374151",
+                                    fontWeight: 700,
+                                  }}
+                                >
+                                  -
+                                </button>
 
-      <button
-        type="button"
-        onClick={() => updateQty(it.id, Number(it.quantity) + 1)}
-        style={{
-          width: 34,
-          height: 34,
-          border: "none",
-          background: "#fff",
-          color: "#374151",
-          fontWeight: 700,
-        }}
-      >
-        +
-      </button>
-    </div>
-  </div>
+                                <input
+                                  type="number"
+                                  min={1}
+                                  value={it.quantity}
+                                  onChange={(e) => updateQty(it.id, Number(e.target.value || 1))}
+                                  style={{
+                                    width: 52,
+                                    height: 34,
+                                    border: "none",
+                                    borderLeft: "1px solid #e5e7eb",
+                                    borderRight: "1px solid #e5e7eb",
+                                    textAlign: "center",
+                                    outline: "none",
+                                    color: "#111827",
+                                  }}
+                                />
 
-  <div className="col-4 col-lg-2">
-    <div
-      style={{
-        color: "#ee4d2d",
-        fontWeight: 800,
-        fontSize: 18,
-        textAlign: "right",
-        whiteSpace: "nowrap",
-      }}
-    >
-      {formatPrice(it.lineTotal)}
-    </div>
-  </div>
-</div>
-                      </div>
-                    ))}
+                                <button
+                                  type="button"
+                                  onClick={() => updateQty(it.id, Number(it.quantity) + 1)}
+                                  style={{
+                                    width: 34,
+                                    height: 34,
+                                    border: "none",
+                                    background: "#fff",
+                                    color: "#374151",
+                                    fontWeight: 700,
+                                  }}
+                                >
+                                  +
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="col-4 col-lg-2">
+                              <div
+                                style={{
+                                  color: "#ee4d2d",
+                                  fontWeight: 800,
+                                  fontSize: 18,
+                                  textAlign: "right",
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                {formatPrice(it.lineTotal)}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>

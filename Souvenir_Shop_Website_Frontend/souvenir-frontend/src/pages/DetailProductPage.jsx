@@ -18,11 +18,32 @@ const formatPrice = (price) => {
   return Number(price).toLocaleString("vi-VN") + " ₫";
 };
 
-const slugToTitle = (slug = "") => {
-  if (!slug) return "Chi tiết sản phẩm";
-  return slug
+const normalizeDisplayText = (value = "") => {
+  return String(value || "")
+    .normalize("NFC")
     .replace(/-/g, " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
+    .replace(/\s+/g, " ")
+    .trim();
+};
+
+const getProductTitle = (product) => {
+  const raw = product?.name || product?.slug || "";
+  const normalized = normalizeDisplayText(raw);
+  return normalized || "Chi tiết sản phẩm";
+};
+
+const getCategoryLabel = (categoryId) => {
+  const map = {
+    1: "Quà lưu niệm",
+    2: "Đồ thủ công",
+    3: "Móc khóa",
+    4: "Áo du lịch",
+    5: "Phụ kiện",
+    6: "Đặc sản",
+    7: "Khác",
+  };
+
+  return map[Number(categoryId)] || "Sản phẩm lưu niệm";
 };
 
 const getErrorMessage = (ex, fallback) => {
@@ -121,7 +142,8 @@ export default function DetailProductPage() {
     return (p?.variants || []).find((v) => v.id === Number(variantId)) || null;
   }, [p, variantId]);
 
-  const productTitle = p?.name || slugToTitle(p?.slug);
+  const productTitle = getProductTitle(p);
+  const categoryLabel = getCategoryLabel(p?.categoryId);
 
   const imageList = useMemo(() => {
     const rawImages = Array.isArray(p?.images) ? p.images : [];
@@ -262,6 +284,9 @@ export default function DetailProductPage() {
                     fontWeight: 800,
                     color: "#111827",
                     fontSize: "clamp(24px, 4vw, 34px)",
+                    textTransform: "none",
+                    letterSpacing: 0,
+                    wordBreak: "break-word",
                   }}
                 >
                   {productTitle}
@@ -423,7 +448,7 @@ export default function DetailProductPage() {
                       }}
                     >
                       <i className="bi bi-bag-heart"></i>
-                      Sản phẩm lưu niệm
+                      {categoryLabel}
                     </div>
 
                     <h1
@@ -433,6 +458,9 @@ export default function DetailProductPage() {
                         marginBottom: 16,
                         fontSize: "clamp(24px, 4vw, 32px)",
                         lineHeight: 1.4,
+                        textTransform: "none",
+                        letterSpacing: 0,
+                        wordBreak: "break-word",
                       }}
                     >
                       {productTitle}
@@ -499,7 +527,7 @@ export default function DetailProductPage() {
                           {(p.variants || []).length > 0 ? (
                             (p.variants || []).map((v) => (
                               <option key={v.id} value={v.id}>
-                                {v.variantName} - {formatPrice(v.price ?? p.basePrice)}
+                                {normalizeDisplayText(v.variantName)} - {formatPrice(v.price ?? p.basePrice)}
                               </option>
                             ))
                           ) : (
@@ -641,9 +669,6 @@ export default function DetailProductPage() {
                       }}
                     >
                       <div>
-                        <strong style={{ color: "#111827" }}>Slug:</strong> {p.slug || "-"}
-                      </div>
-                      <div>
                         <strong style={{ color: "#111827" }}>Số biến thể:</strong>{" "}
                         {p.variants?.length || 0}
                       </div>
@@ -726,12 +751,12 @@ export default function DetailProductPage() {
                                 <span style={{ color: "#f59e0b" }}>
                                   {"★".repeat(Number(r.rating || 0))}
                                 </span>{" "}
-                                {r.title}
+                                {normalizeDisplayText(r.title)}
                               </div>
                             </div>
 
                             <div style={{ color: "#4b5563", lineHeight: 1.7 }}>
-                              {r.content}
+                              {normalizeDisplayText(r.content)}
                             </div>
 
                             {r.replyContent && (
@@ -745,7 +770,7 @@ export default function DetailProductPage() {
                                   border: "1px solid #fed7aa",
                                 }}
                               >
-                                <strong>Phản hồi từ shop:</strong> {r.replyContent}
+                                <strong>Phản hồi từ shop:</strong> {normalizeDisplayText(r.replyContent)}
                               </div>
                             )}
                           </div>
