@@ -125,6 +125,95 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "Souvenir_Shop_Website.Controllers.API.Admin.AdminChatController",
+    "Method": "GetConversations",
+    "RelativePath": "api/admin/chat/conversations",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "keyword",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.List\u00601[[SouvenirShop.DTOs.Chat.AdminChatConversationDto, Souvenir_Shop_Website, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Souvenir_Shop_Website.Controllers.API.Admin.AdminChatController",
+    "Method": "GetMessages",
+    "RelativePath": "api/admin/chat/conversations/{conversationId}/messages",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "conversationId",
+        "Type": "System.Int64",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.List\u00601[[SouvenirShop.DTOs.Chat.ChatMessageDto, Souvenir_Shop_Website, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Souvenir_Shop_Website.Controllers.API.Admin.AdminChatController",
+    "Method": "SendMessage",
+    "RelativePath": "api/admin/chat/conversations/{conversationId}/messages",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "conversationId",
+        "Type": "System.Int64",
+        "IsRequired": true
+      },
+      {
+        "Name": "req",
+        "Type": "SouvenirShop.DTOs.Chat.SendChatMessageRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Souvenir_Shop_Website.Controllers.API.Admin.AdminChatController",
+    "Method": "MarkRead",
+    "RelativePath": "api/admin/chat/conversations/{conversationId}/read",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "conversationId",
+        "Type": "System.Int64",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "Souvenir_Shop_Website.Controllers.API.Admin.AdminCouponsController",
     "Method": "GetAll",
     "RelativePath": "api/admin/coupons",
@@ -839,6 +928,73 @@
     "ReturnTypes": [
       {
         "Type": "System.Collections.Generic.List\u00601[[SouvenirShop.DTOs.Category.CategoryDto, Souvenir_Shop_Website, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Souvenir_Shop_Website.Controllers.API.User.ChatController",
+    "Method": "GetMessages",
+    "RelativePath": "api/chat/conversations/{conversationId}/messages",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "conversationId",
+        "Type": "System.Int64",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.List\u00601[[SouvenirShop.DTOs.Chat.ChatMessageDto, Souvenir_Shop_Website, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Souvenir_Shop_Website.Controllers.API.User.ChatController",
+    "Method": "SendMessage",
+    "RelativePath": "api/chat/conversations/{conversationId}/messages",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "conversationId",
+        "Type": "System.Int64",
+        "IsRequired": true
+      },
+      {
+        "Name": "req",
+        "Type": "SouvenirShop.DTOs.Chat.SendChatMessageRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Souvenir_Shop_Website.Controllers.API.User.ChatController",
+    "Method": "OpenOrGetConversation",
+    "RelativePath": "api/chat/open",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "SouvenirShop.DTOs.Chat.ChatOpenResponseDto",
         "MediaTypes": [
           "text/plain",
           "application/json",

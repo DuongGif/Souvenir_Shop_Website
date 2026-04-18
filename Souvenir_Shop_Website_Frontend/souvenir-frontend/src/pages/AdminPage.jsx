@@ -8,6 +8,8 @@ const menuItems = [
   { to: "/admin/reviews", label: "Đánh giá", icon: "bi-chat-square-text" },
   { to: "/admin/orders", label: "Đơn hàng", icon: "bi-receipt" },
   { to: "/admin/products", label: "Sản phẩm", icon: "bi-box-seam" },
+  { to: "/admin/chats", label: "Chat", icon: "bi-chat-dots" },
+  { to: "/admin/finance", label: "Tài chính", icon: "bi-cash-coin" },
 ];
 
 export default function AdminPage() {
@@ -63,7 +65,7 @@ export default function AdminPage() {
                   margin: 0,
                   color: "#0f172a",
                   fontWeight: 800,
-                  fontSize: 34,
+                  fontSize: "clamp(28px, 4vw, 34px)",
                   lineHeight: 1.2,
                 }}
               >
@@ -86,7 +88,7 @@ export default function AdminPage() {
               className="btn"
               style={{
                 borderRadius: 16,
-                height: 46,
+                minHeight: 48,
                 padding: "0 18px",
                 display: "inline-flex",
                 alignItems: "center",
@@ -96,6 +98,7 @@ export default function AdminPage() {
                 background: "#f8fafc",
                 color: "#334155",
                 border: "1px solid #e2e8f0",
+                whiteSpace: "nowrap",
               }}
             >
               <i className="bi bi-arrow-left"></i>
@@ -105,78 +108,77 @@ export default function AdminPage() {
 
           <div
             style={{
-              overflowX: "auto",
-              overflowY: "hidden",
-              paddingBottom: 4,
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
+              gap: 14,
             }}
           >
-            <div
-              className="d-flex align-items-center gap-2 flex-nowrap"
-              style={{
-                minWidth: "max-content",
-              }}
-            >
-              {menuItems.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  end={item.end}
-                  style={({ isActive }) => ({
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 10,
-                    padding: "12px 18px",
-                    borderRadius: 16,
-                    textDecoration: "none",
-                    fontWeight: 700,
-                    fontSize: 16,
-                    whiteSpace: "nowrap",
-                    background: isActive
-                      ? "linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)"
-                      : "#f8fafc",
-                    color: isActive ? "#ffffff" : "#334155",
-                    border: isActive
-                      ? "1px solid transparent"
-                      : "1px solid #e2e8f0",
-                    boxShadow: isActive
-                      ? "0 12px 24px rgba(37, 99, 235, 0.2)"
-                      : "none",
-                    transition: "all 0.2s ease",
-                    flexShrink: 0,
-                  })}
-                >
-                  {({ isActive }) => (
-                    <>
-                      <span
-                        style={{
-                          width: 36,
-                          height: 36,
-                          borderRadius: 12,
-                          display: "inline-flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          background: isActive
-                            ? "rgba(255,255,255,0.18)"
-                            : "#ffffff",
-                          color: isActive ? "#ffffff" : "#475569",
-                          border: isActive
-                            ? "1px solid rgba(255,255,255,0.18)"
-                            : "1px solid #e2e8f0",
-                          flexShrink: 0,
-                        }}
-                      >
-                        <i
-                          className={`bi ${item.icon}`}
-                          style={{ fontSize: 17 }}
-                        ></i>
-                      </span>
+            {menuItems.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                style={({ isActive }) => ({
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  minHeight: 92,
+                  padding: "16px 18px",
+                  borderRadius: 20,
+                  textDecoration: "none",
+                  fontWeight: 700,
+                  fontSize: 17,
+                  background: isActive
+                    ? "linear-gradient(135deg, #2563eb 0%, #3b82f6 100%)"
+                    : "#f8fafc",
+                  color: isActive ? "#ffffff" : "#334155",
+                  border: isActive
+                    ? "1px solid transparent"
+                    : "1px solid #e2e8f0",
+                  boxShadow: isActive
+                    ? "0 14px 28px rgba(37, 99, 235, 0.22)"
+                    : "none",
+                  transition: "all 0.2s ease",
+                })}
+              >
+                {({ isActive }) => (
+                  <>
+                    <span
+                      style={{
+                        width: 50,
+                        height: 50,
+                        borderRadius: 16,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        background: isActive
+                          ? "rgba(255,255,255,0.18)"
+                          : "#ffffff",
+                        color: isActive ? "#ffffff" : "#475569",
+                        border: isActive
+                          ? "1px solid rgba(255,255,255,0.18)"
+                          : "1px solid #e2e8f0",
+                        flexShrink: 0,
+                      }}
+                    >
+                      <i
+                        className={`bi ${item.icon}`}
+                        style={{ fontSize: 22 }}
+                      ></i>
+                    </span>
 
-                      <span>{item.label}</span>
-                    </>
-                  )}
-                </NavLink>
-              ))}
-            </div>
+                    <span
+                      style={{
+                        lineHeight: 1.35,
+                        wordBreak: "break-word",
+                      }}
+                    >
+                      {item.label}
+                    </span>
+                  </>
+                )}
+              </NavLink>
+            ))}
           </div>
         </div>
 

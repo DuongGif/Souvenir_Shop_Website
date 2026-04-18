@@ -17,6 +17,7 @@ import OrderDetailPage from "./pages/OrderDetailPage";
 import PaymentPage from "./pages/PaymentPage";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCancel from "./pages/PaymentCancel";
+import CustomerChatWidget from "./components/chat/CustomerChatWidget";
 
 // Admin
 import AdminPage from "./pages/AdminPage";
@@ -27,6 +28,8 @@ import AdminOrdersPage from "./pages/admin/AdminOrdersPage";
 import AdminCouponsPage from "./pages/admin/AdminCouponsPage";
 import AdminReviewsPage from "./pages/admin/AdminReviewsPage";
 import AdminProductVariantsPage from "./pages/admin/AdminProductVariantsPage";
+import AdminChatsPage from "./pages/admin/AdminChatsPage";
+import AdminFinancePage from "./pages/admin/AdminFinancePage";
 
 import { getRoleFromToken } from "./utils";
 
@@ -136,6 +139,8 @@ export default function App() {
           <Route path="orders" element={<AdminOrdersPage />} />
           <Route path="coupons" element={<AdminCouponsPage />} />
           <Route path="reviews" element={<AdminReviewsPage />} />
+          <Route path="chats" element={<AdminChatsPage />} />
+          <Route path="finance" element={<AdminFinancePage />} />
           <Route
             path="products/:productId/variants"
             element={<AdminProductVariantsPage />}
@@ -145,6 +150,8 @@ export default function App() {
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+
+      <CustomerChatWidget />
     </>
   );
 }

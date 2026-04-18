@@ -1,36 +1,137 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-const quickLinks = [
+const overviewCards = [
   {
     title: "Người dùng",
-    desc: "Quản lý tài khoản, khóa hoặc mở khóa người dùng.",
-    to: "/admin/users",
+    desc: "Quản lý tài khoản khách hàng và trạng thái hoạt động.",
     icon: "bi-people",
+    iconBg: "#dbeafe",
+    iconColor: "#2563eb",
   },
   {
     title: "Sản phẩm",
-    desc: "Xem và quản lý danh sách sản phẩm lưu niệm.",
-    to: "/admin/products",
+    desc: "Quản lý sản phẩm, hình ảnh, biến thể và hiển thị.",
     icon: "bi-box-seam",
+    iconBg: "#dcfce7",
+    iconColor: "#16a34a",
   },
   {
     title: "Đơn hàng",
-    desc: "Theo dõi trạng thái và xử lý đơn hàng của khách.",
-    to: "/admin/orders",
+    desc: "Theo dõi đơn mới, đơn đang giao và đơn hoàn tất.",
     icon: "bi-receipt",
+    iconBg: "#fef3c7",
+    iconColor: "#d97706",
   },
   {
     title: "Mã giảm giá",
-    desc: "Tạo và quản lý coupon cho chương trình khuyến mãi.",
+    desc: "Tạo coupon và quản lý các chương trình khuyến mãi.",
+    icon: "bi-ticket-perforated",
+    iconBg: "#fce7f3",
+    iconColor: "#db2777",
+  },
+  {
+    title: "Chat khách hàng",
+    desc: "Phản hồi nhanh các cuộc trò chuyện và tư vấn sản phẩm.",
+    icon: "bi-chat-dots",
+    iconBg: "#e0e7ff",
+    iconColor: "#4f46e5",
+  },
+  {
+    title: "Tài chính",
+    desc: "Xem báo cáo doanh thu từ đơn đã đặt và đơn đã giao.",
+    icon: "bi-cash-coin",
+    iconBg: "#cffafe",
+    iconColor: "#0891b2",
+  },
+];
+
+const urgentActions = [
+  {
+    title: "Đơn hàng mới",
+    desc: "Kiểm tra và xử lý các đơn hàng vừa được tạo.",
+    to: "/admin/orders",
+    icon: "bi-bag-check",
+    iconBg: "#fff7ed",
+    iconColor: "#ea580c",
+    buttonText: "Xem đơn hàng",
+  },
+  {
+    title: "Tin nhắn mới",
+    desc: "Trả lời khách hàng đang cần tư vấn hoặc hỗ trợ.",
+    to: "/admin/chats",
+    icon: "bi-chat-left-dots",
+    iconBg: "#eff6ff",
+    iconColor: "#2563eb",
+    buttonText: "Mở chat",
+  },
+  {
+    title: "Đánh giá cần phản hồi",
+    desc: "Xem các đánh giá mới để phản hồi kịp thời.",
+    to: "/admin/reviews",
+    icon: "bi-stars",
+    iconBg: "#f5f3ff",
+    iconColor: "#7c3aed",
+    buttonText: "Xem đánh giá",
+  },
+];
+
+const quickLinks = [
+  {
+    title: "Người dùng",
+    desc: "Khóa, mở khóa và theo dõi tài khoản người dùng.",
+    to: "/admin/users",
+    icon: "bi-people",
+    iconBg: "#dbeafe",
+    iconColor: "#2563eb",
+  },
+  {
+    title: "Sản phẩm",
+    desc: "Quản lý danh sách sản phẩm lưu niệm.",
+    to: "/admin/products",
+    icon: "bi-box-seam",
+    iconBg: "#dcfce7",
+    iconColor: "#16a34a",
+  },
+  {
+    title: "Đơn hàng",
+    desc: "Theo dõi và xử lý đơn hàng của khách.",
+    to: "/admin/orders",
+    icon: "bi-receipt",
+    iconBg: "#fef3c7",
+    iconColor: "#d97706",
+  },
+  {
+    title: "Mã giảm giá",
+    desc: "Tạo và quản lý coupon khuyến mãi.",
     to: "/admin/coupons",
     icon: "bi-ticket-perforated",
+    iconBg: "#fce7f3",
+    iconColor: "#db2777",
   },
   {
     title: "Đánh giá",
-    desc: "Kiểm duyệt và phản hồi đánh giá sản phẩm.",
+    desc: "Xem và phản hồi đánh giá sản phẩm.",
     to: "/admin/reviews",
     icon: "bi-chat-square-text",
+    iconBg: "#ede9fe",
+    iconColor: "#7c3aed",
+  },
+  {
+    title: "Chat",
+    desc: "Hỗ trợ khách hàng qua hệ thống chat.",
+    to: "/admin/chats",
+    icon: "bi-chat-dots",
+    iconBg: "#e0e7ff",
+    iconColor: "#4f46e5",
+  },
+  {
+    title: "Tài chính",
+    desc: "Xem báo cáo tài chính và doanh thu.",
+    to: "/admin/finance",
+    icon: "bi-cash-coin",
+    iconBg: "#cffafe",
+    iconColor: "#0891b2",
   },
 ];
 
@@ -57,149 +158,140 @@ export default function AdminDashboard() {
           style={{
             marginBottom: 8,
             color: "#0f172a",
-            fontWeight: 700,
+            fontWeight: 800,
           }}
         >
           Admin Dashboard
         </h2>
 
-        <p style={{ marginBottom: 0, color: "#64748b" }}>
-          Quản lý hệ thống người dùng, sản phẩm, đơn hàng, mã giảm giá và đánh giá
-          từ một nơi duy nhất.
+        <p style={{ marginBottom: 0, color: "#64748b", lineHeight: 1.7 }}>
+          Quản lý người dùng, sản phẩm, đơn hàng, khuyến mãi, đánh giá, chat và
+          tài chính từ một nơi duy nhất.
         </p>
       </div>
 
       <div className="row g-4 mb-4">
-        <div className="col-md-6 col-xl-3">
-          <div
-            style={{
-              background: "#f8fafc",
-              borderRadius: 20,
-              padding: 22,
-              height: "100%",
-              border: "1px solid #e5e7eb",
-            }}
-          >
+        {overviewCards.map((item) => (
+          <div key={item.title} className="col-md-6 col-xl-4">
             <div
               style={{
-                width: 52,
-                height: 52,
-                borderRadius: 14,
-                background: "#dbeafe",
-                color: "#2563eb",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 22,
-                marginBottom: 14,
+                background: "#f8fafc",
+                borderRadius: 20,
+                padding: 22,
+                height: "100%",
+                border: "1px solid #e5e7eb",
               }}
             >
-              <i className="bi bi-people"></i>
-            </div>
-            <h4 style={{ color: "#0f172a", fontWeight: 700 }}>Người dùng</h4>
-            <p style={{ color: "#64748b", marginBottom: 0 }}>
-              Theo dõi và quản lý tài khoản khách hàng trong hệ thống.
-            </p>
-          </div>
-        </div>
+              <div
+                style={{
+                  width: 52,
+                  height: 52,
+                  borderRadius: 14,
+                  background: item.iconBg,
+                  color: item.iconColor,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 22,
+                  marginBottom: 14,
+                }}
+              >
+                <i className={`bi ${item.icon}`}></i>
+              </div>
 
-        <div className="col-md-6 col-xl-3">
-          <div
-            style={{
-              background: "#f8fafc",
-              borderRadius: 20,
-              padding: 22,
-              height: "100%",
-              border: "1px solid #e5e7eb",
-            }}
-          >
-            <div
-              style={{
-                width: 52,
-                height: 52,
-                borderRadius: 14,
-                background: "#dcfce7",
-                color: "#16a34a",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 22,
-                marginBottom: 14,
-              }}
-            >
-              <i className="bi bi-box-seam"></i>
-            </div>
-            <h4 style={{ color: "#0f172a", fontWeight: 700 }}>Sản phẩm</h4>
-            <p style={{ color: "#64748b", marginBottom: 0 }}>
-              Quản lý danh mục sản phẩm lưu niệm và thông tin hiển thị.
-            </p>
-          </div>
-        </div>
+              <h4 style={{ color: "#0f172a", fontWeight: 700, marginBottom: 8 }}>
+                {item.title}
+              </h4>
 
-        <div className="col-md-6 col-xl-3">
-          <div
-            style={{
-              background: "#f8fafc",
-              borderRadius: 20,
-              padding: 22,
-              height: "100%",
-              border: "1px solid #e5e7eb",
-            }}
-          >
-            <div
-              style={{
-                width: 52,
-                height: 52,
-                borderRadius: 14,
-                background: "#fef3c7",
-                color: "#d97706",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 22,
-                marginBottom: 14,
-              }}
-            >
-              <i className="bi bi-receipt"></i>
+              <p style={{ color: "#64748b", marginBottom: 0, lineHeight: 1.7 }}>
+                {item.desc}
+              </p>
             </div>
-            <h4 style={{ color: "#0f172a", fontWeight: 700 }}>Đơn hàng</h4>
-            <p style={{ color: "#64748b", marginBottom: 0 }}>
-              Theo dõi tình trạng xử lý và thanh toán của các đơn hàng.
-            </p>
           </div>
-        </div>
+        ))}
+      </div>
 
-        <div className="col-md-6 col-xl-3">
-          <div
-            style={{
-              background: "#f8fafc",
-              borderRadius: 20,
-              padding: 22,
-              height: "100%",
-              border: "1px solid #e5e7eb",
-            }}
-          >
-            <div
-              style={{
-                width: 52,
-                height: 52,
-                borderRadius: 14,
-                background: "#fce7f3",
-                color: "#db2777",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 22,
-                marginBottom: 14,
-              }}
-            >
-              <i className="bi bi-ticket-perforated"></i>
+      <div
+        style={{
+          background: "#ffffff",
+          borderRadius: 20,
+          padding: 24,
+          border: "1px solid #e5e7eb",
+          marginBottom: 24,
+        }}
+      >
+        <h3
+          style={{
+            color: "#0f172a",
+            fontWeight: 800,
+            marginBottom: 18,
+          }}
+        >
+          Cần xử lý nhanh
+        </h3>
+
+        <div className="row g-3">
+          {urgentActions.map((item) => (
+            <div key={item.title} className="col-md-6 col-xl-4">
+              <div
+                style={{
+                  background: "#f8fafc",
+                  borderRadius: 18,
+                  padding: 20,
+                  height: "100%",
+                  border: "1px solid #e5e7eb",
+                }}
+              >
+                <div
+                  style={{
+                    width: 46,
+                    height: 46,
+                    borderRadius: 12,
+                    background: item.iconBg,
+                    color: item.iconColor,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 20,
+                    marginBottom: 14,
+                  }}
+                >
+                  <i className={`bi ${item.icon}`}></i>
+                </div>
+
+                <h5
+                  style={{
+                    color: "#0f172a",
+                    fontWeight: 700,
+                    marginBottom: 8,
+                  }}
+                >
+                  {item.title}
+                </h5>
+
+                <p
+                  style={{
+                    color: "#64748b",
+                    lineHeight: 1.7,
+                    marginBottom: 16,
+                  }}
+                >
+                  {item.desc}
+                </p>
+
+                <Link
+                  to={item.to}
+                  className="btn btn-outline-primary"
+                  style={{
+                    borderRadius: 12,
+                    fontWeight: 700,
+                  }}
+                >
+                  {item.buttonText}
+                </Link>
+              </div>
             </div>
-            <h4 style={{ color: "#0f172a", fontWeight: 700 }}>Khuyến mãi</h4>
-            <p style={{ color: "#64748b", marginBottom: 0 }}>
-              Quản lý coupon, ưu đãi và chiến dịch giảm giá cho khách hàng.
-            </p>
-          </div>
+          ))}
         </div>
       </div>
 
@@ -214,7 +306,7 @@ export default function AdminDashboard() {
         <h3
           style={{
             color: "#0f172a",
-            fontWeight: 700,
+            fontWeight: 800,
             marginBottom: 18,
           }}
         >
@@ -247,8 +339,8 @@ export default function AdminDashboard() {
                       width: 46,
                       height: 46,
                       borderRadius: 12,
-                      background: "#e2e8f0",
-                      color: "#334155",
+                      background: item.iconBg,
+                      color: item.iconColor,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",

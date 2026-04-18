@@ -213,6 +213,29 @@ export default function DetailProductPage() {
     }
   };
 
+  const handleChatProduct = () => {
+    if (!p) return;
+
+    const payload = {
+      productId: Number(id),
+      name: productTitle,
+      slug: p.slug || "",
+      imageUrl: selectedImage || imageList?.[0] || "",
+      price: displayPrice,
+      variantName: currentVariant?.variantName || "",
+      url: `/products/${id}`,
+    };
+
+    window.dispatchEvent(
+      new CustomEvent("souvn:chat-share-product", {
+        detail: payload,
+      })
+    );
+
+    setMsg("Đã mở chat và gửi sản phẩm để xin tư vấn.");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const submitReview = async () => {
     setMsg("");
     setErr("");
@@ -633,6 +656,23 @@ export default function DetailProductPage() {
                       >
                         <i className="bi bi-cart-plus me-2"></i>
                         {addingCart ? "Đang thêm..." : "Thêm vào giỏ hàng"}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleChatProduct}
+                        style={{
+                          minWidth: 220,
+                          height: 48,
+                          borderRadius: 10,
+                          border: "1px solid #ee4d2d",
+                          background: "#ffffff",
+                          color: "#ee4d2d",
+                          fontWeight: 800,
+                        }}
+                      >
+                        <i className="bi bi-chat-dots me-2"></i>
+                        Chat tư vấn sản phẩm
                       </button>
 
                       <Link
