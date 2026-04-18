@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { adminOrdersService } from "../../services/admin/adminOrdersService";
+
+const PAGE_SIZE = 5;
 
 const getErrorMessage = (ex, fallback) => {
   const data = ex?.response?.data;
@@ -33,7 +35,12 @@ const STATUS_OPTIONS = [
 const normalizeStatus = (status) => {
   const s = String(status || "").trim().toLowerCase();
 
-  if (s === "dang_giao" || s === "đang giao" || s === "da_giao_van" || s === "shipped") {
+  if (
+    s === "dang_giao" ||
+    s === "đang giao" ||
+    s === "da_giao_van" ||
+    s === "shipped"
+  ) {
     return "shipping";
   }
 
@@ -96,6 +103,9 @@ export default function AdminOrdersPage() {
   const [err, setErr] = useState("");
   const [msg, setMsg] = useState("");
 
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+
   const load = async () => {
     setLoading(true);
     setErr("");
@@ -121,6 +131,10 @@ export default function AdminOrdersPage() {
     load();
   }, []);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchKeyword]);
+
   const updateStatus = async (id) => {
     setErr("");
     setMsg("");
@@ -140,6 +154,38 @@ export default function AdminOrdersPage() {
     }
   };
 
+  const filteredOrders = useMemo(() => {
+    const keyword = searchKeyword.trim().toLowerCase();
+
+    if (!keyword) return orders;
+
+    return orders.filter((o) => {
+      const idText = String(o.id || "").toLowerCase();
+      const orderCodeText = String(o.orderCode || "").toLowerCase();
+      const statusText = String(getStatusLabel(o.status) || "").toLowerCase();
+
+      return (
+        idText.includes(keyword) ||
+        orderCodeText.includes(keyword) ||
+        statusText.includes(keyword)
+      );
+    });
+  }, [orders, searchKeyword]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+
+  const pagedOrders = useMemo(() => {
+    const start = (safeCurrentPage - 1) * PAGE_SIZE;
+    return filteredOrders.slice(start, start + PAGE_SIZE);
+  }, [filteredOrders, safeCurrentPage]);
+
+  const goToPage = (page) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return (
     <div>
       <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
@@ -154,7 +200,7 @@ export default function AdminOrdersPage() {
             Quản lý đơn hàng
           </h2>
           <p style={{ marginBottom: 0, color: "#64748b" }}>
-            Theo dõi danh sách đơn hàng và cập nhật trạng thái xử lý.
+            Theo dõi danh sách đơn hàng, tìm kiếm và cập nhật trạng thái xử lý.
           </p>
         </div>
 
@@ -165,6 +211,47 @@ export default function AdminOrdersPage() {
         >
           Tải lại
         </button>
+      </div>
+
+      <div
+        className="mb-4"
+        style={{
+          background: "#fff",
+          borderRadius: 20,
+          padding: 18,
+          boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
+        }}
+      >
+        <div className="row g-3 align-items-end">
+          <div className="col-md-6 col-lg-5">
+            <label
+              className="form-label"
+              style={{ color: "#111827", fontWeight: 600 }}
+            >
+              Tìm kiếm đơn hàng
+            </label>
+            <input
+              className="form-control"
+              placeholder="Nhập mã đơn hàng hoặc trạng thái..."
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              style={{ height: 44, borderRadius: 12, color: "#111827" }}
+            />
+          </div>
+
+          <div className="col-md-6 col-lg-7">
+            <div
+              className="d-flex flex-wrap gap-3"
+              style={{ color: "#64748b", fontWeight: 500 }}
+            >
+              <span>Tổng đơn: {orders.length}</span>
+              <span>Kết quả: {filteredOrders.length}</span>
+              <span>
+                Trang {safeCurrentPage} / {totalPages}
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {err && (
@@ -184,7 +271,7 @@ export default function AdminOrdersPage() {
           <div className="spinner-border text-info" role="status"></div>
           <p className="mt-3 mb-0">Đang tải danh sách đơn hàng...</p>
         </div>
-      ) : orders.length === 0 ? (
+      ) : filteredOrders.length === 0 ? (
         <div
           style={{
             background: "#fff",
@@ -194,113 +281,173 @@ export default function AdminOrdersPage() {
             color: "#475569",
           }}
         >
-          Không có đơn hàng nào.
+          Không tìm thấy đơn hàng nào.
         </div>
       ) : (
-        <div
-          style={{
-            background: "#fff",
-            borderRadius: 20,
-            overflow: "hidden",
-            boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
-          }}
-        >
-          <div className="table-responsive">
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                color: "#1f2937",
-              }}
-            >
-              <thead>
-                <tr style={{ background: "#f8fafc" }}>
-                  <th style={thStyle}>Id</th>
-                  <th style={thStyle}>Mã đơn hàng</th>
-                  <th style={thStyle}>Tạm tính</th>
-                  <th style={thStyle}>Phí vận chuyển</th>
-                  <th style={thStyle}>Tổng tiền</th>
-                  <th style={thStyle}>Trạng thái</th>
-                  <th style={thStyle}>Cập nhật</th>
-                </tr>
-              </thead>
+        <>
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: 20,
+              overflow: "hidden",
+              boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
+            }}
+          >
+            <div className="table-responsive">
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  color: "#1f2937",
+                }}
+              >
+                <thead>
+                  <tr style={{ background: "#f8fafc" }}>
+                    <th style={thStyle}>Id</th>
+                    <th style={thStyle}>Mã đơn hàng</th>
+                    <th style={thStyle}>Tạm tính</th>
+                    <th style={thStyle}>Phí vận chuyển</th>
+                    <th style={thStyle}>Tổng tiền</th>
+                    <th style={thStyle}>Trạng thái</th>
+                    <th style={thStyle}>Cập nhật</th>
+                  </tr>
+                </thead>
 
-              <tbody>
-                {orders.map((o) => {
-                  const badge = getStatusBadge(o.status);
+                <tbody>
+                  {pagedOrders.map((o) => {
+                    const badge = getStatusBadge(o.status);
 
-                  return (
-                    <tr key={o.id}>
-                      <td style={tdStyle}>{o.id}</td>
+                    return (
+                      <tr key={o.id}>
+                        <td style={tdStyle}>{o.id}</td>
 
-                      <td style={{ ...tdStyle, fontWeight: 700 }}>
-                        {o.orderCode}
-                      </td>
+                        <td style={{ ...tdStyle, fontWeight: 700 }}>
+                          {o.orderCode}
+                        </td>
 
-                      <td style={tdStyle}>{formatPrice(o.subtotal)}</td>
+                        <td style={tdStyle}>{formatPrice(o.subtotal)}</td>
 
-                      <td style={tdStyle}>{formatPrice(o.shippingFee)}</td>
+                        <td style={tdStyle}>{formatPrice(o.shippingFee)}</td>
 
-                      <td style={{ ...tdStyle, fontWeight: 700, color: "#2563eb" }}>
-                        {formatPrice(o.totalAmount)}
-                      </td>
-
-                      <td style={tdStyle}>
-                        <span
+                        <td
                           style={{
-                            background: badge.bg,
-                            color: badge.color,
-                            padding: "6px 12px",
-                            borderRadius: 999,
-                            fontSize: 13,
-                            fontWeight: 600,
+                            ...tdStyle,
+                            fontWeight: 700,
+                            color: "#2563eb",
                           }}
                         >
-                          {badge.text}
-                        </span>
-                      </td>
+                          {formatPrice(o.totalAmount)}
+                        </td>
 
-                      <td style={tdStyle}>
-                        <div className="d-flex gap-2 flex-wrap">
-                          <select
-                            className="form-select form-select-sm"
-                            value={statusMap[o.id] || normalizeStatus(o.status) || "pending"}
-                            onChange={(e) =>
-                              setStatusMap({
-                                ...statusMap,
-                                [o.id]: e.target.value,
-                              })
-                            }
+                        <td style={tdStyle}>
+                          <span
                             style={{
-                              width: 190,
-                              borderRadius: 10,
-                              color: "#111827",
+                              background: badge.bg,
+                              color: badge.color,
+                              padding: "6px 12px",
+                              borderRadius: 999,
+                              fontSize: 13,
+                              fontWeight: 600,
+                              whiteSpace: "nowrap",
                             }}
                           >
-                            {STATUS_OPTIONS.map((item) => (
-                              <option key={item.value} value={item.value}>
-                                {item.label}
-                              </option>
-                            ))}
-                          </select>
+                            {badge.text}
+                          </span>
+                        </td>
 
-                          <button
-                            onClick={() => updateStatus(o.id)}
-                            className="btn btn-outline-primary btn-sm"
-                            disabled={savingId === o.id}
-                            style={{ borderRadius: 10, fontWeight: 600 }}
-                          >
-                            {savingId === o.id ? "Đang lưu..." : "Lưu"}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        <td style={tdStyle}>
+                          <div className="d-flex gap-2 flex-wrap">
+                            <select
+                              className="form-select form-select-sm"
+                              value={
+                                statusMap[o.id] ||
+                                normalizeStatus(o.status) ||
+                                "pending"
+                              }
+                              onChange={(e) =>
+                                setStatusMap({
+                                  ...statusMap,
+                                  [o.id]: e.target.value,
+                                })
+                              }
+                              style={{
+                                width: 190,
+                                borderRadius: 10,
+                                color: "#111827",
+                              }}
+                            >
+                              {STATUS_OPTIONS.map((item) => (
+                                <option key={item.value} value={item.value}>
+                                  {item.label}
+                                </option>
+                              ))}
+                            </select>
+
+                            <button
+                              onClick={() => updateStatus(o.id)}
+                              className="btn btn-outline-primary btn-sm"
+                              disabled={savingId === o.id}
+                              style={{ borderRadius: 10, fontWeight: 600 }}
+                            >
+                              {savingId === o.id ? "Đang lưu..." : "Lưu"}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+
+          <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mt-4">
+            <div style={{ color: "#64748b", fontWeight: 500 }}>
+              Hiển thị tối đa {PAGE_SIZE} đơn hàng mỗi trang
+            </div>
+
+            <div className="d-flex align-items-center gap-2 flex-wrap">
+              <button
+                className="btn btn-outline-secondary btn-sm"
+                onClick={() => goToPage(safeCurrentPage - 1)}
+                disabled={safeCurrentPage === 1}
+                style={{ borderRadius: 10, fontWeight: 600 }}
+              >
+                Trang trước
+              </button>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (page) => (
+                  <button
+                    key={page}
+                    className={`btn btn-sm ${
+                      safeCurrentPage === page
+                        ? "btn-primary"
+                        : "btn-outline-primary"
+                    }`}
+                    onClick={() => goToPage(page)}
+                    style={{
+                      minWidth: 40,
+                      borderRadius: 10,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {page}
+                  </button>
+                )
+              )}
+
+              <button
+                className="btn btn-outline-secondary btn-sm"
+                onClick={() => goToPage(safeCurrentPage + 1)}
+                disabled={safeCurrentPage === totalPages}
+                style={{ borderRadius: 10, fontWeight: 600 }}
+              >
+                Trang sau
+              </button>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

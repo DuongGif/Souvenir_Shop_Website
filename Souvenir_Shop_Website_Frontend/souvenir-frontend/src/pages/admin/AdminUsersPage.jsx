@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { adminUsersService } from "../../services/admin/adminUsersService";
+
+const PAGE_SIZE = 5;
 
 const getErrorMessage = (ex, fallback) => {
   const data = ex?.response?.data;
@@ -41,6 +43,7 @@ export default function AdminUsersPage() {
   const [err, setErr] = useState("");
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const load = async () => {
     setLoading(true);
@@ -48,7 +51,11 @@ export default function AdminUsersPage() {
 
     try {
       const res = await adminUsersService.getAll();
-      setUsers(res.data || []);
+      const data = res.data || [];
+      setUsers(data);
+
+      const totalPages = Math.max(1, Math.ceil(data.length / PAGE_SIZE));
+      setCurrentPage((prev) => (prev > totalPages ? totalPages : prev));
     } catch (ex) {
       setErr(getErrorMessage(ex, "Không thể tải danh sách người dùng"));
     } finally {
@@ -84,6 +91,20 @@ export default function AdminUsersPage() {
     } catch (ex) {
       setErr(getErrorMessage(ex, "Mở khóa người dùng thất bại"));
     }
+  };
+
+  const totalPages = Math.max(1, Math.ceil(users.length / PAGE_SIZE));
+
+  const pagedUsers = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const end = start + PAGE_SIZE;
+    return users.slice(start, end);
+  }, [users, currentPage]);
+
+  const goToPage = (page) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
@@ -135,170 +156,212 @@ export default function AdminUsersPage() {
           Không có người dùng nào.
         </div>
       ) : (
-        <div
-          style={{
-            background: "#fff",
-            borderRadius: 20,
-            overflow: "hidden",
-            boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
-          }}
-        >
-          <div className="table-responsive">
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                color: "#1f2937",
-              }}
-            >
-              <thead>
-                <tr style={{ background: "#f8fafc" }}>
-                  <th
-                    style={{
-                      padding: "16px 14px",
-                      textAlign: "left",
-                      color: "#0f172a",
-                      fontWeight: 700,
-                      borderBottom: "1px solid #e5e7eb",
-                    }}
-                  >
-                    Mã
-                  </th>
-                  <th
-                    style={{
-                      padding: "16px 14px",
-                      textAlign: "left",
-                      color: "#0f172a",
-                      fontWeight: 700,
-                      borderBottom: "1px solid #e5e7eb",
-                    }}
-                  >
-                    Email
-                  </th>
-                  <th
-                    style={{
-                      padding: "16px 14px",
-                      textAlign: "left",
-                      color: "#0f172a",
-                      fontWeight: 700,
-                      borderBottom: "1px solid #e5e7eb",
-                    }}
-                  >
-                    Vai trò
-                  </th>
-                  <th
-                    style={{
-                      padding: "16px 14px",
-                      textAlign: "left",
-                      color: "#0f172a",
-                      fontWeight: 700,
-                      borderBottom: "1px solid #e5e7eb",
-                    }}
-                  >
-                    Trạng thái
-                  </th>
-                  <th
-                    style={{
-                      padding: "16px 14px",
-                      textAlign: "left",
-                      color: "#0f172a",
-                      fontWeight: 700,
-                      borderBottom: "1px solid #e5e7eb",
-                    }}
-                  >
-                    Thao tác
-                  </th>
-                </tr>
-              </thead>
+        <>
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: 20,
+              overflow: "hidden",
+              boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
+            }}
+          >
+            <div className="table-responsive">
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  color: "#1f2937",
+                }}
+              >
+                <thead>
+                  <tr style={{ background: "#f8fafc" }}>
+                    <th
+                      style={{
+                        padding: "16px 14px",
+                        textAlign: "left",
+                        color: "#0f172a",
+                        fontWeight: 700,
+                        borderBottom: "1px solid #e5e7eb",
+                      }}
+                    >
+                      Mã
+                    </th>
+                    <th
+                      style={{
+                        padding: "16px 14px",
+                        textAlign: "left",
+                        color: "#0f172a",
+                        fontWeight: 700,
+                        borderBottom: "1px solid #e5e7eb",
+                      }}
+                    >
+                      Email
+                    </th>
+                    <th
+                      style={{
+                        padding: "16px 14px",
+                        textAlign: "left",
+                        color: "#0f172a",
+                        fontWeight: 700,
+                        borderBottom: "1px solid #e5e7eb",
+                      }}
+                    >
+                      Vai trò
+                    </th>
+                    <th
+                      style={{
+                        padding: "16px 14px",
+                        textAlign: "left",
+                        color: "#0f172a",
+                        fontWeight: 700,
+                        borderBottom: "1px solid #e5e7eb",
+                      }}
+                    >
+                      Trạng thái
+                    </th>
+                    <th
+                      style={{
+                        padding: "16px 14px",
+                        textAlign: "left",
+                        color: "#0f172a",
+                        fontWeight: 700,
+                        borderBottom: "1px solid #e5e7eb",
+                      }}
+                    >
+                      Thao tác
+                    </th>
+                  </tr>
+                </thead>
 
-              <tbody>
-                {users.map((u) => {
-                  const badge = getStatusBadge(u.status);
+                <tbody>
+                  {pagedUsers.map((u) => {
+                    const badge = getStatusBadge(u.status);
 
-                  return (
-                    <tr key={u.id}>
-                      <td
-                        style={{
-                          padding: "14px",
-                          color: "#334155",
-                          borderBottom: "1px solid #e5e7eb",
-                        }}
-                      >
-                        {u.id}
-                      </td>
-
-                      <td
-                        style={{
-                          padding: "14px",
-                          color: "#334155",
-                          borderBottom: "1px solid #e5e7eb",
-                          fontWeight: 500,
-                        }}
-                      >
-                        {u.email}
-                      </td>
-
-                      <td
-                        style={{
-                          padding: "14px",
-                          color: "#334155",
-                          borderBottom: "1px solid #e5e7eb",
-                        }}
-                      >
-                        {getRoleText(u.role)}
-                      </td>
-
-                      <td
-                        style={{
-                          padding: "14px",
-                          borderBottom: "1px solid #e5e7eb",
-                        }}
-                      >
-                        <span
+                    return (
+                      <tr key={u.id}>
+                        <td
                           style={{
-                            background: badge.bg,
-                            color: badge.color,
-                            padding: "6px 12px",
-                            borderRadius: 999,
-                            fontSize: 13,
-                            fontWeight: 600,
+                            padding: "14px",
+                            color: "#334155",
+                            borderBottom: "1px solid #e5e7eb",
                           }}
                         >
-                          {badge.text}
-                        </span>
-                      </td>
+                          {u.id}
+                        </td>
 
-                      <td
-                        style={{
-                          padding: "14px",
-                          borderBottom: "1px solid #e5e7eb",
-                        }}
-                      >
-                        <div className="d-flex gap-2 flex-wrap">
-                          <button
-                            onClick={() => lock(u.id)}
-                            className="btn btn-outline-danger btn-sm"
-                            style={{ borderRadius: 10, fontWeight: 600 }}
-                          >
-                            Khóa
-                          </button>
+                        <td
+                          style={{
+                            padding: "14px",
+                            color: "#334155",
+                            borderBottom: "1px solid #e5e7eb",
+                            fontWeight: 500,
+                          }}
+                        >
+                          {u.email}
+                        </td>
 
-                          <button
-                            onClick={() => unlock(u.id)}
-                            className="btn btn-outline-success btn-sm"
-                            style={{ borderRadius: 10, fontWeight: 600 }}
+                        <td
+                          style={{
+                            padding: "14px",
+                            color: "#334155",
+                            borderBottom: "1px solid #e5e7eb",
+                          }}
+                        >
+                          {getRoleText(u.role)}
+                        </td>
+
+                        <td
+                          style={{
+                            padding: "14px",
+                            borderBottom: "1px solid #e5e7eb",
+                          }}
+                        >
+                          <span
+                            style={{
+                              background: badge.bg,
+                              color: badge.color,
+                              padding: "6px 12px",
+                              borderRadius: 999,
+                              fontSize: 13,
+                              fontWeight: 600,
+                            }}
                           >
-                            Mở khóa
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                            {badge.text}
+                          </span>
+                        </td>
+
+                        <td
+                          style={{
+                            padding: "14px",
+                            borderBottom: "1px solid #e5e7eb",
+                          }}
+                        >
+                          <div className="d-flex gap-2 flex-wrap">
+                            <button
+                              onClick={() => lock(u.id)}
+                              className="btn btn-outline-danger btn-sm"
+                              style={{ borderRadius: 10, fontWeight: 600 }}
+                            >
+                              Khóa
+                            </button>
+
+                            <button
+                              onClick={() => unlock(u.id)}
+                              className="btn btn-outline-success btn-sm"
+                              style={{ borderRadius: 10, fontWeight: 600 }}
+                            >
+                              Mở khóa
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+
+          <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mt-4">
+            <div style={{ color: "#64748b", fontWeight: 500 }}>
+              Trang {currentPage} / {totalPages} — Hiển thị tối đa {PAGE_SIZE} tài
+              khoản mỗi trang
+            </div>
+
+            <div className="d-flex align-items-center gap-2 flex-wrap">
+              <button
+                className="btn btn-outline-secondary btn-sm"
+                onClick={() => goToPage(currentPage - 1)}
+                disabled={currentPage === 1}
+                style={{ borderRadius: 10, fontWeight: 600 }}
+              >
+                Trang trước
+              </button>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  className={`btn btn-sm ${
+                    currentPage === page ? "btn-primary" : "btn-outline-primary"
+                  }`}
+                  onClick={() => goToPage(page)}
+                  style={{ minWidth: 40, borderRadius: 10, fontWeight: 600 }}
+                >
+                  {page}
+                </button>
+              ))}
+
+              <button
+                className="btn btn-outline-secondary btn-sm"
+                onClick={() => goToPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                style={{ borderRadius: 10, fontWeight: 600 }}
+              >
+                Trang sau
+              </button>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

@@ -24,4 +24,8 @@ public partial class User
     public DateTime? UpdatedAt { get; set; }
 
     public virtual ICollection<ReviewReply> ReviewReplies { get; set; } = new List<ReviewReply>();
+
+	public virtual ICollection<ChatConversation> ChatConversations { get; set; } = new List<ChatConversation>();
+
+	public virtual ICollection<ChatMessage> ChatMessages { get; set; } = new List<ChatMessage>();
 }

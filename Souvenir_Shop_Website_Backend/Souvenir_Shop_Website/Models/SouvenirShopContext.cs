@@ -55,8 +55,72 @@ public partial class SouvenirShopContext : DbContext
 
 	public virtual DbSet<EmailOtp> EmailOtps { get; set; }
 
+	public virtual DbSet<ChatConversation> ChatConversations { get; set; }
+
+	public virtual DbSet<ChatMessage> ChatMessages { get; set; }
+
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+		modelBuilder.Entity<ChatConversation>(entity =>
+		{
+			entity.ToTable("chat_conversations");
+
+			entity.HasKey(e => e.Id);
+
+			entity.Property(e => e.Id).HasColumnName("id");
+			entity.Property(e => e.CustomerId).HasColumnName("customer_id");
+			entity.Property(e => e.Status)
+				.HasMaxLength(20)
+				.HasColumnName("status");
+			entity.Property(e => e.CreatedAt)
+				.HasColumnType("datetime")
+				.HasColumnName("created_at");
+			entity.Property(e => e.UpdatedAt)
+				.HasColumnType("datetime")
+				.HasColumnName("updated_at");
+			entity.Property(e => e.LastMessageAt)
+				.HasColumnType("datetime")
+				.HasColumnName("last_message_at");
+
+			entity.HasOne(d => d.Customer)
+				.WithMany(p => p.ChatConversations)
+				.HasForeignKey(d => d.CustomerId)
+				.OnDelete(DeleteBehavior.ClientSetNull)
+				.HasConstraintName("FK_chat_conversations_customer");
+		});
+
+		modelBuilder.Entity<ChatMessage>(entity =>
+		{
+			entity.ToTable("chat_messages");
+
+			entity.HasKey(e => e.Id);
+
+			entity.Property(e => e.Id).HasColumnName("id");
+			entity.Property(e => e.ConversationId).HasColumnName("conversation_id");
+			entity.Property(e => e.SenderUserId).HasColumnName("sender_user_id");
+			entity.Property(e => e.SenderRole)
+				.HasMaxLength(20)
+				.HasColumnName("sender_role");
+			entity.Property(e => e.Content)
+				.HasMaxLength(2000)
+				.HasColumnName("content");
+			entity.Property(e => e.IsReadByAdmin).HasColumnName("is_read_by_admin");
+			entity.Property(e => e.IsReadByCustomer).HasColumnName("is_read_by_customer");
+			entity.Property(e => e.CreatedAt)
+				.HasColumnType("datetime")
+				.HasColumnName("created_at");
+
+			entity.HasOne(d => d.Conversation)
+				.WithMany(p => p.ChatMessages)
+				.HasForeignKey(d => d.ConversationId)
+				.OnDelete(DeleteBehavior.Cascade)
+				.HasConstraintName("FK_chat_messages_conversation");
+
+			entity.HasOne(d => d.SenderUser)
+				.WithMany(p => p.ChatMessages)
+				.HasForeignKey(d => d.SenderUserId)
+				.HasConstraintName("FK_chat_messages_sender_user");
+		});
 		modelBuilder.Entity<EmailOtp>(entity =>
 		{
 			entity.ToTable("email_otps");
