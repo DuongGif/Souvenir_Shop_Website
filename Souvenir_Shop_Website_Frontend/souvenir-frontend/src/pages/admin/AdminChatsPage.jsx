@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { chatService } from "../../services/chatService";
 import ChatMessageContent from "../../components/chat/ChatMessageContent";
 
+const PRODUCT_PREFIX = "[[PRODUCT]]";
+
 const getErrorMessage = (ex, fallback) => {
   const data = ex?.response?.data;
   if (typeof data === "string") return data;
@@ -19,6 +21,16 @@ const formatTime = (value) => {
     day: "2-digit",
     month: "2-digit",
   });
+};
+
+const getLastMessagePreview = (content) => {
+  if (!content) return "Chưa có tin nhắn";
+
+  if (typeof content === "string" && content.startsWith(PRODUCT_PREFIX)) {
+    return "Đã gửi sản phẩm để tư vấn";
+  }
+
+  return content;
 };
 
 export default function AdminChatsPage() {
@@ -255,7 +267,7 @@ export default function AdminChatsPage() {
                               textOverflow: "ellipsis",
                             }}
                           >
-                            {c.lastMessage || "Chưa có tin nhắn"}
+                            {getLastMessagePreview(c.lastMessage)}
                           </div>
                         </div>
 

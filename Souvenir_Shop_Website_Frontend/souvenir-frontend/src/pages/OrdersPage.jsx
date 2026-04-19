@@ -27,6 +27,15 @@ const getStatusBadge = (status) => {
     return { text: "Chờ xử lý", bg: "#fff7ed", color: "#c2410c" };
   }
 
+  if (
+    s === "cancel_requested" ||
+    s === "pending_cancel" ||
+    s === "yeu_cau_huy" ||
+    s === "dang_yeu_cau_huy"
+  ) {
+    return { text: "Đang yêu cầu hủy đơn", bg: "#fff7ed", color: "#c2410c" };
+  }
+
   if (s === "confirmed" || s === "da_xac_nhan") {
     return { text: "Đã xác nhận", bg: "#eff6ff", color: "#1d4ed8" };
   }
@@ -35,9 +44,9 @@ const getStatusBadge = (status) => {
     return { text: "Đã thanh toán", bg: "#ecfdf5", color: "#047857" };
   }
 
- if (s === "shipping") {
-  return { text: "Đang giao hàng", bg: "#eff6ff", color: "#1d4ed8" };
-}
+  if (s === "shipping" || s === "dang_giao") {
+    return { text: "Đang giao hàng", bg: "#eff6ff", color: "#1d4ed8" };
+  }
 
   if (s === "completed" || s === "hoan_thanh") {
     return { text: "Hoàn thành", bg: "#ecfdf5", color: "#047857" };
@@ -72,18 +81,32 @@ const matchesFilter = (status, filterKey) => {
   const s = normalizeStatus(status);
 
   if (filterKey === "all") return true;
+
   if (filterKey === "pending") {
     return s === "pending" || s === "cho_xu_ly" || s === "cho_xac_nhan";
   }
+
   if (filterKey === "confirmed") {
-    return s === "confirmed" || s === "da_xac_nhan" || s === "paid" || s === "da_thanh_toan";
+    return (
+      s === "confirmed" ||
+      s === "da_xac_nhan" ||
+      s === "paid" ||
+      s === "da_thanh_toan" ||
+      s === "cancel_requested" ||
+      s === "pending_cancel" ||
+      s === "yeu_cau_huy" ||
+      s === "dang_yeu_cau_huy"
+    );
   }
+
   if (filterKey === "shipping") {
     return s === "shipping" || s === "dang_giao";
   }
+
   if (filterKey === "completed") {
     return s === "completed" || s === "hoan_thanh";
   }
+
   if (filterKey === "cancelled") {
     return s === "cancelled" || s === "canceled" || s === "da_huy";
   }
