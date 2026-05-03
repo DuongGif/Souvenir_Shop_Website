@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import { paymentService } from "../services/paymentService";
+import { useLanguage } from "../contexts/LanguageContext.jsx";
+import { commonTranslations } from "../i18n/common";
 
 const formatPrice = (value) => {
   if (value === null || value === undefined) return "0 ₫";
@@ -20,35 +22,60 @@ const getErrorMessage = (ex, fallback) => {
   return fallback;
 };
 
-const getStatusBadge = (status) => {
+const getStatusBadge = (status, t) => {
   const s = String(status || "").toLowerCase();
 
   if (s === "pending" || s === "cho_thanh_toan") {
-    return { text: "Chờ thanh toán", bg: "#fef3c7", color: "#92400e" };
+    return {
+      text: t.paymentStatusPending || "Chờ thanh toán",
+      bg: "#fef3c7",
+      color: "#92400e",
+    };
   }
 
   if (s === "paid" || s === "success" || s === "da_thanh_toan") {
-    return { text: "Đã thanh toán", bg: "#dcfce7", color: "#166534" };
+    return {
+      text: t.paymentStatusPaid || "Đã thanh toán",
+      bg: "#dcfce7",
+      color: "#166534",
+    };
   }
 
   if (s === "failed" || s === "that_bai") {
-    return { text: "Thất bại", bg: "#fee2e2", color: "#991b1b" };
+    return {
+      text: t.paymentStatusFailed || "Thất bại",
+      bg: "#fee2e2",
+      color: "#991b1b",
+    };
   }
 
   if (s === "cancelled" || s === "canceled" || s === "da_huy") {
-    return { text: "Đã hủy", bg: "#e5e7eb", color: "#374151" };
+    return {
+      text: t.paymentStatusCancelled || "Đã hủy",
+      bg: "#e5e7eb",
+      color: "#374151",
+    };
   }
 
-  return { text: "Không xác định", bg: "#e5e7eb", color: "#374151" };
+  return {
+    text: t.paymentStatusUnknown || "Không xác định",
+    bg: "#e5e7eb",
+    color: "#374151",
+  };
 };
 
-const getMethodText = (method) => {
+const getMethodText = (method, t) => {
   const s = String(method || "").toLowerCase();
 
-  if (s === "cod") return "Thanh toán khi nhận hàng (COD)";
-  if (s === "bank_transfer") return "Chuyển khoản ngân hàng";
+  if (s === "cod") {
+    return t.paymentMethodCod || "Thanh toán khi nhận hàng (COD)";
+  }
 
-  return method || "Không xác định";
+  if (s === "bank_transfer") {
+    return t.paymentMethodBankTransfer || "Chuyển khoản ngân hàng";
+  }
+
+  return method || (t.orderUnknown || "Không xác định");
 };
 
 const pageCard = {
@@ -86,6 +113,8 @@ const isImageLikeUrl = (url) => {
 export default function PaymentPage() {
   const { orderCode } = useParams();
   const navigate = useNavigate();
+  const { language } = useLanguage();
+  const t = commonTranslations?.[language] || commonTranslations?.vi || {};
 
   const [method, setMethod] = useState("cod");
   const [payment, setPayment] = useState(null);
@@ -119,19 +148,25 @@ export default function PaymentPage() {
           setMethod(String(latest.paymentMethod).toLowerCase());
         }
       } catch (ex) {
-        setErr(getErrorMessage(ex, "Không thể tải thông tin thanh toán"));
+        setErr(
+          getErrorMessage(
+            ex,
+            t.paymentLoadFailed || "Không thể tải thông tin thanh toán"
+          )
+        );
       } finally {
         setLoading(false);
       }
     };
 
     init();
-  }, [orderCode]);
+  }, [orderCode, t.paymentLoadFailed]);
 
   const goToOrdersSuccess = () => {
     navigate("/orders", {
       state: {
-        successMessage: "Xác nhận đơn hàng thành công.",
+        successMessage:
+          t.orderConfirmedSuccess || "Xác nhận đơn hàng thành công.",
       },
     });
   };
@@ -159,9 +194,17 @@ export default function PaymentPage() {
         return;
       }
 
-      setMsg("Đã tạo QR / thông tin chuyển khoản ngay trên trang này.");
+      setMsg(
+        t.paymentQrCreated ||
+          "Đã tạo QR / thông tin chuyển khoản ngay trên trang này."
+      );
     } catch (ex) {
-      setErr(getErrorMessage(ex, "Tạo thanh toán thất bại"));
+      setErr(
+        getErrorMessage(
+          ex,
+          t.paymentCreateFailed || "Tạo thanh toán thất bại"
+        )
+      );
     } finally {
       setCreating(false);
     }
@@ -182,7 +225,10 @@ export default function PaymentPage() {
       (currentStatus === "pending" || currentStatus === "paid");
 
     if (canReuseCurrentBankTransfer) {
-      setMsg("Đã hiển thị thông tin chuyển khoản cho đơn hàng này.");
+      setMsg(
+        t.paymentTransferInfoShown ||
+          "Đã hiển thị thông tin chuyển khoản cho đơn hàng này."
+      );
       return;
     }
 
@@ -199,13 +245,18 @@ export default function PaymentPage() {
       await loadLatest();
       goToOrdersSuccess();
     } catch (ex) {
-      setErr(getErrorMessage(ex, "Xác nhận thanh toán thất bại"));
+      setErr(
+        getErrorMessage(
+          ex,
+          t.paymentConfirmFailed || "Xác nhận thanh toán thất bại"
+        )
+      );
     } finally {
       setConfirming(false);
     }
   };
 
-  const badge = getStatusBadge(payment?.status);
+  const badge = getStatusBadge(payment?.status, t);
   const selectedMethod = String(method || "").toLowerCase();
   const paymentMethod = String(payment?.paymentMethod || "").toLowerCase();
 
@@ -256,7 +307,7 @@ export default function PaymentPage() {
                     fontWeight: 600,
                   }}
                 >
-                  Thanh toán đơn hàng
+                  {t.paymentHeaderSmall || "Thanh toán đơn hàng"}
                 </div>
 
                 <h2
@@ -268,7 +319,7 @@ export default function PaymentPage() {
                     lineHeight: 1.3,
                   }}
                 >
-                  Thanh toán cho đơn hàng
+                  {t.paymentHeaderTitle || "Thanh toán cho đơn hàng"}
                 </h2>
 
                 <div
@@ -291,7 +342,7 @@ export default function PaymentPage() {
                   fontWeight: 700,
                 }}
               >
-                ← Quay lại đơn hàng
+                {t.backToOrders || "← Quay lại đơn hàng"}
               </Link>
             </div>
           </div>
@@ -330,7 +381,7 @@ export default function PaymentPage() {
             <div style={{ ...pageCard, padding: 40 }} className="text-center">
               <div className="spinner-border text-danger" role="status"></div>
               <p className="mt-3 mb-0" style={{ color: "#6b7280" }}>
-                Đang tải thông tin thanh toán...
+                {t.paymentLoading || "Đang tải thông tin thanh toán..."}
               </p>
             </div>
           ) : (
@@ -345,7 +396,7 @@ export default function PaymentPage() {
                       fontSize: 28,
                     }}
                   >
-                    Thông tin thanh toán
+                    {t.paymentInfoTitle || "Thông tin thanh toán"}
                   </h3>
 
                   <div
@@ -360,21 +411,30 @@ export default function PaymentPage() {
                     }}
                   >
                     <div>
-                      <strong style={{ color: "#111827" }}>Mã đơn hàng:</strong> {orderCode}
+                      <strong style={{ color: "#111827" }}>
+                        {t.orderCodeLabel || "Mã đơn hàng:"}
+                      </strong>{" "}
+                      {orderCode}
                     </div>
 
                     {payment && (
                       <>
                         <div>
-                          <strong style={{ color: "#111827" }}>Phương thức:</strong>{" "}
-                          {getMethodText(payment.paymentMethod)}
+                          <strong style={{ color: "#111827" }}>
+                            {t.paymentMethodLabel || "Phương thức:"}
+                          </strong>{" "}
+                          {getMethodText(payment.paymentMethod, t)}
                         </div>
                         <div>
-                          <strong style={{ color: "#111827" }}>Số tiền:</strong>{" "}
+                          <strong style={{ color: "#111827" }}>
+                            {t.paymentAmountLabel || "Số tiền:"}
+                          </strong>{" "}
                           {formatPrice(payment.amount)}
                         </div>
                         <div>
-                          <strong style={{ color: "#111827" }}>Trạng thái:</strong>{" "}
+                          <strong style={{ color: "#111827" }}>
+                            {t.paymentStatusLabel || "Trạng thái:"}
+                          </strong>{" "}
                           <span
                             style={{
                               background: badge.bg,
@@ -391,7 +451,9 @@ export default function PaymentPage() {
                         </div>
                         {payment.transactionCode && (
                           <div>
-                            <strong style={{ color: "#111827" }}>Mã giao dịch:</strong>{" "}
+                            <strong style={{ color: "#111827" }}>
+                              {t.transactionCodeLabel || "Mã giao dịch:"}
+                            </strong>{" "}
                             {payment.transactionCode}
                           </div>
                         )}
@@ -404,21 +466,29 @@ export default function PaymentPage() {
                       className="form-label"
                       style={{ color: "#111827", fontWeight: 700 }}
                     >
-                      Chọn phương thức thanh toán
+                      {t.choosePaymentMethod || "Chọn phương thức thanh toán"}
                     </label>
 
                     <div className="d-grid gap-2">
                       {[
                         {
                           value: "cod",
-                          title: "Thanh toán khi nhận hàng (COD)",
-                          desc: "Thanh toán trực tiếp khi nhận sản phẩm.",
+                          title:
+                            t.paymentMethodCod ||
+                            "Thanh toán khi nhận hàng (COD)",
+                          desc:
+                            t.paymentMethodCodDesc ||
+                            "Thanh toán trực tiếp khi nhận sản phẩm.",
                           icon: "bi bi-cash-stack",
                         },
                         {
                           value: "bank_transfer",
-                          title: "Chuyển khoản ngân hàng",
-                          desc: "Bấm vào đây để tạo và hiển thị QR ngay trên trang.",
+                          title:
+                            t.paymentMethodBankTransfer ||
+                            "Chuyển khoản ngân hàng",
+                          desc:
+                            t.paymentMethodBankTransferDesc ||
+                            "Bấm vào đây để tạo và hiển thị QR ngay trên trang.",
                           icon: "bi bi-bank",
                         },
                       ].map((item) => {
@@ -444,7 +514,10 @@ export default function PaymentPage() {
                               boxShadow: isActive
                                 ? "inset 0 0 0 2px #ee4d2d"
                                 : "inset 0 0 0 1px #e5e7eb",
-                              opacity: creating && item.value === "bank_transfer" ? 0.8 : 1,
+                              opacity:
+                                creating && item.value === "bank_transfer"
+                                  ? 0.8
+                                  : 1,
                             }}
                           >
                             <div
@@ -504,7 +577,9 @@ export default function PaymentPage() {
                           border: "none",
                         }}
                       >
-                        {creating ? "Đang xử lý..." : "Xác nhận đơn COD"}
+                        {creating
+                          ? t.processing || "Đang xử lý..."
+                          : t.confirmCodOrder || "Xác nhận đơn COD"}
                       </button>
                     )}
 
@@ -521,7 +596,9 @@ export default function PaymentPage() {
                           border: "1px solid #ee4d2d",
                         }}
                       >
-                        {creating ? "Đang tạo QR..." : "Tạo lại QR thanh toán"}
+                        {creating
+                          ? t.creatingQr || "Đang tạo QR..."
+                          : t.recreateQr || "Tạo lại QR thanh toán"}
                       </button>
                     )}
 
@@ -538,7 +615,9 @@ export default function PaymentPage() {
                           border: "1px solid #86efac",
                         }}
                       >
-                        {confirming ? "Đang xác nhận..." : "Xác nhận thanh toán"}
+                        {confirming
+                          ? t.confirmingPayment || "Đang xác nhận..."
+                          : t.confirmPayment || "Xác nhận thanh toán"}
                       </button>
                     )}
                   </div>
@@ -555,7 +634,7 @@ export default function PaymentPage() {
                       fontSize: 28,
                     }}
                   >
-                    Chi tiết thanh toán
+                    {t.paymentDetailTitle || "Chi tiết thanh toán"}
                   </h3>
 
                   {!payment && !isBankTransfer ? (
@@ -569,8 +648,8 @@ export default function PaymentPage() {
                         lineHeight: 1.8,
                       }}
                     >
-                      Chưa có thông tin thanh toán cho đơn hàng này. Hãy chọn
-                      phương thức thanh toán phù hợp.
+                      {t.paymentNoInfo ||
+                        "Chưa có thông tin thanh toán cho đơn hàng này. Hãy chọn phương thức thanh toán phù hợp."}
                     </div>
                   ) : (
                     <div className="d-grid gap-3">
@@ -583,10 +662,10 @@ export default function PaymentPage() {
                         }}
                       >
                         <div style={{ color: "#6b7280", marginBottom: 8 }}>
-                          Phương thức thanh toán
+                          {t.paymentMethodDisplay || "Phương thức thanh toán"}
                         </div>
                         <div style={{ color: "#111827", fontWeight: 700 }}>
-                          {getMethodText(payment?.paymentMethod || method)}
+                          {getMethodText(payment?.paymentMethod || method, t)}
                         </div>
                       </div>
 
@@ -601,7 +680,7 @@ export default function PaymentPage() {
                             }}
                           >
                             <div style={{ color: "#6b7280", marginBottom: 8 }}>
-                              Trạng thái thanh toán
+                              {t.paymentStatusDisplay || "Trạng thái thanh toán"}
                             </div>
                             <div>
                               <span
@@ -628,7 +707,7 @@ export default function PaymentPage() {
                             }}
                           >
                             <div style={{ color: "#6b7280", marginBottom: 8 }}>
-                              Số tiền thanh toán
+                              {t.paymentAmountDisplay || "Số tiền thanh toán"}
                             </div>
                             <div
                               style={{
@@ -651,7 +730,8 @@ export default function PaymentPage() {
                               }}
                             >
                               <div style={{ color: "#6b7280", marginBottom: 8 }}>
-                                Mã giao dịch / nội dung chuyển khoản
+                                {t.paymentTransactionInfo ||
+                                  "Mã giao dịch / nội dung chuyển khoản"}
                               </div>
                               <div
                                 style={{
@@ -684,32 +764,42 @@ export default function PaymentPage() {
                               fontSize: 16,
                             }}
                           >
-                            QR / thông tin chuyển khoản ngay trên trang
+                            {t.paymentQrSectionTitle ||
+                              "QR / thông tin chuyển khoản ngay trên trang"}
                           </div>
 
                           {payment?.bankName && (
                             <div style={{ color: "#7c2d12", marginBottom: 6 }}>
-                              <strong>Ngân hàng:</strong> {payment.bankName}
+                              <strong>{t.bankNameLabel || "Ngân hàng:"}</strong>{" "}
+                              {payment.bankName}
                             </div>
                           )}
 
                           {payment?.accountName && (
                             <div style={{ color: "#7c2d12", marginBottom: 6 }}>
-                              <strong>Chủ tài khoản:</strong> {payment.accountName}
+                              <strong>
+                                {t.accountNameLabel || "Chủ tài khoản:"}
+                              </strong>{" "}
+                              {payment.accountName}
                             </div>
                           )}
 
                           {payment?.accountNo && (
                             <div style={{ color: "#7c2d12", marginBottom: 6 }}>
-                              <strong>Số tài khoản:</strong> {payment.accountNo}
+                              <strong>
+                                {t.accountNumberLabel || "Số tài khoản:"}
+                              </strong>{" "}
+                              {payment.accountNo}
                             </div>
                           )}
 
-                          {payment?.amount !== null && payment?.amount !== undefined && (
-                            <div style={{ color: "#7c2d12", marginBottom: 10 }}>
-                              <strong>Số tiền:</strong> {formatPrice(payment.amount)}
-                            </div>
-                          )}
+                          {payment?.amount !== null &&
+                            payment?.amount !== undefined && (
+                              <div style={{ color: "#7c2d12", marginBottom: 10 }}>
+                                <strong>{t.paymentAmountLabel || "Số tiền:"}</strong>{" "}
+                                {formatPrice(payment.amount)}
+                              </div>
+                            )}
 
                           {inlineQrImage ? (
                             <div
@@ -724,7 +814,7 @@ export default function PaymentPage() {
                             >
                               <img
                                 src={inlineQrImage}
-                                alt="QR thanh toán"
+                                alt={t.paymentQrAlt || "QR thanh toán"}
                                 style={{
                                   width: "100%",
                                   maxWidth: 320,
@@ -745,7 +835,7 @@ export default function PaymentPage() {
                             >
                               <iframe
                                 src={payment.paymentUrl}
-                                title="Thông tin thanh toán"
+                                title={t.paymentInfoIframeTitle || "Thông tin thanh toán"}
                                 style={{
                                   width: "100%",
                                   minHeight: 420,
@@ -762,8 +852,8 @@ export default function PaymentPage() {
                                   lineHeight: 1.6,
                                 }}
                               >
-                                Nếu khung không hiển thị được do giới hạn từ phía cổng thanh toán,
-                                bạn hãy dùng nút “Tạo lại QR thanh toán”.
+                                {t.paymentIframeHint ||
+                                  "Nếu khung không hiển thị được do giới hạn từ phía cổng thanh toán, bạn hãy dùng nút “Tạo lại QR thanh toán”."}
                               </div>
                             </div>
                           ) : (
@@ -779,8 +869,10 @@ export default function PaymentPage() {
                               }}
                             >
                               {paymentMethod === "bank_transfer"
-                                ? "Đã tạo thanh toán chuyển khoản. Nếu backend của bạn chưa trả về ảnh QR, hãy hiển thị thêm qrCodeUrl hoặc qrUrl từ API để QR hiện trực tiếp tại đây."
-                                : "Hãy bấm vào “Chuyển khoản ngân hàng” ở bên trái để tạo QR ngay trên trang này."}
+                                ? t.paymentQrMissingHint ||
+                                  "Đã tạo thanh toán chuyển khoản. Nếu backend của bạn chưa trả về ảnh QR, hãy hiển thị thêm qrCodeUrl hoặc qrUrl từ API để QR hiện trực tiếp tại đây."
+                                : t.paymentSelectBankHint ||
+                                  "Hãy bấm vào “Chuyển khoản ngân hàng” ở bên trái để tạo QR ngay trên trang này."}
                             </div>
                           )}
                         </div>
@@ -797,8 +889,8 @@ export default function PaymentPage() {
                             lineHeight: 1.8,
                           }}
                         >
-                          Đơn hàng này sử dụng hình thức thanh toán khi nhận hàng
-                          (COD), nên không cần xác nhận thanh toán trước.
+                          {t.paymentCodHint ||
+                            "Đơn hàng này sử dụng hình thức thanh toán khi nhận hàng (COD), nên không cần xác nhận thanh toán trước."}
                         </div>
                       )}
                     </div>

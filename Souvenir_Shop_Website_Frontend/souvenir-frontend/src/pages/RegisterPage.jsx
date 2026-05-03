@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import { authService } from "../services/authService";
+import { useLanguage } from "../contexts/LanguageContext.jsx";
+import { commonTranslations } from "../i18n/common";
 
 const getErrorMessage = (ex, fallback) => {
   const data = ex?.response?.data;
@@ -40,8 +42,10 @@ const inputStyle = {
   boxShadow: "none",
 };
 
-export default function AccountPage() {
+export default function RegisterPage() {
   const nav = useNavigate();
+  const { language } = useLanguage();
+  const t = commonTranslations?.[language] || commonTranslations?.vi || {};
 
   const [step, setStep] = useState(1);
   const [otpEmail, setOtpEmail] = useState("");
@@ -70,7 +74,7 @@ export default function AccountPage() {
     const email = form.email.trim();
 
     if (!email) {
-      setErr("Vui lòng nhập email.");
+      setErr(t.registerRequireEmail || "Vui lòng nhập email.");
       return;
     }
 
@@ -80,10 +84,10 @@ export default function AccountPage() {
       await authService.sendRegisterOtp({ email });
 
       setOtpEmail(email);
-      setSuccess("Mã OTP đã được gửi về email của bạn.");
+      setSuccess(t.registerOtpSent || "Mã OTP đã được gửi về email của bạn.");
       setStep(2);
     } catch (ex) {
-      setErr(getErrorMessage(ex, "Không thể gửi OTP."));
+      setErr(getErrorMessage(ex, t.registerOtpSendFailed || "Không thể gửi OTP."));
     } finally {
       setLoadingSendOtp(false);
     }
@@ -95,17 +99,17 @@ export default function AccountPage() {
     setSuccess("");
 
     if (!otpEmail.trim()) {
-      setErr("Email xác thực không hợp lệ.");
+      setErr(t.registerInvalidVerifyEmail || "Email xác thực không hợp lệ.");
       return;
     }
 
     if (!form.otp.trim()) {
-      setErr("Vui lòng nhập mã OTP.");
+      setErr(t.registerRequireOtp || "Vui lòng nhập mã OTP.");
       return;
     }
 
     if (!form.password.trim()) {
-      setErr("Vui lòng nhập mật khẩu.");
+      setErr(t.registerRequirePassword || "Vui lòng nhập mật khẩu.");
       return;
     }
 
@@ -120,13 +124,16 @@ export default function AccountPage() {
         password: form.password,
       });
 
-      setSuccess("Đăng ký tài khoản thành công. Bạn có thể đăng nhập ngay bây giờ.");
+      setSuccess(
+        t.registerSuccess ||
+          "Đăng ký tài khoản thành công. Bạn có thể đăng nhập ngay bây giờ."
+      );
 
       setTimeout(() => {
         nav("/login");
       }, 1200);
     } catch (ex) {
-      setErr(getErrorMessage(ex, "Xác thực OTP thất bại."));
+      setErr(getErrorMessage(ex, t.registerVerifyFailed || "Xác thực OTP thất bại."));
     } finally {
       setLoadingVerify(false);
     }
@@ -137,7 +144,7 @@ export default function AccountPage() {
     setSuccess("");
 
     if (!otpEmail.trim()) {
-      setErr("Không tìm thấy email để gửi lại OTP.");
+      setErr(t.registerResendMissingEmail || "Không tìm thấy email để gửi lại OTP.");
       return;
     }
 
@@ -148,9 +155,9 @@ export default function AccountPage() {
         email: otpEmail,
       });
 
-      setSuccess("Mã OTP mới đã được gửi lại về email của bạn.");
+      setSuccess(t.registerOtpResent || "Mã OTP mới đã được gửi lại về email của bạn.");
     } catch (ex) {
-      setErr(getErrorMessage(ex, "Không thể gửi lại OTP."));
+      setErr(getErrorMessage(ex, t.registerResendFailed || "Không thể gửi lại OTP."));
     } finally {
       setLoadingSendOtp(false);
     }
@@ -191,7 +198,7 @@ export default function AccountPage() {
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
               <div>
                 <div style={{ color: "#6b7280", fontSize: 14, fontWeight: 600 }}>
-                  SouVN Shop
+                  {t.shopName || "SouVN Shop"}
                 </div>
                 <h2
                   style={{
@@ -200,7 +207,7 @@ export default function AccountPage() {
                     color: "#111827",
                   }}
                 >
-                  Đăng ký tài khoản
+                  {t.registerPageTitle || "Đăng ký tài khoản"}
                 </h2>
               </div>
 
@@ -211,7 +218,7 @@ export default function AccountPage() {
                   fontWeight: 700,
                 }}
               >
-                Bước {step}/2
+                {(t.registerStepLabel || "Bước")} {step}/2
               </div>
             </div>
           </div>
@@ -226,11 +233,12 @@ export default function AccountPage() {
                     marginBottom: 16,
                   }}
                 >
-                  Tạo tài khoản SouVN
+                  {t.registerCreateSouvn || "Tạo tài khoản SouVN"}
                 </h3>
 
                 <p style={{ color: "#6b7280", lineHeight: 1.8 }}>
-                  Đăng ký nhanh bằng email và mã OTP để bắt đầu mua sắm, theo dõi đơn hàng và quản lý tài khoản dễ dàng.
+                  {t.registerIntroDesc ||
+                    "Đăng ký nhanh bằng email và mã OTP để bắt đầu mua sắm, theo dõi đơn hàng và quản lý tài khoản dễ dàng."}
                 </p>
 
                 <div className="d-grid gap-3 mt-4">
@@ -243,9 +251,11 @@ export default function AccountPage() {
                     }}
                   >
                     <div style={{ color: "#111827", fontWeight: 800, marginBottom: 4 }}>
-                      Bước 1
+                      {(t.registerStepLabel || "Bước")} 1
                     </div>
-                    <div style={{ color: "#6b7280" }}>Nhập email để nhận mã OTP</div>
+                    <div style={{ color: "#6b7280" }}>
+                      {t.registerStep1Desc || "Nhập email để nhận mã OTP"}
+                    </div>
                   </div>
 
                   <div
@@ -257,17 +267,17 @@ export default function AccountPage() {
                     }}
                   >
                     <div style={{ color: "#111827", fontWeight: 800, marginBottom: 4 }}>
-                      Bước 2
+                      {(t.registerStepLabel || "Bước")} 2
                     </div>
                     <div style={{ color: "#6b7280" }}>
-                      Xác thực OTP và hoàn tất đăng ký
+                      {t.registerStep2Desc || "Xác thực OTP và hoàn tất đăng ký"}
                     </div>
                   </div>
 
                   {[
-                    "Đăng ký nhanh chóng",
-                    "Xác thực email an toàn",
-                    "Bắt đầu mua sắm ngay",
+                    t.registerFeature1 || "Đăng ký nhanh chóng",
+                    t.registerFeature2 || "Xác thực email an toàn",
+                    t.registerFeature3 || "Bắt đầu mua sắm ngay",
                   ].map((text, i) => (
                     <div
                       key={i}
@@ -297,13 +307,15 @@ export default function AccountPage() {
                     marginBottom: 8,
                   }}
                 >
-                  {step === 1 ? "Nhận mã OTP" : "Hoàn tất đăng ký"}
+                  {step === 1
+                    ? (t.registerGetOtpTitle || "Nhận mã OTP")
+                    : (t.registerCompleteTitle || "Hoàn tất đăng ký")}
                 </h3>
 
                 <p style={{ color: "#6b7280", marginBottom: 20 }}>
                   {step === 1
-                    ? "Nhập email để nhận mã xác thực."
-                    : "Nhập OTP và thông tin tài khoản của bạn."}
+                    ? (t.registerGetOtpDesc || "Nhập email để nhận mã xác thực.")
+                    : (t.registerCompleteDesc || "Nhập OTP và thông tin tài khoản của bạn.")}
                 </p>
 
                 {err && (
@@ -338,13 +350,13 @@ export default function AccountPage() {
                   <form onSubmit={sendOtp}>
                     <div className="mb-4">
                       <label className="form-label" style={labelStyle}>
-                        Email
+                        {t.emailLabel || "Email"}
                       </label>
                       <input
                         name="email"
                         type="email"
                         className="form-control"
-                        placeholder="Nhập email của bạn"
+                        placeholder={t.registerEmailPlaceholder || "Nhập email của bạn"}
                         value={form.email}
                         onChange={change}
                         style={inputStyle}
@@ -364,14 +376,16 @@ export default function AccountPage() {
                         fontWeight: 700,
                       }}
                     >
-                      {loadingSendOtp ? "Đang gửi OTP..." : "Gửi mã OTP"}
+                      {loadingSendOtp
+                        ? (t.registerSendingOtp || "Đang gửi OTP...")
+                        : (t.registerSendOtp || "Gửi mã OTP")}
                     </button>
                   </form>
                 ) : (
                   <form onSubmit={verifyOtpAndRegister}>
                     <div className="mb-3">
                       <label className="form-label" style={labelStyle}>
-                        Email đã nhận OTP
+                        {t.registerOtpEmailLabel || "Email đã nhận OTP"}
                       </label>
                       <input
                         type="email"
@@ -389,12 +403,12 @@ export default function AccountPage() {
 
                     <div className="mb-3">
                       <label className="form-label" style={labelStyle}>
-                        Mã OTP
+                        {t.registerOtpLabel || "Mã OTP"}
                       </label>
                       <input
                         name="otp"
                         className="form-control"
-                        placeholder="Nhập mã OTP gồm 6 số"
+                        placeholder={t.registerOtpPlaceholder || "Nhập mã OTP gồm 6 số"}
                         value={form.otp}
                         onChange={change}
                         style={inputStyle}
@@ -403,12 +417,12 @@ export default function AccountPage() {
 
                     <div className="mb-3">
                       <label className="form-label" style={labelStyle}>
-                        Họ và tên
+                        {t.fullNameLabel || "Họ và tên"}
                       </label>
                       <input
                         name="fullName"
                         className="form-control"
-                        placeholder="Nhập họ và tên"
+                        placeholder={t.fullNamePlaceholder || "Nhập họ và tên"}
                         value={form.fullName}
                         onChange={change}
                         style={inputStyle}
@@ -417,12 +431,12 @@ export default function AccountPage() {
 
                     <div className="mb-3">
                       <label className="form-label" style={labelStyle}>
-                        Số điện thoại
+                        {t.phoneLabel || "Số điện thoại"}
                       </label>
                       <input
                         name="phone"
                         className="form-control"
-                        placeholder="Nhập số điện thoại"
+                        placeholder={t.phonePlaceholder || "Nhập số điện thoại"}
                         value={form.phone}
                         onChange={change}
                         style={inputStyle}
@@ -431,13 +445,13 @@ export default function AccountPage() {
 
                     <div className="mb-3">
                       <label className="form-label" style={labelStyle}>
-                        Mật khẩu
+                        {t.passwordLabel || "Mật khẩu"}
                       </label>
                       <input
                         name="password"
                         type="password"
                         className="form-control"
-                        placeholder="Nhập mật khẩu"
+                        placeholder={t.passwordPlaceholder || "Nhập mật khẩu"}
                         value={form.password}
                         onChange={change}
                         style={inputStyle}
@@ -458,7 +472,9 @@ export default function AccountPage() {
                           fontWeight: 700,
                         }}
                       >
-                        {loadingVerify ? "Đang xác thực..." : "Xác thực OTP và đăng ký"}
+                        {loadingVerify
+                          ? (t.registerVerifying || "Đang xác thực...")
+                          : (t.registerVerifyAndCreate || "Xác thực OTP và đăng ký")}
                       </button>
 
                       <button
@@ -475,7 +491,9 @@ export default function AccountPage() {
                           fontWeight: 700,
                         }}
                       >
-                        {loadingSendOtp ? "Đang gửi lại..." : "Gửi lại OTP"}
+                        {loadingSendOtp
+                          ? (t.registerResendingOtp || "Đang gửi lại...")
+                          : (t.registerResendOtp || "Gửi lại OTP")}
                       </button>
 
                       <button
@@ -491,16 +509,16 @@ export default function AccountPage() {
                           fontWeight: 700,
                         }}
                       >
-                        Đổi email khác
+                        {t.registerChangeEmail || "Đổi email khác"}
                       </button>
                     </div>
                   </form>
                 )}
 
                 <p className="text-center mt-4 mb-0" style={{ color: "#6b7280" }}>
-                  Đã có tài khoản?{" "}
+                  {t.registerHasAccount || "Đã có tài khoản?"}{" "}
                   <Link to="/login" style={{ color: "#ee4d2d", fontWeight: 700 }}>
-                    Đăng nhập ngay
+                    {t.loginPageTitle || "Đăng nhập"}
                   </Link>
                 </p>
               </div>

@@ -4,6 +4,8 @@ import MainLayout from "../layouts/MainLayout";
 import { productService } from "../services/productService";
 import ProductCard from "../components/ProductCard";
 import Pagination from "../components/Pagination";
+import { useLanguage } from "../contexts/LanguageContext.jsx";
+import { commonTranslations } from "../i18n/common";
 
 const pageCard = {
   background: "#ffffff",
@@ -27,24 +29,6 @@ const labelStyle = {
   fontSize: 14,
 };
 
-const sortOptions = [
-  { value: "newest", label: "Mới nhất" },
-  { value: "price_asc", label: "Giá tăng dần" },
-  { value: "price_desc", label: "Giá giảm dần" },
-  { value: "rating_desc", label: "Đánh giá cao nhất" },
-  { value: "rating_asc", label: "Đánh giá thấp nhất" },
-];
-
-const categoryOptions = [
-  { id: "1", label: "Quà lưu niệm", icon: "bi bi-gift" },
-  { id: "2", label: "Đồ thủ công", icon: "bi bi-palette" },
-  { id: "3", label: "Móc khóa", icon: "bi bi-key" },
-  { id: "4", label: "Áo du lịch", icon: "bi bi-handbag" },
-  { id: "5", label: "Phụ kiện", icon: "bi bi-stars" },
-  { id: "6", label: "Đặc sản", icon: "bi bi-box-seam" },
-  { id: "7", label: "Khác", icon: "bi bi-three-dots" },
-];
-
 const getErrorMessage = (ex, fallback) => {
   const data = ex?.response?.data;
   if (typeof data === "string") return data;
@@ -59,6 +43,32 @@ const getErrorMessage = (ex, fallback) => {
 
 export default function ProductsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { language } = useLanguage();
+  const t = commonTranslations?.[language] || commonTranslations?.vi || {};
+
+  const sortOptions = useMemo(
+    () => [
+      { value: "newest", label: t.sortNewest || "Mới nhất" },
+      { value: "price_asc", label: t.sortPriceAsc || "Giá tăng dần" },
+      { value: "price_desc", label: t.sortPriceDesc || "Giá giảm dần" },
+      { value: "rating_desc", label: t.sortRatingDesc || "Đánh giá cao nhất" },
+      { value: "rating_asc", label: t.sortRatingAsc || "Đánh giá thấp nhất" },
+    ],
+    [t]
+  );
+
+  const categoryOptions = useMemo(
+    () => [
+      { id: "1", label: t.categorySouvenir || "Quà lưu niệm", icon: "bi bi-gift" },
+      { id: "2", label: t.categoryHandmade || "Đồ thủ công", icon: "bi bi-palette" },
+      { id: "3", label: t.categoryKeychain || "Móc khóa", icon: "bi bi-key" },
+      { id: "4", label: t.categoryTravelShirt || "Áo du lịch", icon: "bi bi-handbag" },
+      { id: "5", label: t.categoryAccessories || "Phụ kiện", icon: "bi bi-stars" },
+      { id: "6", label: t.categorySpecialties || "Đặc sản", icon: "bi bi-box-seam" },
+      { id: "7", label: t.categoryOther || "Khác", icon: "bi bi-three-dots" },
+    ],
+    [t]
+  );
 
   const [q, setQ] = useState({
     keyword: searchParams.get("keyword") || "",
@@ -120,14 +130,19 @@ export default function ProductsPage() {
           }
         );
       } catch (ex) {
-        setErr(getErrorMessage(ex, "Không thể tải danh sách sản phẩm"));
+        setErr(
+          getErrorMessage(
+            ex,
+            t.productsLoadFailed || "Không thể tải danh sách sản phẩm"
+          )
+        );
       } finally {
         setLoading(false);
       }
     };
 
     fetchProducts();
-  }, [params]);
+  }, [params, t.productsLoadFailed]);
 
   useEffect(() => {
     const nextParams = {};
@@ -204,7 +219,7 @@ export default function ProductsPage() {
                     fontWeight: 600,
                   }}
                 >
-                  SouVN Shop
+                  {t.shopName || "SouVN Shop"}
                 </div>
 
                 <h2
@@ -215,7 +230,7 @@ export default function ProductsPage() {
                     fontSize: "clamp(24px, 4vw, 34px)",
                   }}
                 >
-                  Danh sách sản phẩm
+                  {t.productList || "Danh sách sản phẩm"}
                 </h2>
               </div>
 
@@ -226,7 +241,7 @@ export default function ProductsPage() {
                   fontWeight: 600,
                 }}
               >
-                Tổng số sản phẩm:{" "}
+                {t.totalProducts || "Tổng số sản phẩm:"}{" "}
                 <span style={{ color: "#ee4d2d" }}>{data.totalItems || 0}</span>
               </div>
             </div>
@@ -259,18 +274,18 @@ export default function ProductsPage() {
                   }}
                 >
                   <i className="bi bi-funnel me-2" style={{ color: "#ee4d2d" }}></i>
-                  Bộ lọc tìm kiếm
+                  {t.searchFilters || "Bộ lọc tìm kiếm"}
                 </div>
 
                 <div className="d-grid gap-3">
                   <div>
                     <label className="form-label" style={labelStyle}>
-                      Từ khóa
+                      {t.keyword || "Từ khóa"}
                     </label>
                     <input
                       type="text"
                       className="form-control"
-                      placeholder="Nhập tên sản phẩm..."
+                      placeholder={t.enterProductName || "Nhập tên sản phẩm..."}
                       value={q.keyword}
                       onChange={(e) =>
                         setQ({ ...q, keyword: e.target.value, page: 1 })
@@ -281,7 +296,7 @@ export default function ProductsPage() {
 
                   <div>
                     <label className="form-label" style={labelStyle}>
-                      Danh mục
+                      {t.category || "Danh mục"}
                     </label>
 
                     <div className="d-grid gap-2">
@@ -326,7 +341,7 @@ export default function ProductsPage() {
                           fontWeight: 600,
                         }}
                       >
-                        Đang chọn:{" "}
+                        {t.selected || "Đang chọn:"}{" "}
                         <span style={{ color: "#ee4d2d" }}>
                           {selectedCategory.label}
                         </span>
@@ -337,7 +352,7 @@ export default function ProductsPage() {
                   <div className="row g-2">
                     <div className="col-6">
                       <label className="form-label" style={labelStyle}>
-                        Giá từ
+                        {t.priceFrom || "Giá từ"}
                       </label>
                       <input
                         type="number"
@@ -353,7 +368,7 @@ export default function ProductsPage() {
 
                     <div className="col-6">
                       <label className="form-label" style={labelStyle}>
-                        Giá đến
+                        {t.priceTo || "Giá đến"}
                       </label>
                       <input
                         type="number"
@@ -370,7 +385,7 @@ export default function ProductsPage() {
 
                   <div>
                     <label className="form-label" style={labelStyle}>
-                      Đánh giá tối thiểu
+                      {t.minRating || "Đánh giá tối thiểu"}
                     </label>
                     <input
                       type="number"
@@ -378,7 +393,7 @@ export default function ProductsPage() {
                       min="0"
                       max="5"
                       step="0.1"
-                      placeholder="Ví dụ: 4"
+                      placeholder={t.minRatingExample || "Ví dụ: 4"}
                       value={q.minRating}
                       onChange={(e) =>
                         setQ({ ...q, minRating: e.target.value, page: 1 })
@@ -410,7 +425,7 @@ export default function ProductsPage() {
                       htmlFor="inStockOnly"
                       style={{ color: "#9a3412", fontWeight: 600 }}
                     >
-                      Chỉ hiển thị sản phẩm còn hàng
+                      {t.inStockOnly || "Chỉ hiển thị sản phẩm còn hàng"}
                     </label>
                   </div>
 
@@ -428,7 +443,7 @@ export default function ProductsPage() {
                     }}
                   >
                     <i className="bi bi-arrow-counterclockwise me-2"></i>
-                    Xóa bộ lọc
+                    {t.clearFilters || "Xóa bộ lọc"}
                   </button>
                 </div>
               </div>
@@ -452,7 +467,7 @@ export default function ProductsPage() {
                         fontSize: 14,
                       }}
                     >
-                      Sắp xếp theo
+                      {t.sortBy || "Sắp xếp theo"}
                     </span>
 
                     {sortOptions.map((option) => {
@@ -492,11 +507,11 @@ export default function ProductsPage() {
                       fontWeight: 600,
                     }}
                   >
-                    Hiển thị{" "}
+                    {t.showing || "Hiển thị"}{" "}
                     <span style={{ color: "#ee4d2d" }}>
                       {data.items?.length || 0}
                     </span>{" "}
-                    sản phẩm
+                    {t.products || "sản phẩm"}
                   </div>
                 </div>
               </div>
@@ -505,7 +520,7 @@ export default function ProductsPage() {
                 <div style={{ ...pageCard, padding: 40 }} className="text-center">
                   <div className="spinner-border text-danger" role="status"></div>
                   <p className="mt-3 mb-0" style={{ color: "#6b7280" }}>
-                    Đang tải sản phẩm...
+                    {t.loadingProducts || "Đang tải sản phẩm..."}
                   </p>
                 </div>
               ) : (data.items || []).length === 0 ? (
@@ -521,11 +536,11 @@ export default function ProductsPage() {
                   </div>
 
                   <h4 style={{ color: "#111827", fontWeight: 700 }}>
-                    Không tìm thấy sản phẩm phù hợp
+                    {t.noMatchingProducts || "Không tìm thấy sản phẩm phù hợp"}
                   </h4>
 
                   <p style={{ color: "#6b7280", marginBottom: 0 }}>
-                    Hãy thử thay đổi từ khóa tìm kiếm hoặc bộ lọc.
+                    {t.tryDifferentFilters || "Hãy thử thay đổi từ khóa tìm kiếm hoặc bộ lọc."}
                   </p>
                 </div>
               ) : (

@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import { orderService } from "../services/orderService";
+import { useLanguage } from "../contexts/LanguageContext.jsx";
+import { commonTranslations } from "../i18n/common";
 
 const formatPrice = (value) => {
   if (value === null || value === undefined) return "0 ₫";
@@ -20,11 +22,15 @@ const getErrorMessage = (ex, fallback) => {
   return fallback;
 };
 
-const getStatusBadge = (status) => {
+const getStatusBadge = (status, t) => {
   const s = String(status || "").toLowerCase();
 
   if (s === "pending" || s === "cho_xu_ly" || s === "cho_xac_nhan") {
-    return { text: "Chờ xử lý", bg: "#fff7ed", color: "#c2410c" };
+    return {
+      text: t.orderStatusPending || "Chờ xử lý",
+      bg: "#fff7ed",
+      color: "#c2410c",
+    };
   }
 
   if (
@@ -33,46 +39,76 @@ const getStatusBadge = (status) => {
     s === "yeu_cau_huy" ||
     s === "dang_yeu_cau_huy"
   ) {
-    return { text: "Đang yêu cầu hủy đơn", bg: "#fff7ed", color: "#c2410c" };
+    return {
+      text: t.orderStatusCancelRequested || "Đang yêu cầu hủy đơn",
+      bg: "#fff7ed",
+      color: "#c2410c",
+    };
   }
 
   if (s === "confirmed" || s === "da_xac_nhan") {
-    return { text: "Đã xác nhận", bg: "#eff6ff", color: "#1d4ed8" };
+    return {
+      text: t.orderStatusConfirmed || "Đã xác nhận",
+      bg: "#eff6ff",
+      color: "#1d4ed8",
+    };
   }
 
   if (s === "paid" || s === "da_thanh_toan") {
-    return { text: "Đã thanh toán", bg: "#ecfdf5", color: "#047857" };
+    return {
+      text: t.orderStatusPaid || "Đã thanh toán",
+      bg: "#ecfdf5",
+      color: "#047857",
+    };
   }
 
   if (s === "shipping" || s === "dang_giao") {
-    return { text: "Đang giao hàng", bg: "#eff6ff", color: "#1d4ed8" };
+    return {
+      text: t.orderStatusShipping || "Đang giao hàng",
+      bg: "#eff6ff",
+      color: "#1d4ed8",
+    };
   }
 
   if (s === "completed" || s === "hoan_thanh") {
-    return { text: "Hoàn thành", bg: "#ecfdf5", color: "#047857" };
+    return {
+      text: t.orderStatusCompleted || "Hoàn thành",
+      bg: "#ecfdf5",
+      color: "#047857",
+    };
   }
 
   if (s === "cancelled" || s === "canceled" || s === "da_huy") {
-    return { text: "Đã hủy", bg: "#fef2f2", color: "#b91c1c" };
+    return {
+      text: t.orderStatusCancelled || "Đã hủy",
+      bg: "#fef2f2",
+      color: "#b91c1c",
+    };
   }
 
   return {
-    text: "Không xác định",
+    text: t.orderStatusUnknown || "Không xác định",
     bg: "#f3f4f6",
     color: "#374151",
   };
 };
 
-const getFulfillmentText = (value) => {
+const getFulfillmentText = (value, t) => {
   const s = String(value || "").toLowerCase();
 
-  if (s === "delivery" || s === "giao_hang") return "Giao hàng tận nơi";
-  if (s === "pickup" || s === "nhan_tai_diem") return "Nhận tại điểm";
-  if (s === "hotel" || s === "hotel_delivery" || s === "giao_khach_san") {
-    return "Giao tại khách sạn";
+  if (s === "delivery" || s === "giao_hang") {
+    return t.fulfillmentDelivery || "Giao hàng tận nơi";
   }
 
-  return value || "Không xác định";
+  if (s === "pickup" || s === "nhan_tai_diem") {
+    return t.fulfillmentPickup || "Nhận tại điểm";
+  }
+
+  if (s === "hotel" || s === "hotel_delivery" || s === "giao_khach_san") {
+    return t.fulfillmentHotel || "Giao tại khách sạn";
+  }
+
+  return value || (t.orderUnknown || "Không xác định");
 };
 
 const normalizeStatus = (status) => String(status || "").toLowerCase();
@@ -120,18 +156,23 @@ const pageCard = {
   boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
 };
 
-const filterTabs = [
-  { key: "all", label: "Tất cả" },
-  { key: "pending", label: "Chờ xử lý" },
-  { key: "confirmed", label: "Đã xác nhận" },
-  { key: "shipping", label: "Đang giao" },
-  { key: "completed", label: "Hoàn thành" },
-  { key: "cancelled", label: "Đã hủy" },
-];
-
 export default function OrdersPage() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { language } = useLanguage();
+  const t = commonTranslations?.[language] || commonTranslations?.vi || {};
+
+  const filterTabs = useMemo(
+    () => [
+      { key: "all", label: t.orderTabAll || "Tất cả" },
+      { key: "pending", label: t.orderTabPending || "Chờ xử lý" },
+      { key: "confirmed", label: t.orderTabConfirmed || "Đã xác nhận" },
+      { key: "shipping", label: t.orderTabShipping || "Đang giao" },
+      { key: "completed", label: t.orderTabCompleted || "Hoàn thành" },
+      { key: "cancelled", label: t.orderTabCancelled || "Đã hủy" },
+    ],
+    [t]
+  );
 
   const [orders, setOrders] = useState([]);
   const [activeTab, setActiveTab] = useState("all");
@@ -159,14 +200,19 @@ export default function OrdersPage() {
         const res = await orderService.my();
         setOrders(Array.isArray(res.data) ? res.data : []);
       } catch (ex) {
-        setErr(getErrorMessage(ex, "Không thể tải danh sách đơn hàng."));
+        setErr(
+          getErrorMessage(
+            ex,
+            t.ordersLoadFailed || "Không thể tải danh sách đơn hàng."
+          )
+        );
       } finally {
         setLoading(false);
       }
     };
 
     loadOrders();
-  }, []);
+  }, [t.ordersLoadFailed]);
 
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => matchesFilter(order.status, activeTab));
@@ -176,7 +222,8 @@ export default function OrdersPage() {
     return {
       all: orders.length,
       pending: orders.filter((o) => matchesFilter(o.status, "pending")).length,
-      confirmed: orders.filter((o) => matchesFilter(o.status, "confirmed")).length,
+      confirmed: orders.filter((o) => matchesFilter(o.status, "confirmed"))
+        .length,
       shipping: orders.filter((o) => matchesFilter(o.status, "shipping")).length,
       completed: orders.filter((o) => matchesFilter(o.status, "completed")).length,
       cancelled: orders.filter((o) => matchesFilter(o.status, "cancelled")).length,
@@ -212,7 +259,7 @@ export default function OrdersPage() {
                     marginBottom: 8,
                   }}
                 >
-                  Quản lý đơn hàng
+                  {t.ordersHeaderSmall || "Quản lý đơn hàng"}
                 </div>
 
                 <h2
@@ -223,7 +270,7 @@ export default function OrdersPage() {
                     fontSize: "clamp(24px, 4vw, 34px)",
                   }}
                 >
-                  Đơn mua của tôi
+                  {t.ordersHeaderTitle || "Đơn mua của tôi"}
                 </h2>
               </div>
 
@@ -234,7 +281,8 @@ export default function OrdersPage() {
                   fontWeight: 600,
                 }}
               >
-                Tổng số đơn: <span style={{ color: "#ee4d2d" }}>{orders.length}</span>
+                {t.ordersTotal || "Tổng số đơn:"}{" "}
+                <span style={{ color: "#ee4d2d" }}>{orders.length}</span>
               </div>
             </div>
           </div>
@@ -301,7 +349,9 @@ export default function OrdersPage() {
                       borderRadius: 999,
                       padding: "10px 16px",
                       whiteSpace: "nowrap",
-                      boxShadow: isActive ? "0 8px 18px rgba(238,77,45,0.2)" : "none",
+                      boxShadow: isActive
+                        ? "0 8px 18px rgba(238,77,45,0.2)"
+                        : "none",
                       borderColor: "#e5e7eb",
                     }}
                   >
@@ -316,7 +366,7 @@ export default function OrdersPage() {
             <div style={{ ...pageCard, padding: 40 }} className="text-center">
               <div className="spinner-border text-danger" role="status"></div>
               <p className="mt-3 mb-0" style={{ color: "#6b7280" }}>
-                Đang tải danh sách đơn hàng...
+                {t.ordersLoading || "Đang tải danh sách đơn hàng..."}
               </p>
             </div>
           ) : filteredOrders.length === 0 ? (
@@ -332,11 +382,11 @@ export default function OrdersPage() {
               </div>
 
               <h4 style={{ color: "#111827", fontWeight: 700 }}>
-                Không có đơn hàng phù hợp
+                {t.ordersEmptyTitle || "Không có đơn hàng phù hợp"}
               </h4>
 
               <p style={{ color: "#6b7280", marginBottom: 20 }}>
-                Không có đơn hàng nào trong mục{" "}
+                {t.ordersEmptyDescPrefix || "Không có đơn hàng nào trong mục"}{" "}
                 <strong>{filterTabs.find((x) => x.key === activeTab)?.label}</strong>.
               </p>
 
@@ -357,13 +407,13 @@ export default function OrdersPage() {
                 }}
               >
                 <i className="bi bi-bag"></i>
-                Mua sắm ngay
+                {t.shopNow || "Mua sắm ngay"}
               </Link>
             </div>
           ) : (
             <div className="d-grid gap-3">
               {filteredOrders.map((order) => {
-                const badge = getStatusBadge(order.status);
+                const badge = getStatusBadge(order.status, t);
 
                 return (
                   <div
@@ -412,27 +462,35 @@ export default function OrdersPage() {
                         <div style={{ color: "#4b5563", lineHeight: 1.9 }}>
                           {order.createdAt && (
                             <div>
-                              <strong style={{ color: "#111827" }}>Ngày tạo:</strong>{" "}
+                              <strong style={{ color: "#111827" }}>
+                                {t.orderCreatedDate || "Ngày tạo:"}
+                              </strong>{" "}
                               {new Date(order.createdAt).toLocaleString("vi-VN")}
                             </div>
                           )}
 
                           {order.fulfillmentType && (
                             <div>
-                              <strong style={{ color: "#111827" }}>Hình thức nhận:</strong>{" "}
-                              {getFulfillmentText(order.fulfillmentType)}
+                              <strong style={{ color: "#111827" }}>
+                                {t.orderFulfillmentType || "Hình thức nhận:"}
+                              </strong>{" "}
+                              {getFulfillmentText(order.fulfillmentType, t)}
                             </div>
                           )}
 
                           <div>
-                            <strong style={{ color: "#111827" }}>Tạm tính:</strong>{" "}
+                            <strong style={{ color: "#111827" }}>
+                              {t.subtotal || "Tạm tính:"}
+                            </strong>{" "}
                             {formatPrice(order.subtotal)}
                           </div>
 
                           {order.shippingFee !== undefined &&
                             order.shippingFee !== null && (
                               <div>
-                                <strong style={{ color: "#111827" }}>Phí vận chuyển:</strong>{" "}
+                                <strong style={{ color: "#111827" }}>
+                                  {t.shippingFee || "Phí vận chuyển:"}
+                                </strong>{" "}
                                 {formatPrice(order.shippingFee)}
                               </div>
                             )}
@@ -447,7 +505,7 @@ export default function OrdersPage() {
                             marginBottom: 8,
                           }}
                         >
-                          Tổng thanh toán
+                          {t.totalPayment || "Tổng thanh toán"}
                         </div>
 
                         <div
@@ -478,7 +536,7 @@ export default function OrdersPage() {
                           }}
                         >
                           <i className="bi bi-eye"></i>
-                          Xem chi tiết
+                          {t.viewDetails || "Xem chi tiết"}
                         </Link>
                       </div>
                     </div>

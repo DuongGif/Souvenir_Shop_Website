@@ -1,5 +1,8 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useLanguage } from "../contexts/LanguageContext.jsx";
+import { commonTranslations } from "../i18n/common";
+import { aiService } from "../services/aiService";
 
 const API_ORIGIN = "https://localhost:7020";
 
@@ -36,7 +39,48 @@ const getProductTitle = (p) => {
 };
 
 export default function ProductCard({ p }) {
-  const title = getProductTitle(p);
+  const { language, currentLanguageName, isVietnamese } = useLanguage();
+  const t = commonTranslations?.[language] || commonTranslations?.vi || {};
+
+  const originalTitle = getProductTitle(p);
+  const [translatedTitle, setTranslatedTitle] = useState(originalTitle);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const run = async () => {
+      if (!originalTitle) {
+        if (!cancelled) setTranslatedTitle("");
+        return;
+      }
+
+      if (isVietnamese) {
+        if (!cancelled) setTranslatedTitle(originalTitle);
+        return;
+      }
+
+      try {
+        const res = await aiService.translate(originalTitle, currentLanguageName);
+        const nextTitle = res?.data?.translatedText?.trim() || originalTitle;
+
+        if (!cancelled) {
+          setTranslatedTitle(nextTitle);
+        }
+      } catch {
+        if (!cancelled) {
+          setTranslatedTitle(originalTitle);
+        }
+      }
+    };
+
+    run();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [originalTitle, language, currentLanguageName, isVietnamese]);
+
+  const title = translatedTitle || originalTitle;
   const imageUrl = getImageSrc(p?.imageUrl);
 
   const price = p?.price;
@@ -93,7 +137,9 @@ export default function ProductCard({ p }) {
               borderRadius: 999,
             }}
           >
-            {inStock ? "Còn hàng" : "Hết hàng"}
+            {inStock
+              ? t.inStockLabel || "Còn hàng"
+              : t.outOfStockLabel || "Hết hàng"}
           </span>
         </div>
 
@@ -122,7 +168,7 @@ export default function ProductCard({ p }) {
             <small style={{ color: "#666" }}>
               {rating > 0
                 ? `${Number(rating).toFixed(1)} (${reviewCount})`
-                : "Chưa có đánh giá"}
+                : t.noReviewsShort || "Chưa có đánh giá"}
             </small>
           </div>
 
@@ -143,7 +189,7 @@ export default function ProductCard({ p }) {
               className="btn btn-primary"
               style={{ borderRadius: 12 }}
             >
-              Xem chi tiết
+              {t.viewDetails || "Xem chi tiết"}
             </Link>
           </div>
         </div>

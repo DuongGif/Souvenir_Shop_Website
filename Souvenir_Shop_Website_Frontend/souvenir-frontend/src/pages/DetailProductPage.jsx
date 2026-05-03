@@ -4,6 +4,9 @@ import MainLayout from "../layouts/MainLayout";
 import { productService } from "../services/productService";
 import { cartService } from "../services/cartService";
 import { reviewService } from "../services/reviewService";
+import { aiService } from "../services/aiService";
+import { useLanguage } from "../contexts/LanguageContext.jsx";
+import { commonTranslations } from "../i18n/common";
 
 const API_ORIGIN = "https://localhost:7020";
 
@@ -79,6 +82,8 @@ export default function DetailProductPage() {
   const { id } = useParams();
   const nav = useNavigate();
   const token = localStorage.getItem("token");
+  const { language, currentLanguageName, isVietnamese } = useLanguage();
+  const t = commonTranslations?.[language] || commonTranslations?.vi || {};
 
   const [p, setP] = useState(null);
   const [variantId, setVariantId] = useState(null);
@@ -95,6 +100,12 @@ export default function DetailProductPage() {
   const [addingCart, setAddingCart] = useState(false);
   const [submittingReview, setSubmittingReview] = useState(false);
 
+  const [translatedProductTitle, setTranslatedProductTitle] = useState("");
+  const [translatedCategoryLabel, setTranslatedCategoryLabel] = useState("");
+  const [translatedVariants, setTranslatedVariants] = useState({});
+  const [translatedReviews, setTranslatedReviews] = useState([]);
+  const [translatingPage, setTranslatingPage] = useState(false);
+
   useEffect(() => {
     const loadProduct = async () => {
       setLoading(true);
@@ -105,7 +116,7 @@ export default function DetailProductPage() {
         setP(res.data);
         setVariantId(res.data?.variants?.[0]?.id ?? null);
       } catch (ex) {
-        setErr(getErrorMessage(ex, "Không thể tải chi tiết sản phẩm"));
+        setErr(getErrorMessage(ex, t.cannotLoadProductDetails || "Không thể tải chi tiết sản phẩm"));
       } finally {
         setLoading(false);
       }
@@ -119,13 +130,13 @@ export default function DetailProductPage() {
         setReviews(rr.data || []);
       } catch (ex) {
         setReviews([]);
-        setReviewErr(getErrorMessage(ex, "Không thể tải đánh giá sản phẩm"));
+        setReviewErr(getErrorMessage(ex, t.cannotLoadReviews || "Không thể tải đánh giá sản phẩm"));
       }
     };
 
     loadProduct();
     loadReviews();
-  }, [id]);
+  }, [id, t.cannotLoadProductDetails, t.cannotLoadReviews]);
 
   useEffect(() => {
     if (!msg && !err) return;
@@ -175,6 +186,92 @@ export default function DetailProductPage() {
     }
   }, [imageList]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const translateText = async (text) => {
+      if (!text || isVietnamese) return text;
+
+      try {
+        const res = await aiService.translate(text, currentLanguageName);
+        return res?.data?.translatedText?.trim() || text;
+      } catch {
+        return text;
+      }
+    };
+
+    const translatePageContent = async () => {
+      if (!p) return;
+
+      if (isVietnamese) {
+        setTranslatedProductTitle(productTitle);
+        setTranslatedCategoryLabel(categoryLabel);
+
+        const originalVariants = {};
+        (p?.variants || []).forEach((v) => {
+          originalVariants[v.id] = normalizeDisplayText(v.variantName);
+        });
+        setTranslatedVariants(originalVariants);
+        setTranslatedReviews(reviews);
+        return;
+      }
+
+      try {
+        setTranslatingPage(true);
+
+        const nextProductTitle = await translateText(productTitle);
+        const nextCategoryLabel = await translateText(categoryLabel);
+
+        const variantEntries = await Promise.all(
+          (p?.variants || []).map(async (v) => {
+            const translatedVariantName = await translateText(
+              normalizeDisplayText(v.variantName)
+            );
+            return [v.id, translatedVariantName];
+          })
+        );
+
+        const nextVariants = Object.fromEntries(variantEntries);
+
+        const nextReviews = await Promise.all(
+          (reviews || []).map(async (r) => {
+            const translatedTitle = await translateText(
+              normalizeDisplayText(r.title)
+            );
+            const translatedContent = await translateText(
+              normalizeDisplayText(r.content)
+            );
+            const translatedReplyContent = r.replyContent
+              ? await translateText(normalizeDisplayText(r.replyContent))
+              : "";
+
+            return {
+              ...r,
+              translatedTitle,
+              translatedContent,
+              translatedReplyContent,
+            };
+          })
+        );
+
+        if (!cancelled) {
+          setTranslatedProductTitle(nextProductTitle);
+          setTranslatedCategoryLabel(nextCategoryLabel);
+          setTranslatedVariants(nextVariants);
+          setTranslatedReviews(nextReviews);
+        }
+      } finally {
+        if (!cancelled) setTranslatingPage(false);
+      }
+    };
+
+    translatePageContent();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [p, reviews, language, currentLanguageName, isVietnamese, productTitle, categoryLabel]);
+
   const displayPrice = currentVariant?.price ?? p?.basePrice ?? 0;
 
   const addToCart = async () => {
@@ -187,7 +284,7 @@ export default function DetailProductPage() {
     }
 
     if (!variantId) {
-      setErr("Vui lòng chọn biến thể sản phẩm.");
+      setErr(t.pleaseChooseVariant || "Vui lòng chọn biến thể sản phẩm.");
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
@@ -200,13 +297,13 @@ export default function DetailProductPage() {
         quantity: Number(qty),
       });
 
-      setMsg("Đã thêm sản phẩm vào giỏ hàng.");
+      setMsg(t.addedToCartSuccess || "Đã thêm sản phẩm vào giỏ hàng.");
       setQty(1);
 
       window.dispatchEvent(new Event("cart-updated"));
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (ex) {
-      setErr(getErrorMessage(ex, "Thêm vào giỏ hàng thất bại"));
+      setErr(getErrorMessage(ex, t.addToCartFailed || "Thêm vào giỏ hàng thất bại"));
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setAddingCart(false);
@@ -218,11 +315,14 @@ export default function DetailProductPage() {
 
     const payload = {
       productId: Number(id),
-      name: productTitle,
+      name: translatedProductTitle || productTitle,
       slug: p.slug || "",
       imageUrl: selectedImage || imageList?.[0] || "",
       price: displayPrice,
-      variantName: currentVariant?.variantName || "",
+      variantName:
+        translatedVariants[currentVariant?.id] ||
+        currentVariant?.variantName ||
+        "",
       url: `/products/${id}`,
     };
 
@@ -232,7 +332,7 @@ export default function DetailProductPage() {
       })
     );
 
-    setMsg("Đã mở chat và gửi sản phẩm để xin tư vấn.");
+    setMsg(t.chatOpenedAndShared || "Đã mở chat và gửi sản phẩm để xin tư vấn.");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -248,7 +348,7 @@ export default function DetailProductPage() {
         ...rv,
       });
 
-      setMsg("Đánh giá đã được gửi thành công");
+      setMsg(t.reviewSubmittedSuccess || "Đánh giá đã được gửi thành công");
       setRv({ rating: 5, title: "", content: "" });
 
       try {
@@ -256,17 +356,20 @@ export default function DetailProductPage() {
         setReviews(rr.data || []);
       } catch (ex) {
         setReviews([]);
-        setReviewErr(getErrorMessage(ex, "Không thể tải lại danh sách đánh giá"));
+        setReviewErr(getErrorMessage(ex, t.cannotReloadReviews || "Không thể tải lại danh sách đánh giá"));
       }
 
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (ex) {
-      setErr(getErrorMessage(ex, "Gửi đánh giá thất bại"));
+      setErr(getErrorMessage(ex, t.submitReviewFailed || "Gửi đánh giá thất bại"));
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setSubmittingReview(false);
     }
   };
+
+  const displayProductTitle = translatedProductTitle || productTitle;
+  const displayCategoryLabel = translatedCategoryLabel || categoryLabel;
 
   return (
     <MainLayout>
@@ -298,7 +401,7 @@ export default function DetailProductPage() {
                     fontWeight: 600,
                   }}
                 >
-                  Chi tiết sản phẩm
+                  {t.productDetails || "Chi tiết sản phẩm"}
                 </div>
 
                 <h2
@@ -312,7 +415,7 @@ export default function DetailProductPage() {
                     wordBreak: "break-word",
                   }}
                 >
-                  {productTitle}
+                  {displayProductTitle}
                 </h2>
               </div>
 
@@ -324,10 +427,25 @@ export default function DetailProductPage() {
                   fontWeight: 700,
                 }}
               >
-                ← Quay lại danh sách sản phẩm
+                {t.backToProducts || "← Quay lại danh sách sản phẩm"}
               </Link>
             </div>
           </div>
+
+          {translatingPage && !loading && (
+            <div
+              className="alert mb-4"
+              role="alert"
+              style={{
+                background: "#eff6ff",
+                color: "#1d4ed8",
+                border: "1px solid #bfdbfe",
+                borderRadius: 12,
+              }}
+            >
+              {t.translating || "Đang dịch nội dung sang ngôn ngữ đã chọn..."}
+            </div>
+          )}
 
           {err && (
             <div
@@ -363,7 +481,7 @@ export default function DetailProductPage() {
             <div style={{ ...pageCard, padding: 40 }} className="text-center">
               <div className="spinner-border text-danger" role="status"></div>
               <p className="mt-3 mb-0" style={{ color: "#6b7280" }}>
-                Đang tải chi tiết sản phẩm...
+                {t.loadingProduct || "Đang tải chi tiết sản phẩm..."}
               </p>
             </div>
           ) : !p ? (
@@ -376,7 +494,7 @@ export default function DetailProductPage() {
                 borderRadius: 12,
               }}
             >
-              Không tìm thấy sản phẩm.
+              {t.productNotFound || "Không tìm thấy sản phẩm."}
             </div>
           ) : (
             <>
@@ -394,7 +512,7 @@ export default function DetailProductPage() {
                     >
                       <img
                         src={selectedImage || imageList[0]}
-                        alt={productTitle}
+                        alt={displayProductTitle}
                         style={{
                           width: "100%",
                           height: 480,
@@ -434,7 +552,7 @@ export default function DetailProductPage() {
                           >
                             <img
                               src={img}
-                              alt={`${productTitle}-${index + 1}`}
+                              alt={`${displayProductTitle}-${index + 1}`}
                               style={{
                                 width: "100%",
                                 height: 74,
@@ -471,7 +589,7 @@ export default function DetailProductPage() {
                       }}
                     >
                       <i className="bi bi-bag-heart"></i>
-                      {categoryLabel}
+                      {displayCategoryLabel}
                     </div>
 
                     <h1
@@ -486,7 +604,7 @@ export default function DetailProductPage() {
                         wordBreak: "break-word",
                       }}
                     >
-                      {productTitle}
+                      {displayProductTitle}
                     </h1>
 
                     <div
@@ -516,7 +634,7 @@ export default function DetailProductPage() {
                             marginTop: 8,
                           }}
                         >
-                          Giá gốc: {formatPrice(p.basePrice)}
+                          {t.basePrice || "Giá gốc:"} {formatPrice(p.basePrice)}
                         </div>
                       )}
                     </div>
@@ -536,7 +654,7 @@ export default function DetailProductPage() {
                           fontWeight: 700,
                         }}
                       >
-                        Biến thể
+                        {t.variant || "Biến thể"}
                       </div>
 
                       <div>
@@ -550,11 +668,16 @@ export default function DetailProductPage() {
                           {(p.variants || []).length > 0 ? (
                             (p.variants || []).map((v) => (
                               <option key={v.id} value={v.id}>
-                                {normalizeDisplayText(v.variantName)} - {formatPrice(v.price ?? p.basePrice)}
+                                {(translatedVariants[v.id] ||
+                                  normalizeDisplayText(v.variantName)) +
+                                  " - " +
+                                  formatPrice(v.price ?? p.basePrice)}
                               </option>
                             ))
                           ) : (
-                            <option value="">Không có biến thể</option>
+                            <option value="">
+                              {t.noVariant || "Không có biến thể"}
+                            </option>
                           )}
                         </select>
                       </div>
@@ -575,7 +698,7 @@ export default function DetailProductPage() {
                           fontWeight: 700,
                         }}
                       >
-                        Số lượng
+                        {t.quantity || "Số lượng"}
                       </div>
 
                       <div
@@ -655,7 +778,9 @@ export default function DetailProductPage() {
                         }}
                       >
                         <i className="bi bi-cart-plus me-2"></i>
-                        {addingCart ? "Đang thêm..." : "Thêm vào giỏ hàng"}
+                        {addingCart
+                          ? (t.adding || "Đang thêm...")
+                          : (t.addToCart || "Thêm vào giỏ hàng")}
                       </button>
 
                       <button
@@ -672,7 +797,7 @@ export default function DetailProductPage() {
                         }}
                       >
                         <i className="bi bi-chat-dots me-2"></i>
-                        Chat tư vấn sản phẩm
+                        {t.chatAdvice || "Chat tư vấn sản phẩm"}
                       </button>
 
                       <Link
@@ -692,7 +817,7 @@ export default function DetailProductPage() {
                         }}
                       >
                         <i className="bi bi-bag-check me-2"></i>
-                        Xem giỏ hàng
+                        {t.viewCart || "Xem giỏ hàng"}
                       </Link>
                     </div>
 
@@ -709,11 +834,15 @@ export default function DetailProductPage() {
                       }}
                     >
                       <div>
-                        <strong style={{ color: "#111827" }}>Số biến thể:</strong>{" "}
+                        <strong style={{ color: "#111827" }}>
+                          {t.numberOfVariants || "Số biến thể:"}
+                        </strong>{" "}
                         {p.variants?.length || 0}
                       </div>
                       <div>
-                        <strong style={{ color: "#111827" }}>Số ảnh:</strong>{" "}
+                        <strong style={{ color: "#111827" }}>
+                          {t.numberOfImages || "Số ảnh:"}
+                        </strong>{" "}
                         {imageList.length}
                       </div>
                     </div>
@@ -732,7 +861,7 @@ export default function DetailProductPage() {
                         fontSize: 24,
                       }}
                     >
-                      Đánh giá sản phẩm
+                      {t.productReviews || "Đánh giá sản phẩm"}
                     </h3>
 
                     {reviewErr && (
@@ -750,7 +879,7 @@ export default function DetailProductPage() {
                       </div>
                     )}
 
-                    {(reviews || []).length === 0 ? (
+                    {(translatedReviews || []).length === 0 ? (
                       <div
                         style={{
                           background: "#fafafa",
@@ -759,11 +888,11 @@ export default function DetailProductPage() {
                           color: "#6b7280",
                         }}
                       >
-                        Chưa có đánh giá nào cho sản phẩm này.
+                        {t.noReviews || "Chưa có đánh giá nào cho sản phẩm này."}
                       </div>
                     ) : (
                       <div className="d-grid gap-3">
-                        {(reviews || []).map((r) => (
+                        {(translatedReviews || []).map((r) => (
                           <div
                             key={r.id}
                             style={{
@@ -791,12 +920,12 @@ export default function DetailProductPage() {
                                 <span style={{ color: "#f59e0b" }}>
                                   {"★".repeat(Number(r.rating || 0))}
                                 </span>{" "}
-                                {normalizeDisplayText(r.title)}
+                                {r.translatedTitle || normalizeDisplayText(r.title)}
                               </div>
                             </div>
 
                             <div style={{ color: "#4b5563", lineHeight: 1.7 }}>
-                              {normalizeDisplayText(r.content)}
+                              {r.translatedContent || normalizeDisplayText(r.content)}
                             </div>
 
                             {r.replyContent && (
@@ -810,7 +939,11 @@ export default function DetailProductPage() {
                                   border: "1px solid #fed7aa",
                                 }}
                               >
-                                <strong>Phản hồi từ shop:</strong> {normalizeDisplayText(r.replyContent)}
+                                <strong>
+                                  {t.shopReply || "Phản hồi từ shop:"}
+                                </strong>{" "}
+                                {r.translatedReplyContent ||
+                                  normalizeDisplayText(r.replyContent)}
                               </div>
                             )}
                           </div>
@@ -830,7 +963,7 @@ export default function DetailProductPage() {
                         fontSize: 24,
                       }}
                     >
-                      Viết đánh giá
+                      {t.writeReview || "Viết đánh giá"}
                     </h3>
 
                     {!token ? (
@@ -843,7 +976,7 @@ export default function DetailProductPage() {
                           lineHeight: 1.7,
                         }}
                       >
-                        Bạn cần{" "}
+                        {t.loginRequiredPrefix || "Bạn cần "}
                         <Link
                           to="/login"
                           style={{
@@ -852,9 +985,9 @@ export default function DetailProductPage() {
                             textDecoration: "none",
                           }}
                         >
-                          đăng nhập
-                        </Link>{" "}
-                        để gửi đánh giá.
+                          {t.login || "đăng nhập"}
+                        </Link>
+                        {t.loginRequiredSuffix || " để gửi đánh giá."}
                       </div>
                     ) : (
                       <div className="d-grid gap-3">
@@ -863,7 +996,7 @@ export default function DetailProductPage() {
                             className="form-label"
                             style={{ color: "#111827", fontWeight: 700 }}
                           >
-                            Số sao
+                            {t.rating || "Số sao"}
                           </label>
                           <input
                             type="number"
@@ -883,11 +1016,11 @@ export default function DetailProductPage() {
                             className="form-label"
                             style={{ color: "#111827", fontWeight: 700 }}
                           >
-                            Tiêu đề
+                            {t.title || "Tiêu đề"}
                           </label>
                           <input
                             className="form-control"
-                            placeholder="Nhập tiêu đề đánh giá"
+                            placeholder={t.reviewTitlePlaceholder || "Nhập tiêu đề đánh giá"}
                             value={rv.title}
                             onChange={(e) =>
                               setRv({ ...rv, title: e.target.value })
@@ -901,12 +1034,15 @@ export default function DetailProductPage() {
                             className="form-label"
                             style={{ color: "#111827", fontWeight: 700 }}
                           >
-                            Nội dung
+                            {t.content || "Nội dung"}
                           </label>
                           <textarea
                             className="form-control"
                             rows={5}
-                            placeholder="Chia sẻ cảm nhận của bạn về sản phẩm"
+                            placeholder={
+                              t.reviewContentPlaceholder ||
+                              "Chia sẻ cảm nhận của bạn về sản phẩm"
+                            }
                             value={rv.content}
                             onChange={(e) =>
                               setRv({ ...rv, content: e.target.value })
@@ -932,7 +1068,9 @@ export default function DetailProductPage() {
                             fontWeight: 800,
                           }}
                         >
-                          {submittingReview ? "Đang gửi..." : "Gửi đánh giá"}
+                          {submittingReview
+                            ? (t.submitting || "Đang gửi...")
+                            : (t.submitReview || "Gửi đánh giá")}
                         </button>
                       </div>
                     )}

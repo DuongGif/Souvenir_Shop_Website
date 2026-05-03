@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import { useLanguage } from "../contexts/LanguageContext.jsx";
+import { commonTranslations } from "../i18n/common";
 
 const footerLink = {
   color: "#4b5563",
@@ -23,6 +25,8 @@ const socialStyle = {
 
 export default function Footer() {
   const year = new Date().getFullYear();
+  const { language } = useLanguage();
+  const t = commonTranslations?.[language] || commonTranslations?.vi || {};
 
   return (
     <footer
@@ -42,7 +46,6 @@ export default function Footer() {
           }}
         >
           <div className="row gy-4">
-            {/* ABOUT */}
             <div className="col-lg-4 col-md-6">
               <h4
                 style={{
@@ -55,8 +58,8 @@ export default function Footer() {
               </h4>
 
               <p style={{ color: "#6b7280", lineHeight: 1.8 }}>
-                SouVN là cửa hàng quà tặng và đồ lưu niệm dành cho khách tham
-                quan, cung cấp các sản phẩm đẹp, ý nghĩa và phù hợp làm quà.
+                {t.footerAboutText ||
+                  "SouVN là cửa hàng quà tặng và đồ lưu niệm dành cho khách tham quan, cung cấp các sản phẩm đẹp, ý nghĩa và phù hợp làm quà."}
               </p>
 
               <div className="d-flex gap-2 mt-3">
@@ -68,7 +71,6 @@ export default function Footer() {
               </div>
             </div>
 
-            {/* QUICK LINKS */}
             <div className="col-lg-2 col-md-6">
               <h5
                 style={{
@@ -77,27 +79,26 @@ export default function Footer() {
                   marginBottom: 16,
                 }}
               >
-                Liên kết
+                {t.footerQuickLinks || "Liên kết"}
               </h5>
 
               <Link to="/" style={footerLink}>
-                Trang chủ
+                {t.navHome || "Trang chủ"}
               </Link>
               <Link to="/products" style={footerLink}>
-                Sản phẩm
+                {t.navProducts || "Sản phẩm"}
               </Link>
               <Link to="/cart" style={footerLink}>
-                Giỏ hàng
+                {t.navCart || "Giỏ hàng"}
               </Link>
               <Link to="/orders" style={footerLink}>
-                Đơn hàng
+                {t.navOrders || "Đơn hàng"}
               </Link>
               <Link to="/contact" style={footerLink}>
-                Liên hệ
+                {t.contact || "Liên hệ"}
               </Link>
             </div>
 
-            {/* SUPPORT */}
             <div className="col-lg-3 col-md-6">
               <h5
                 style={{
@@ -106,24 +107,23 @@ export default function Footer() {
                   marginBottom: 16,
                 }}
               >
-                Hỗ trợ
+                {t.footerSupport || "Hỗ trợ"}
               </h5>
 
               <Link to="/account" style={footerLink}>
-                Tài khoản của tôi
+                {t.footerMyAccount || "Tài khoản của tôi"}
               </Link>
               <Link to="/orders" style={footerLink}>
-                Tra cứu đơn hàng
+                {t.footerTrackOrder || "Tra cứu đơn hàng"}
               </Link>
               <Link to="/contact" style={footerLink}>
-                Chính sách đổi trả
+                {t.footerReturnPolicy || "Chính sách đổi trả"}
               </Link>
               <Link to="/contact" style={footerLink}>
-                FAQ
+                {t.footerFaq || "FAQ"}
               </Link>
             </div>
 
-            {/* CONTACT */}
             <div className="col-lg-3 col-md-6">
               <h5
                 style={{
@@ -132,13 +132,13 @@ export default function Footer() {
                   marginBottom: 16,
                 }}
               >
-                Liên hệ
+                {t.contact || "Liên hệ"}
               </h5>
 
               <div style={{ color: "#4b5563", lineHeight: 2 }}>
                 <div>
                   <i className="bi bi-geo-alt me-2" style={{ color: "#ee4d2d" }}></i>
-                  Hà Nội, Việt Nam
+                  {t.addressValue || "Hà Nội, Việt Nam"}
                 </div>
 
                 <div>
@@ -159,7 +159,6 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* BOTTOM */}
           <hr style={{ margin: "24px 0", borderColor: "#e5e7eb" }} />
 
           <div
@@ -167,13 +166,19 @@ export default function Footer() {
             style={{ fontSize: 14 }}
           >
             <div style={{ color: "#6b7280" }}>
-              © {year} <strong>SouVN</strong>. All rights reserved.
+              © {year} <strong>SouVN</strong>. {t.footerRights || "All rights reserved."}
             </div>
 
             <div className="d-flex gap-3">
-              <span style={{ color: "#9ca3af" }}>Bảo mật</span>
-              <span style={{ color: "#9ca3af" }}>Điều khoản</span>
-              <span style={{ color: "#9ca3af" }}>Chính sách</span>
+              <span style={{ color: "#9ca3af" }}>
+                {t.footerPrivacy || "Bảo mật"}
+              </span>
+              <span style={{ color: "#9ca3af" }}>
+                {t.footerTerms || "Điều khoản"}
+              </span>
+              <span style={{ color: "#9ca3af" }}>
+                {t.footerPolicy || "Chính sách"}
+              </span>
             </div>
           </div>
         </div>

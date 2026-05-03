@@ -5,6 +5,9 @@ import { cartService } from "../services/cartService";
 import { couponService } from "../services/couponService";
 import { orderService } from "../services/orderService";
 import { accountService } from "../services/accountService";
+import { aiService } from "../services/aiService";
+import { useLanguage } from "../contexts/LanguageContext.jsx";
+import { commonTranslations } from "../i18n/common";
 
 const API_ORIGIN = "https://localhost:7020";
 
@@ -68,6 +71,8 @@ const sectionTitle = {
 
 export default function CartPage() {
   const nav = useNavigate();
+  const { language, currentLanguageName, isVietnamese } = useLanguage();
+  const t = commonTranslations?.[language] || commonTranslations?.vi || {};
 
   const [cart, setCart] = useState({ items: [], subtotal: 0, cartId: 0 });
   const [addresses, setAddresses] = useState([]);
@@ -82,6 +87,20 @@ export default function CartPage() {
 
   const [err, setErr] = useState("");
   const [msg, setMsg] = useState("");
+
+  const [translatedItems, setTranslatedItems] = useState({});
+  const [translatingCart, setTranslatingCart] = useState(false);
+
+  const translateText = async (text) => {
+    if (!text || isVietnamese) return text;
+
+    try {
+      const res = await aiService.translate(text, currentLanguageName);
+      return res?.data?.translatedText?.trim() || text;
+    } catch {
+      return text;
+    }
+  };
 
   const load = async () => {
     setLoading(true);
@@ -108,7 +127,7 @@ export default function CartPage() {
         setSelectedAddressId("");
       }
     } catch (ex) {
-      setErr(getErrorMessage(ex, "Không thể tải giỏ hàng"));
+      setErr(getErrorMessage(ex, t.cartLoadFailed || "Không thể tải giỏ hàng"));
     } finally {
       setLoading(false);
     }
@@ -117,6 +136,64 @@ export default function CartPage() {
   useEffect(() => {
     load();
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const run = async () => {
+      if ((cart.items || []).length === 0) {
+        setTranslatedItems({});
+        return;
+      }
+
+      if (isVietnamese) {
+        const mapped = {};
+        (cart.items || []).forEach((it) => {
+          mapped[it.id] = {
+            productTitle: getProductTitle(it),
+            variantTitle: normalizeDisplayText(it.variantName) || (t.defaultVariant || "Mặc định"),
+          };
+        });
+        setTranslatedItems(mapped);
+        return;
+      }
+
+      try {
+        setTranslatingCart(true);
+
+        const entries = await Promise.all(
+          (cart.items || []).map(async (it) => {
+            const originalProductTitle = getProductTitle(it);
+            const originalVariantTitle =
+              normalizeDisplayText(it.variantName) || (t.defaultVariant || "Mặc định");
+
+            const translatedProductTitle = await translateText(originalProductTitle);
+            const translatedVariantTitle = await translateText(originalVariantTitle);
+
+            return [
+              it.id,
+              {
+                productTitle: translatedProductTitle || originalProductTitle,
+                variantTitle: translatedVariantTitle || originalVariantTitle,
+              },
+            ];
+          })
+        );
+
+        if (!cancelled) {
+          setTranslatedItems(Object.fromEntries(entries));
+        }
+      } finally {
+        if (!cancelled) setTranslatingCart(false);
+      }
+    };
+
+    run();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [cart.items, language]);
 
   const discountAmount = couponInfo?.isValid
     ? Number(couponInfo.discountAmount || 0)
@@ -135,9 +212,9 @@ export default function CartPage() {
     try {
       await cartService.updateItem(itemId, { quantity: safeQty });
       await load();
-      setMsg("Đã cập nhật số lượng sản phẩm");
+      setMsg(t.cartQtyUpdated || "Đã cập nhật số lượng sản phẩm");
     } catch (ex) {
-      setErr(getErrorMessage(ex, "Cập nhật số lượng thất bại"));
+      setErr(getErrorMessage(ex, t.cartQtyUpdateFailed || "Cập nhật số lượng thất bại"));
     }
   };
 
@@ -148,9 +225,9 @@ export default function CartPage() {
     try {
       await cartService.deleteItem(itemId);
       await load();
-      setMsg("Đã xóa sản phẩm khỏi giỏ hàng");
+      setMsg(t.cartItemRemoved || "Đã xóa sản phẩm khỏi giỏ hàng");
     } catch (ex) {
-      setErr(getErrorMessage(ex, "Xóa sản phẩm thất bại"));
+      setErr(getErrorMessage(ex, t.cartRemoveFailed || "Xóa sản phẩm thất bại"));
     }
   };
 
@@ -160,7 +237,7 @@ export default function CartPage() {
     setCouponInfo(null);
 
     if (!couponCode.trim()) {
-      setErr("Vui lòng nhập mã giảm giá");
+      setErr(t.cartCouponRequired || "Vui lòng nhập mã giảm giá");
       return;
     }
 
@@ -173,12 +250,12 @@ export default function CartPage() {
       setCouponInfo(res.data);
 
       if (res.data?.isValid) {
-        setMsg("Mã giảm giá hợp lệ");
+        setMsg(t.cartCouponValid || "Mã giảm giá hợp lệ");
       } else {
-        setErr(res.data?.message || "Mã giảm giá không hợp lệ");
+        setErr(res.data?.message || (t.cartCouponInvalid || "Mã giảm giá không hợp lệ"));
       }
     } catch (ex) {
-      setErr(getErrorMessage(ex, "Kiểm tra mã giảm giá thất bại"));
+      setErr(getErrorMessage(ex, t.cartCouponCheckFailed || "Kiểm tra mã giảm giá thất bại"));
     } finally {
       setCheckingCoupon(false);
     }
@@ -189,12 +266,12 @@ export default function CartPage() {
     setMsg("");
 
     if ((cart.items || []).length === 0) {
-      setErr("Giỏ hàng đang trống");
+      setErr(t.cartEmpty || "Giỏ hàng đang trống");
       return;
     }
 
     if (!selectedAddressId) {
-      setErr("Vui lòng chọn địa chỉ giao hàng");
+      setErr(t.cartChooseAddress || "Vui lòng chọn địa chỉ giao hàng");
       return;
     }
 
@@ -214,7 +291,7 @@ export default function CartPage() {
       const orderCode = res.data.orderCode;
       nav(`/payment/${orderCode}`);
     } catch (ex) {
-      setErr(getErrorMessage(ex, "Tạo đơn hàng thất bại"));
+      setErr(getErrorMessage(ex, t.cartCheckoutFailed || "Tạo đơn hàng thất bại"));
     } finally {
       setCheckingOut(false);
     }
@@ -250,7 +327,7 @@ export default function CartPage() {
                     fontWeight: 600,
                   }}
                 >
-                  Giỏ hàng SouVN
+                  {t.cartHeaderSmall || "Giỏ hàng SouVN"}
                 </div>
 
                 <h2
@@ -263,7 +340,7 @@ export default function CartPage() {
                     letterSpacing: 0,
                   }}
                 >
-                  Giỏ hàng của bạn
+                  {t.cartHeaderTitle || "Giỏ hàng của bạn"}
                 </h2>
               </div>
 
@@ -274,11 +351,25 @@ export default function CartPage() {
                   fontWeight: 600,
                 }}
               >
-                Số sản phẩm:{" "}
+                {t.cartItemCount || "Số sản phẩm:"}{" "}
                 <span style={{ color: "#ee4d2d" }}>{cart.items?.length || 0}</span>
               </div>
             </div>
           </div>
+
+          {translatingCart && !loading && (
+            <div
+              className="alert mb-4"
+              style={{
+                background: "#eff6ff",
+                color: "#1d4ed8",
+                border: "1px solid #bfdbfe",
+                borderRadius: 12,
+              }}
+            >
+              {t.translating || "Đang dịch nội dung sang ngôn ngữ đã chọn..."}
+            </div>
+          )}
 
           {err && (
             <div
@@ -312,7 +403,7 @@ export default function CartPage() {
             <div style={{ ...pageCard, padding: 40 }} className="text-center">
               <div className="spinner-border text-danger" role="status"></div>
               <p className="mt-3 mb-0" style={{ color: "#6b7280" }}>
-                Đang tải giỏ hàng...
+                {t.cartLoading || "Đang tải giỏ hàng..."}
               </p>
             </div>
           ) : (cart.items || []).length === 0 ? (
@@ -334,10 +425,10 @@ export default function CartPage() {
               </div>
 
               <h4 style={{ color: "#111827", fontWeight: 700 }}>
-                Giỏ hàng đang trống
+                {t.cartEmptyTitle || "Giỏ hàng đang trống"}
               </h4>
               <p style={{ color: "#6b7280", marginBottom: 20 }}>
-                Bạn chưa thêm sản phẩm nào vào giỏ hàng.
+                {t.cartEmptyDesc || "Bạn chưa thêm sản phẩm nào vào giỏ hàng."}
               </p>
 
               <Link
@@ -357,7 +448,7 @@ export default function CartPage() {
                 }}
               >
                 <i className="bi bi-bag"></i>
-                Tiếp tục mua sắm
+                {t.continueShopping || "Tiếp tục mua sắm"}
               </Link>
             </div>
           ) : (
@@ -379,13 +470,17 @@ export default function CartPage() {
                       fontWeight: 800,
                     }}
                   >
-                    Sản phẩm đã chọn
+                    {t.cartSelectedProducts || "Sản phẩm đã chọn"}
                   </div>
 
                   <div className="d-grid">
                     {(cart.items || []).map((it, index) => {
-                      const productTitle = getProductTitle(it);
-                      const variantTitle = normalizeDisplayText(it.variantName);
+                      const productTitle =
+                        translatedItems[it.id]?.productTitle || getProductTitle(it);
+                      const variantTitle =
+                        translatedItems[it.id]?.variantTitle ||
+                        normalizeDisplayText(it.variantName) ||
+                        (t.defaultVariant || "Mặc định");
 
                       return (
                         <div
@@ -447,7 +542,7 @@ export default function CartPage() {
                                   textTransform: "none",
                                 }}
                               >
-                                Phân loại: {variantTitle || "Mặc định"}
+                                {t.variantType || "Phân loại:"} {variantTitle}
                               </div>
 
                               <button
@@ -462,7 +557,7 @@ export default function CartPage() {
                                 }}
                               >
                                 <i className="bi bi-trash3 me-1"></i>
-                                Xóa
+                                {t.delete || "Xóa"}
                               </button>
                             </div>
 
@@ -564,12 +659,12 @@ export default function CartPage() {
 
               <div className="col-lg-4">
                 <div style={{ ...pageCard, padding: 20, marginBottom: 16 }}>
-                  <h4 style={sectionTitle}>Mã giảm giá</h4>
+                  <h4 style={sectionTitle}>{t.couponTitle || "Mã giảm giá"}</h4>
 
                   <div className="d-flex gap-2">
                     <input
                       className="form-control"
-                      placeholder="Nhập mã giảm giá"
+                      placeholder={t.couponPlaceholder || "Nhập mã giảm giá"}
                       value={couponCode}
                       onChange={(e) => setCouponCode(e.target.value)}
                       style={inputStyle}
@@ -587,7 +682,9 @@ export default function CartPage() {
                         fontWeight: 700,
                       }}
                     >
-                      {checkingCoupon ? "Đang kiểm tra..." : "Áp dụng"}
+                      {checkingCoupon
+                        ? (t.checking || "Đang kiểm tra...")
+                        : (t.apply || "Áp dụng")}
                     </button>
                   </div>
 
@@ -606,10 +703,10 @@ export default function CartPage() {
                       }}
                     >
                       <div>
-                        <strong>Thông báo:</strong> {couponInfo.message}
+                        <strong>{t.notice || "Thông báo:"}</strong> {couponInfo.message}
                       </div>
                       <div>
-                        <strong>Giảm giá:</strong>{" "}
+                        <strong>{t.discount || "Giảm giá:"}</strong>{" "}
                         {formatPrice(couponInfo.discountAmount)}
                       </div>
                     </div>
@@ -617,7 +714,7 @@ export default function CartPage() {
                 </div>
 
                 <div style={{ ...pageCard, padding: 20, marginBottom: 16 }}>
-                  <h4 style={sectionTitle}>Địa chỉ giao hàng</h4>
+                  <h4 style={sectionTitle}>{t.shippingAddress || "Địa chỉ giao hàng"}</h4>
 
                   {addresses.length === 0 ? (
                     <div
@@ -629,7 +726,7 @@ export default function CartPage() {
                         border: "1px solid #fed7aa",
                       }}
                     >
-                      Bạn chưa có địa chỉ giao hàng.{" "}
+                      {t.noShippingAddress || "Bạn chưa có địa chỉ giao hàng."}{" "}
                       <Link
                         to="/account"
                         style={{
@@ -638,7 +735,7 @@ export default function CartPage() {
                           textDecoration: "none",
                         }}
                       >
-                        Thêm địa chỉ ngay
+                        {t.addAddressNow || "Thêm địa chỉ ngay"}
                       </Link>
                     </div>
                   ) : (
@@ -648,14 +745,16 @@ export default function CartPage() {
                       onChange={(e) => setSelectedAddressId(e.target.value)}
                       style={inputStyle}
                     >
-                      <option value="">Chọn địa chỉ giao hàng</option>
+                      <option value="">
+                        {t.chooseShippingAddress || "Chọn địa chỉ giao hàng"}
+                      </option>
                       {addresses.map((addr) => (
                         <option key={addr.id} value={addr.id}>
                           {addr.recipientName} - {addr.recipientPhone} -{" "}
                           {[addr.addressLine1, addr.district, addr.province]
                             .filter(Boolean)
                             .join(", ")}
-                          {addr.isDefault ? " (Mặc định)" : ""}
+                          {addr.isDefault ? ` (${t.defaultAddress || "Mặc định"})` : ""}
                         </option>
                       ))}
                     </select>
@@ -663,16 +762,16 @@ export default function CartPage() {
                 </div>
 
                 <div style={{ ...pageCard, padding: 20 }}>
-                  <h4 style={sectionTitle}>Tóm tắt đơn hàng</h4>
+                  <h4 style={sectionTitle}>{t.orderSummary || "Tóm tắt đơn hàng"}</h4>
 
                   <div className="d-grid gap-2" style={{ color: "#374151" }}>
                     <div className="d-flex justify-content-between">
-                      <span>Tạm tính</span>
+                      <span>{t.subtotal || "Tạm tính"}</span>
                       <strong>{formatPrice(cart.subtotal)}</strong>
                     </div>
 
                     <div className="d-flex justify-content-between">
-                      <span>Giảm giá</span>
+                      <span>{t.discount || "Giảm giá"}</span>
                       <strong>- {formatPrice(discountAmount)}</strong>
                     </div>
 
@@ -682,7 +781,7 @@ export default function CartPage() {
                       className="d-flex justify-content-between"
                       style={{ fontSize: 22, color: "#111827" }}
                     >
-                      <span>Tổng cộng</span>
+                      <span>{t.total || "Tổng cộng"}</span>
                       <strong style={{ color: "#ee4d2d" }}>
                         {formatPrice(finalTotal)}
                       </strong>
@@ -703,7 +802,9 @@ export default function CartPage() {
                       marginTop: 18,
                     }}
                   >
-                    {checkingOut ? "Đang tạo đơn..." : "Mua hàng"}
+                    {checkingOut
+                      ? (t.creatingOrder || "Đang tạo đơn...")
+                      : (t.buyNowCart || "Mua hàng")}
                   </button>
 
                   <Link
@@ -723,7 +824,7 @@ export default function CartPage() {
                       textDecoration: "none",
                     }}
                   >
-                    Tiếp tục mua sắm
+                    {t.continueShopping || "Tiếp tục mua sắm"}
                   </Link>
                 </div>
               </div>

@@ -428,3 +428,15 @@ D:\Nam4\ki2\Đồ án\Git\Souvenir_Shop_Website\Souvenir_Shop_Website_Backend\So
 D:\Nam4\ki2\Đồ án\Git\Souvenir_Shop_Website\Souvenir_Shop_Website_Backend\Souvenir_Shop_Website\obj\Debug\net8.0\Souvenir_Shop_Website.pdb
 D:\Nam4\ki2\Đồ án\Git\Souvenir_Shop_Website\Souvenir_Shop_Website_Backend\Souvenir_Shop_Website\obj\Debug\net8.0\Souvenir_Shop_Website.genruntimeconfig.cache
 D:\Nam4\ki2\Đồ án\Git\Souvenir_Shop_Website\Souvenir_Shop_Website_Backend\Souvenir_Shop_Website\obj\Debug\net8.0\ref\Souvenir_Shop_Website.dll
+D:\Nam4\ki2\Đồ án\Git\Souvenir_Shop_Website\Souvenir_Shop_Website_Backend\Souvenir_Shop_Website\bin\Debug\net8.0\Google.Apis.dll
+D:\Nam4\ki2\Đồ án\Git\Souvenir_Shop_Website\Souvenir_Shop_Website_Backend\Souvenir_Shop_Website\bin\Debug\net8.0\Google.Apis.Auth.dll
+D:\Nam4\ki2\Đồ án\Git\Souvenir_Shop_Website\Souvenir_Shop_Website_Backend\Souvenir_Shop_Website\bin\Debug\net8.0\Google.Apis.Core.dll
+D:\Nam4\ki2\Đồ án\Git\Souvenir_Shop_Website\Souvenir_Shop_Website_Backend\Souvenir_Shop_Website\bin\Debug\net8.0\Google.GenAI.dll
+D:\Nam4\ki2\Đồ án\Git\Souvenir_Shop_Website\Souvenir_Shop_Website_Backend\Souvenir_Shop_Website\bin\Debug\net8.0\Microsoft.Extensions.AI.Abstractions.dll
+D:\Nam4\ki2\Đồ án\Git\Souvenir_Shop_Website\Souvenir_Shop_Website_Backend\Souvenir_Shop_Website\bin\Debug\net8.0\Newtonsoft.Json.dll
+D:\Nam4\ki2\Đồ án\Git\Souvenir_Shop_Website\Souvenir_Shop_Website_Backend\Souvenir_Shop_Website\bin\Debug\net8.0\System.IO.Pipelines.dll
+D:\Nam4\ki2\Đồ án\Git\Souvenir_Shop_Website\Souvenir_Shop_Website_Backend\Souvenir_Shop_Website\bin\Debug\net8.0\System.Management.dll
+D:\Nam4\ki2\Đồ án\Git\Souvenir_Shop_Website\Souvenir_Shop_Website_Backend\Souvenir_Shop_Website\bin\Debug\net8.0\System.Text.Encodings.Web.dll
+D:\Nam4\ki2\Đồ án\Git\Souvenir_Shop_Website\Souvenir_Shop_Website_Backend\Souvenir_Shop_Website\bin\Debug\net8.0\System.Text.Json.dll
+D:\Nam4\ki2\Đồ án\Git\Souvenir_Shop_Website\Souvenir_Shop_Website_Backend\Souvenir_Shop_Website\bin\Debug\net8.0\runtimes\win\lib\net7.0\System.Management.dll
+D:\Nam4\ki2\Đồ án\Git\Souvenir_Shop_Website\Souvenir_Shop_Website_Backend\Souvenir_Shop_Website\bin\Debug\net8.0\runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll

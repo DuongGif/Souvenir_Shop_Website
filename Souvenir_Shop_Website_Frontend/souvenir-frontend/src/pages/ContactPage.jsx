@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import MainLayout from "../layouts/MainLayout";
 import { contactService } from "../services/contactService";
+import { useLanguage } from "../contexts/LanguageContext.jsx";
+import { commonTranslations } from "../i18n/common";
 
 const getErrorMessage = (ex, fallback) => {
   const data = ex?.response?.data;
@@ -40,6 +42,9 @@ const labelStyle = {
 };
 
 export default function ContactPage() {
+  const { language } = useLanguage();
+  const t = commonTranslations?.[language] || commonTranslations?.vi || {};
+
   const [form, setForm] = useState({
     fullName: "",
     email: "",
@@ -62,17 +67,17 @@ export default function ContactPage() {
     setSuccess("");
 
     if (!form.fullName.trim()) {
-      setErr("Vui lòng nhập họ và tên.");
+      setErr(t.contactRequireFullName || "Vui lòng nhập họ và tên.");
       return;
     }
 
     if (!form.email.trim()) {
-      setErr("Vui lòng nhập email.");
+      setErr(t.contactRequireEmail || "Vui lòng nhập email.");
       return;
     }
 
     if (!form.message.trim()) {
-      setErr("Vui lòng nhập nội dung liên hệ.");
+      setErr(t.contactRequireMessage || "Vui lòng nhập nội dung liên hệ.");
       return;
     }
 
@@ -87,7 +92,11 @@ export default function ContactPage() {
         message: form.message.trim(),
       });
 
-      setSuccess("Gửi liên hệ thành công. SouVN sẽ phản hồi bạn sớm nhất có thể.");
+      setSuccess(
+        t.contactSendSuccess ||
+          "Gửi liên hệ thành công. SouVN sẽ phản hồi bạn sớm nhất có thể."
+      );
+
       setForm({
         fullName: "",
         email: "",
@@ -96,7 +105,7 @@ export default function ContactPage() {
         message: "",
       });
     } catch (ex) {
-      setErr(getErrorMessage(ex, "Gửi liên hệ thất bại."));
+      setErr(getErrorMessage(ex, t.contactSendFailed || "Gửi liên hệ thất bại."));
     } finally {
       setLoading(false);
     }
@@ -132,7 +141,7 @@ export default function ContactPage() {
                     fontWeight: 600,
                   }}
                 >
-                  Liên hệ SouVN
+                  {t.contactHeaderSmall || "Liên hệ SouVN"}
                 </div>
 
                 <h2
@@ -143,7 +152,7 @@ export default function ContactPage() {
                     fontSize: "clamp(24px, 4vw, 34px)",
                   }}
                 >
-                  Chúng tôi luôn sẵn sàng hỗ trợ bạn
+                  {t.contactHeaderTitle || "Chúng tôi luôn sẵn sàng hỗ trợ bạn"}
                 </h2>
               </div>
 
@@ -154,7 +163,7 @@ export default function ContactPage() {
                   fontWeight: 600,
                 }}
               >
-                Hỗ trợ nhanh và tiện lợi
+                {t.contactHeaderBadge || "Hỗ trợ nhanh và tiện lợi"}
               </div>
             </div>
           </div>
@@ -176,7 +185,7 @@ export default function ContactPage() {
                     fontSize: 24,
                   }}
                 >
-                  Thông tin liên hệ
+                  {t.contactInfoTitle || "Thông tin liên hệ"}
                 </h3>
 
                 <p
@@ -186,9 +195,8 @@ export default function ContactPage() {
                     marginBottom: 20,
                   }}
                 >
-                  Hãy liên hệ với SouVN nếu bạn cần tư vấn sản phẩm lưu niệm, hỗ
-                  trợ đơn hàng, hợp tác kinh doanh hoặc giải đáp các thắc mắc
-                  trong quá trình mua sắm.
+                  {t.contactInfoDesc ||
+                    "Hãy liên hệ với SouVN nếu bạn cần tư vấn sản phẩm lưu niệm, hỗ trợ đơn hàng, hợp tác kinh doanh hoặc giải đáp các thắc mắc trong quá trình mua sắm."}
                 </p>
 
                 <div className="d-grid gap-3">
@@ -210,9 +218,11 @@ export default function ContactPage() {
                         className="bi bi-geo-alt me-2"
                         style={{ color: "#ee4d2d" }}
                       ></i>
-                      Địa chỉ
+                      {t.addressLabel || "Địa chỉ"}
                     </div>
-                    <div style={{ color: "#4b5563" }}>Hà Nội, Việt Nam</div>
+                    <div style={{ color: "#4b5563" }}>
+                      {t.addressValue || "Hà Nội, Việt Nam"}
+                    </div>
                   </div>
 
                   <div
@@ -233,7 +243,7 @@ export default function ContactPage() {
                         className="bi bi-telephone me-2"
                         style={{ color: "#ee4d2d" }}
                       ></i>
-                      Số điện thoại
+                      {t.phoneLabel || "Số điện thoại"}
                     </div>
                     <div style={{ color: "#4b5563" }}>0123 456 789</div>
                   </div>
@@ -256,7 +266,7 @@ export default function ContactPage() {
                         className="bi bi-envelope me-2"
                         style={{ color: "#ee4d2d" }}
                       ></i>
-                      Email
+                      {t.emailLabel || "Email"}
                     </div>
                     <div style={{ color: "#4b5563" }}>souvn@example.com</div>
                   </div>
@@ -279,10 +289,11 @@ export default function ContactPage() {
                         className="bi bi-clock me-2"
                         style={{ color: "#ee4d2d" }}
                       ></i>
-                      Giờ làm việc
+                      {t.workingHoursLabel || "Giờ làm việc"}
                     </div>
                     <div style={{ color: "#4b5563" }}>
-                      08:00 - 22:00, tất cả các ngày trong tuần
+                      {t.workingHoursValue ||
+                        "08:00 - 22:00, tất cả các ngày trong tuần"}
                     </div>
                   </div>
                 </div>
@@ -295,7 +306,7 @@ export default function ContactPage() {
                       marginBottom: 12,
                     }}
                   >
-                    Kết nối với chúng tôi
+                    {t.connectWithUs || "Kết nối với chúng tôi"}
                   </div>
 
                   <div className="d-flex gap-3 flex-wrap">
@@ -345,7 +356,7 @@ export default function ContactPage() {
                     fontSize: 24,
                   }}
                 >
-                  Gửi thông tin liên hệ
+                  {t.contactFormTitle || "Gửi thông tin liên hệ"}
                 </h3>
 
                 {err && (
@@ -382,12 +393,12 @@ export default function ContactPage() {
                   <div className="row g-3">
                     <div className="col-md-6">
                       <label className="form-label" style={labelStyle}>
-                        Họ và tên
+                        {t.fullNameLabel || "Họ và tên"}
                       </label>
                       <input
                         name="fullName"
                         className="form-control"
-                        placeholder="Nhập họ và tên"
+                        placeholder={t.fullNamePlaceholder || "Nhập họ và tên"}
                         value={form.fullName}
                         onChange={change}
                         style={inputStyle}
@@ -396,13 +407,13 @@ export default function ContactPage() {
 
                     <div className="col-md-6">
                       <label className="form-label" style={labelStyle}>
-                        Email
+                        {t.emailLabel || "Email"}
                       </label>
                       <input
                         name="email"
                         type="email"
                         className="form-control"
-                        placeholder="Nhập email"
+                        placeholder={t.emailPlaceholder || "Nhập email"}
                         value={form.email}
                         onChange={change}
                         style={inputStyle}
@@ -411,12 +422,12 @@ export default function ContactPage() {
 
                     <div className="col-md-6">
                       <label className="form-label" style={labelStyle}>
-                        Số điện thoại
+                        {t.phoneLabel || "Số điện thoại"}
                       </label>
                       <input
                         name="phone"
                         className="form-control"
-                        placeholder="Nhập số điện thoại"
+                        placeholder={t.phonePlaceholder || "Nhập số điện thoại"}
                         value={form.phone}
                         onChange={change}
                         style={inputStyle}
@@ -425,12 +436,12 @@ export default function ContactPage() {
 
                     <div className="col-md-6">
                       <label className="form-label" style={labelStyle}>
-                        Chủ đề
+                        {t.subjectLabel || "Chủ đề"}
                       </label>
                       <input
                         name="subject"
                         className="form-control"
-                        placeholder="Ví dụ: Hỗ trợ đơn hàng"
+                        placeholder={t.subjectPlaceholder || "Ví dụ: Hỗ trợ đơn hàng"}
                         value={form.subject}
                         onChange={change}
                         style={inputStyle}
@@ -439,13 +450,16 @@ export default function ContactPage() {
 
                     <div className="col-12">
                       <label className="form-label" style={labelStyle}>
-                        Nội dung
+                        {t.content || "Nội dung"}
                       </label>
                       <textarea
                         name="message"
                         className="form-control"
                         rows={6}
-                        placeholder="Nhập nội dung bạn muốn liên hệ"
+                        placeholder={
+                          t.contactMessagePlaceholder ||
+                          "Nhập nội dung bạn muốn liên hệ"
+                        }
                         value={form.message}
                         onChange={change}
                         style={{
@@ -472,7 +486,9 @@ export default function ContactPage() {
                       marginTop: 18,
                     }}
                   >
-                    {loading ? "Đang gửi..." : "Gửi liên hệ"}
+                    {loading
+                      ? t.contactSending || "Đang gửi..."
+                      : t.contactSubmit || "Gửi liên hệ"}
                   </button>
                 </form>
               </div>
@@ -494,7 +510,7 @@ export default function ContactPage() {
                   marginBottom: 14,
                 }}
               >
-                Bản đồ
+                {t.mapTitle || "Bản đồ"}
               </div>
 
               <iframe

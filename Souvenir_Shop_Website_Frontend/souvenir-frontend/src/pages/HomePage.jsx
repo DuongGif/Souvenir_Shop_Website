@@ -1,9 +1,11 @@
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import MainLayout from "../layouts/MainLayout";
 import heroImg from "../assets/img/profile/profile-square-11.webp";
 import { productService } from "../services/productService";
 import ProductCard from "../components/ProductCard";
+import { useLanguage } from "../contexts/LanguageContext.jsx";
+import { commonTranslations } from "../i18n/common";
 
 const pageCard = {
   background: "#ffffff",
@@ -38,43 +40,93 @@ const getErrorMessage = (ex, fallback) => {
 };
 
 export default function HomePage() {
+  const { language } = useLanguage();
+  const t = commonTranslations?.[language] || commonTranslations?.vi || {};
+
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [newProducts, setNewProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [productErr, setProductErr] = useState("");
 
-const categories = [
-  { icon: "bi bi-gift", text: "Quà lưu niệm", categoryIds: "1" },
-  { icon: "bi bi-palette", text: "Đồ thủ công", categoryIds: "2" },
-  { icon: "bi bi-key", text: "Móc khóa", categoryIds: "3" },
-  { icon: "bi bi-handbag", text: "Áo du lịch", categoryIds: "4" },
-  { icon: "bi bi-stars", text: "Phụ kiện", categoryIds: "5" },
-  { icon: "bi bi-box-seam", text: "Đặc sản", categoryIds: "6" },
-  
-];
+  const categories = useMemo(
+    () => [
+      {
+        icon: "bi bi-gift",
+        text: t.categorySouvenir || "Quà lưu niệm",
+        categoryIds: "1",
+      },
+      {
+        icon: "bi bi-palette",
+        text: t.categoryHandmade || "Đồ thủ công",
+        categoryIds: "2",
+      },
+      {
+        icon: "bi bi-key",
+        text: t.categoryKeychain || "Móc khóa",
+        categoryIds: "3",
+      },
+      {
+        icon: "bi bi-handbag",
+        text: t.categoryTravelShirt || "Áo du lịch",
+        categoryIds: "4",
+      },
+      {
+        icon: "bi bi-stars",
+        text: t.categoryAccessories || "Phụ kiện",
+        categoryIds: "5",
+      },
+      {
+        icon: "bi bi-box-seam",
+        text: t.categorySpecialties || "Đặc sản",
+        categoryIds: "6",
+      },
+    ],
+    [t]
+  );
 
-  const reasons = [
-    {
-      icon: "bi bi-grid",
-      title: "Sản phẩm đa dạng",
-      desc: "Nhiều lựa chọn quà tặng và đồ lưu niệm phù hợp cho khách tham quan.",
-    },
-    {
-      icon: "bi bi-cash-coin",
-      title: "Giá cả hợp lý",
-      desc: "Mức giá rõ ràng, phù hợp với nhiều nhu cầu mua sắm khác nhau.",
-    },
-    {
-      icon: "bi bi-truck",
-      title: "Giao hàng nhanh",
-      desc: "Hỗ trợ xử lý đơn hàng nhanh chóng và thuận tiện cho khách hàng.",
-    },
-    {
-      icon: "bi bi-credit-card",
-      title: "Thanh toán tiện lợi",
-      desc: "Nhiều hình thức thanh toán giúp quá trình mua hàng dễ dàng hơn.",
-    },
-  ];
+  const reasons = useMemo(
+    () => [
+      {
+        icon: "bi bi-grid",
+        title: t.reasonDiverseTitle || "Sản phẩm đa dạng",
+        desc:
+          t.reasonDiverseDesc ||
+          "Nhiều lựa chọn quà tặng và đồ lưu niệm phù hợp cho khách tham quan.",
+      },
+      {
+        icon: "bi bi-cash-coin",
+        title: t.reasonPriceTitle || "Giá cả hợp lý",
+        desc:
+          t.reasonPriceDesc ||
+          "Mức giá rõ ràng, phù hợp với nhiều nhu cầu mua sắm khác nhau.",
+      },
+      {
+        icon: "bi bi-truck",
+        title: t.reasonDeliveryTitle || "Giao hàng nhanh",
+        desc:
+          t.reasonDeliveryDesc ||
+          "Hỗ trợ xử lý đơn hàng nhanh chóng và thuận tiện cho khách hàng.",
+      },
+      {
+        icon: "bi bi-credit-card",
+        title: t.reasonPaymentTitle || "Thanh toán tiện lợi",
+        desc:
+          t.reasonPaymentDesc ||
+          "Nhiều hình thức thanh toán giúp quá trình mua hàng dễ dàng hơn.",
+      },
+    ],
+    [t]
+  );
+
+  const heroTags = useMemo(
+    () => [
+      t.heroTag1 || "Quà lưu niệm đẹp",
+      t.heroTag2 || "Mua sắm dễ dàng",
+      t.heroTag3 || "Nhiều sản phẩm",
+      t.heroTag4 || "Trải nghiệm tốt",
+    ],
+    [t]
+  );
 
   useEffect(() => {
     const loadHomeProducts = async () => {
@@ -92,14 +144,19 @@ const categories = [
         setFeaturedProducts(items.slice(0, 6));
         setNewProducts(items.slice(6, 12));
       } catch (ex) {
-        setProductErr(getErrorMessage(ex, "Không thể tải sản phẩm trang chủ."));
+        setProductErr(
+          getErrorMessage(
+            ex,
+            t.homeProductsLoadFailed || "Không thể tải sản phẩm trang chủ."
+          )
+        );
       } finally {
         setLoadingProducts(false);
       }
     };
 
     loadHomeProducts();
-  }, []);
+  }, [t.homeProductsLoadFailed]);
 
   return (
     <MainLayout>
@@ -112,7 +169,6 @@ const categories = [
         }}
       >
         <div className="container">
-          {/* HERO */}
           <section style={{ marginBottom: 28 }}>
             <div
               style={{
@@ -123,7 +179,9 @@ const categories = [
               <div className="row g-0 align-items-center">
                 <div className="col-lg-6">
                   <div style={{ padding: "42px 34px" }}>
-                    <div style={sectionSubTitle}>Chào mừng đến với SouVN Shop</div>
+                    <div style={sectionSubTitle}>
+                      {t.homeWelcome || "Chào mừng đến với SouVN Shop"}
+                    </div>
 
                     <h1
                       style={{
@@ -134,8 +192,11 @@ const categories = [
                         marginBottom: 16,
                       }}
                     >
-                      Website bán <span style={{ color: "#ee4d2d" }}>đồ lưu niệm</span>{" "}
-                      cho khách tham quan
+                      {t.homeHeroPrefix || "Website bán"}{" "}
+                      <span style={{ color: "#ee4d2d" }}>
+                        {t.homeHeroHighlight || "đồ lưu niệm"}
+                      </span>{" "}
+                      {t.homeHeroSuffix || "cho khách tham quan"}
                     </h1>
 
                     <p
@@ -147,9 +208,8 @@ const categories = [
                         maxWidth: 560,
                       }}
                     >
-                      Khám phá hàng ngàn sản phẩm lưu niệm độc đáo dành cho khách du lịch
-                      và khách tham quan. Tìm kiếm, chọn mua và đặt hàng nhanh chóng
-                      trên SouVN với giao diện hiện đại, dễ sử dụng.
+                      {t.homeHeroDesc ||
+                        "Khám phá hàng ngàn sản phẩm lưu niệm độc đáo dành cho khách du lịch và khách tham quan. Tìm kiếm, chọn mua và đặt hàng nhanh chóng trên SouVN với giao diện hiện đại, dễ sử dụng."}
                     </p>
 
                     <div
@@ -177,7 +237,7 @@ const categories = [
                         }}
                       >
                         <i className="bi bi-bag-heart"></i>
-                        Mua ngay
+                        {t.buyNow || "Mua ngay"}
                       </Link>
 
                       <Link
@@ -197,7 +257,7 @@ const categories = [
                         }}
                       >
                         <i className="bi bi-telephone"></i>
-                        Liên hệ
+                        {t.contact || "Liên hệ"}
                       </Link>
                     </div>
 
@@ -208,12 +268,7 @@ const categories = [
                         gap: 10,
                       }}
                     >
-                      {[
-                        "Quà lưu niệm đẹp",
-                        "Mua sắm dễ dàng",
-                        "Nhiều sản phẩm",
-                        "Trải nghiệm tốt",
-                      ].map((text, index) => (
+                      {heroTags.map((text, index) => (
                         <div
                           key={index}
                           style={{
@@ -285,7 +340,7 @@ const categories = [
                         }}
                       >
                         <i className="bi bi-gift" style={{ color: "#ee4d2d" }}></i>
-                        <span>Lưu niệm</span>
+                        <span>{t.heroBadgeSouvenir || "Lưu niệm"}</span>
                       </div>
 
                       <div
@@ -304,8 +359,11 @@ const categories = [
                           color: "#111827",
                         }}
                       >
-                        <i className="bi bi-cart-check" style={{ color: "#ee4d2d" }}></i>
-                        <span>Mua sắm</span>
+                        <i
+                          className="bi bi-cart-check"
+                          style={{ color: "#ee4d2d" }}
+                        ></i>
+                        <span>{t.heroBadgeShopping || "Mua sắm"}</span>
                       </div>
 
                       <div
@@ -325,7 +383,7 @@ const categories = [
                         }}
                       >
                         <i className="bi bi-globe" style={{ color: "#ee4d2d" }}></i>
-                        <span>Khách tham quan</span>
+                        <span>{t.heroBadgeVisitor || "Khách tham quan"}</span>
                       </div>
                     </div>
                   </div>
@@ -334,75 +392,78 @@ const categories = [
             </div>
           </section>
 
-          {/* DANH MỤC NỔI BẬT */}
           <section style={{ marginBottom: 28 }}>
             <div style={{ ...pageCard, padding: 24 }}>
               <div style={{ marginBottom: 20 }}>
-                <div style={sectionSubTitle}>Mua sắm theo nhóm</div>
-                <h2 style={sectionTitle}>Danh mục nổi bật</h2>
+                <div style={sectionSubTitle}>
+                  {t.shopByGroup || "Mua sắm theo nhóm"}
+                </div>
+                <h2 style={sectionTitle}>
+                  {t.featuredCategories || "Danh mục nổi bật"}
+                </h2>
               </div>
 
               <div className="row g-3">
-  {categories.map((item, index) => (
-    <div key={index} className="col-6 col-md-4 col-lg-2">
-      <Link
-        to={`/products?categoryIds=${item.categoryIds}`}
-        style={{
-          background: "#fff7ed",
-          borderRadius: 16,
-          padding: "18px 14px",
-          textAlign: "center",
-          border: "1px solid #fed7aa",
-          height: "100%",
-          display: "block",
-          textDecoration: "none",
-          transition: "0.2s ease",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = "translateY(-4px)";
-          e.currentTarget.style.boxShadow = "0 10px 20px rgba(238,77,45,0.12)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = "translateY(0)";
-          e.currentTarget.style.boxShadow = "none";
-        }}
-      >
-        <div
-          style={{
-            width: 48,
-            height: 48,
-            margin: "0 auto 12px",
-            borderRadius: "50%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "#ffffff",
-            color: "#ee4d2d",
-            fontSize: 20,
-            border: "1px solid #fed7aa",
-          }}
-        >
-          <i className={item.icon}></i>
-        </div>
+                {categories.map((item, index) => (
+                  <div key={index} className="col-6 col-md-4 col-lg-2">
+                    <Link
+                      to={`/products?categoryIds=${item.categoryIds}`}
+                      style={{
+                        background: "#fff7ed",
+                        borderRadius: 16,
+                        padding: "18px 14px",
+                        textAlign: "center",
+                        border: "1px solid #fed7aa",
+                        height: "100%",
+                        display: "block",
+                        textDecoration: "none",
+                        transition: "0.2s ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = "translateY(-4px)";
+                        e.currentTarget.style.boxShadow =
+                          "0 10px 20px rgba(238,77,45,0.12)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = "translateY(0)";
+                        e.currentTarget.style.boxShadow = "none";
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 48,
+                          height: 48,
+                          margin: "0 auto 12px",
+                          borderRadius: "50%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          background: "#ffffff",
+                          color: "#ee4d2d",
+                          fontSize: 20,
+                          border: "1px solid #fed7aa",
+                        }}
+                      >
+                        <i className={item.icon}></i>
+                      </div>
 
-        <div
-          style={{
-            color: "#c2410c",
-            fontWeight: 700,
-            fontSize: 15,
-            lineHeight: 1.5,
-          }}
-        >
-          {item.text}
-        </div>
-      </Link>
-    </div>
-  ))}
-</div>
+                      <div
+                        style={{
+                          color: "#c2410c",
+                          fontWeight: 700,
+                          fontSize: 15,
+                          lineHeight: 1.5,
+                        }}
+                      >
+                        {item.text}
+                      </div>
+                    </Link>
+                  </div>
+                ))}
+              </div>
             </div>
           </section>
 
-          {/* SẢN PHẨM */}
           <section style={{ marginBottom: 28 }}>
             <div style={{ ...pageCard, padding: 24 }}>
               <div
@@ -410,8 +471,12 @@ const categories = [
                 style={{ marginBottom: 20 }}
               >
                 <div>
-                  <div style={sectionSubTitle}>Gợi ý cho bạn</div>
-                  <h2 style={sectionTitle}>Sản phẩm nổi bật</h2>
+                  <div style={sectionSubTitle}>
+                    {t.suggestedForYou || "Gợi ý cho bạn"}
+                  </div>
+                  <h2 style={sectionTitle}>
+                    {t.featuredProducts || "Sản phẩm nổi bật"}
+                  </h2>
                 </div>
 
                 <Link
@@ -425,7 +490,7 @@ const categories = [
                     fontWeight: 700,
                   }}
                 >
-                  Xem tất cả
+                  {t.viewAll || "Xem tất cả"}
                   <i className="bi bi-arrow-right"></i>
                 </Link>
               </div>
@@ -449,7 +514,7 @@ const categories = [
                 <div className="text-center py-4">
                   <div className="spinner-border text-danger" role="status"></div>
                   <p className="mt-3 mb-0" style={{ color: "#6b7280" }}>
-                    Đang tải sản phẩm...
+                    {t.loadingProducts || "Đang tải sản phẩm..."}
                   </p>
                 </div>
               ) : featuredProducts.length === 0 ? (
@@ -462,7 +527,7 @@ const categories = [
                     color: "#6b7280",
                   }}
                 >
-                  Hiện chưa có sản phẩm để hiển thị.
+                  {t.noProductsToShow || "Hiện chưa có sản phẩm để hiển thị."}
                 </div>
               ) : (
                 <div className="row g-3">
@@ -476,7 +541,6 @@ const categories = [
             </div>
           </section>
 
-          {/* SẢN PHẨM MỚI */}
           <section style={{ marginBottom: 28 }}>
             <div style={{ ...pageCard, padding: 24 }}>
               <div
@@ -484,8 +548,12 @@ const categories = [
                 style={{ marginBottom: 20 }}
               >
                 <div>
-                  <div style={sectionSubTitle}>Cập nhật gần đây</div>
-                  <h2 style={sectionTitle}>Sản phẩm mới</h2>
+                  <div style={sectionSubTitle}>
+                    {t.recentUpdates || "Cập nhật gần đây"}
+                  </div>
+                  <h2 style={sectionTitle}>
+                    {t.newProducts || "Sản phẩm mới"}
+                  </h2>
                 </div>
 
                 <Link
@@ -499,7 +567,7 @@ const categories = [
                     fontWeight: 700,
                   }}
                 >
-                  Xem tất cả
+                  {t.viewAll || "Xem tất cả"}
                   <i className="bi bi-arrow-right"></i>
                 </Link>
               </div>
@@ -508,7 +576,7 @@ const categories = [
                 <div className="text-center py-4">
                   <div className="spinner-border text-danger" role="status"></div>
                   <p className="mt-3 mb-0" style={{ color: "#6b7280" }}>
-                    Đang tải sản phẩm mới...
+                    {t.loadingNewProducts || "Đang tải sản phẩm mới..."}
                   </p>
                 </div>
               ) : newProducts.length === 0 ? (
@@ -521,7 +589,7 @@ const categories = [
                     color: "#6b7280",
                   }}
                 >
-                  Hiện chưa có sản phẩm mới để hiển thị.
+                  {t.noNewProducts || "Hiện chưa có sản phẩm mới để hiển thị."}
                 </div>
               ) : (
                 <div className="row g-3">
@@ -535,12 +603,15 @@ const categories = [
             </div>
           </section>
 
-          {/* LÝ DO CHỌN SOUVN */}
           <section>
             <div style={{ ...pageCard, padding: 24 }}>
               <div style={{ marginBottom: 20 }}>
-                <div style={sectionSubTitle}>Cam kết của chúng tôi</div>
-                <h2 style={sectionTitle}>Vì sao chọn SouVN?</h2>
+                <div style={sectionSubTitle}>
+                  {t.ourCommitment || "Cam kết của chúng tôi"}
+                </div>
+                <h2 style={sectionTitle}>
+                  {t.whyChooseSouVN || "Vì sao chọn SouVN?"}
+                </h2>
               </div>
 
               <div className="row g-3">

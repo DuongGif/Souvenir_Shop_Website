@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using Souvenir_Shop_Website.Models;
 using Souvenir_Shop_Website.Services;
 using System.Text;
+using Souvenir_Shop_Website.Options;
 
 namespace Souvenir_Shop_Website
 {
@@ -91,9 +92,14 @@ namespace Souvenir_Shop_Website
 
 			builder.Services.Configure<SmtpOptions>(
 			builder.Configuration.GetSection("Smtp"));
-
-			builder.Services.AddScoped<EmailService>();
 			builder.Services.AddScoped<OtpService>();
+			builder.Services.AddScoped<EmailService>();
+
+			builder.Services.Configure<GeminiOptions>(
+			builder.Configuration.GetSection("Gemini"));
+			builder.Services.AddScoped<GeminiTranslateService>();
+
+
 			var app = builder.Build();
 				app.UseStaticFiles();
 

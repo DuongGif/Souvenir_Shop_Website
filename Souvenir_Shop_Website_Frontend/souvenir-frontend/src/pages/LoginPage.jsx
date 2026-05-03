@@ -2,6 +2,8 @@ import React, { useContext, useState } from "react";
 import { AuthContext } from "../contexts/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
+import { useLanguage } from "../contexts/LanguageContext.jsx";
+import { commonTranslations } from "../i18n/common";
 
 const pageCard = {
   background: "#ffffff",
@@ -28,6 +30,8 @@ const inputStyle = {
 export default function LoginPage() {
   const nav = useNavigate();
   const { login } = useContext(AuthContext);
+  const { language } = useLanguage();
+  const t = commonTranslations?.[language] || commonTranslations?.vi || {};
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -50,9 +54,9 @@ export default function LoginPage() {
       else if (data?.title) setErr(data.title);
       else if (data?.errors) {
         const firstError = Object.values(data.errors)?.flat?.()[0];
-        setErr(firstError || "Đăng nhập thất bại");
+        setErr(firstError || (t.loginFailed || "Đăng nhập thất bại"));
       } else {
-        setErr("Đăng nhập thất bại");
+        setErr(t.loginFailed || "Đăng nhập thất bại");
       }
     } finally {
       setLoading(false);
@@ -71,7 +75,6 @@ export default function LoginPage() {
         }}
       >
         <div className="container">
-          {/* HEADER */}
           <div
             style={{
               ...pageCard,
@@ -83,7 +86,7 @@ export default function LoginPage() {
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
               <div>
                 <div style={{ color: "#6b7280", fontSize: 14, fontWeight: 600 }}>
-                  SouVN Shop
+                  {t.shopName || "SouVN Shop"}
                 </div>
                 <h2
                   style={{
@@ -92,14 +95,13 @@ export default function LoginPage() {
                     color: "#111827",
                   }}
                 >
-                  Đăng nhập
+                  {t.loginPageTitle || "Đăng nhập"}
                 </h2>
               </div>
             </div>
           </div>
 
           <div className="row justify-content-center g-4">
-            {/* LEFT */}
             <div className="col-lg-5">
               <div style={{ ...pageCard, padding: 24 }}>
                 <h3
@@ -109,18 +111,19 @@ export default function LoginPage() {
                     marginBottom: 16,
                   }}
                 >
-                  Chào mừng quay lại
+                  {t.loginWelcomeBack || "Chào mừng quay lại"}
                 </h3>
 
                 <p style={{ color: "#6b7280", lineHeight: 1.8 }}>
-                  Đăng nhập để tiếp tục mua sắm, quản lý giỏ hàng và đơn hàng của bạn một cách dễ dàng.
+                  {t.loginWelcomeDesc ||
+                    "Đăng nhập để tiếp tục mua sắm, quản lý giỏ hàng và đơn hàng của bạn một cách dễ dàng."}
                 </p>
 
                 <div className="d-grid gap-3 mt-4">
                   {[
-                    "Mua sắm nhanh chóng",
-                    "Quản lý đơn hàng dễ dàng",
-                    "Trải nghiệm hiện đại",
+                    t.loginFeature1 || "Mua sắm nhanh chóng",
+                    t.loginFeature2 || "Quản lý đơn hàng dễ dàng",
+                    t.loginFeature3 || "Trải nghiệm hiện đại",
                   ].map((text, i) => (
                     <div
                       key={i}
@@ -141,7 +144,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* RIGHT */}
             <div className="col-lg-5">
               <div style={{ ...pageCard, padding: 24 }}>
                 <h3
@@ -151,7 +153,7 @@ export default function LoginPage() {
                     marginBottom: 16,
                   }}
                 >
-                  Đăng nhập tài khoản
+                  {t.loginAccountTitle || "Đăng nhập tài khoản"}
                 </h3>
 
                 {err && (
@@ -171,12 +173,12 @@ export default function LoginPage() {
                 <form onSubmit={submit}>
                   <div className="mb-3">
                     <label className="form-label" style={labelStyle}>
-                      Email
+                      {t.emailLabel || "Email"}
                     </label>
                     <input
                       type="email"
                       className="form-control"
-                      placeholder="Nhập email"
+                      placeholder={t.emailPlaceholder || "Nhập email"}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       style={inputStyle}
@@ -185,12 +187,12 @@ export default function LoginPage() {
 
                   <div className="mb-3">
                     <label className="form-label" style={labelStyle}>
-                      Mật khẩu
+                      {t.passwordLabel || "Mật khẩu"}
                     </label>
                     <input
                       type="password"
                       className="form-control"
-                      placeholder="Nhập mật khẩu"
+                      placeholder={t.passwordPlaceholder || "Nhập mật khẩu"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       style={inputStyle}
@@ -210,7 +212,9 @@ export default function LoginPage() {
                       fontWeight: 700,
                     }}
                   >
-                    {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+                    {loading
+                      ? (t.loggingIn || "Đang đăng nhập...")
+                      : (t.loginPageTitle || "Đăng nhập")}
                   </button>
                 </form>
 
@@ -224,13 +228,14 @@ export default function LoginPage() {
                     color: "#6b7280",
                   }}
                 >
-                  Demo admin: <strong>admin@souvenir.com</strong>
+                  {t.loginDemoAdmin || "Demo admin:"}{" "}
+                  <strong>admin@souvenir.com</strong>
                 </div>
 
                 <p className="text-center mt-4 mb-0" style={{ color: "#6b7280" }}>
-                  Chưa có tài khoản?{" "}
+                  {t.noAccountYet || "Chưa có tài khoản?"}{" "}
                   <Link to="/register" style={{ color: "#ee4d2d", fontWeight: 700 }}>
-                    Đăng ký ngay
+                    {t.registerNow || "Đăng ký ngay"}
                   </Link>
                 </p>
               </div>

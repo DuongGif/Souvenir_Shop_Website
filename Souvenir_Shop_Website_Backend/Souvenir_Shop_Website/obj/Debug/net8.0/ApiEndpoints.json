@@ -719,6 +719,32 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "Souvenir_Shop_Website.Controllers.API.User.AiController",
+    "Method": "Translate",
+    "RelativePath": "api/ai/translate",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "req",
+        "Type": "Souvenir_Shop_Website.DTOs.Translate.TranslateRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "Souvenir_Shop_Website.DTOs.Translate.TranslateResponse",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
     "ContainingType": "Souvenir_Shop_Website.Controllers.API.AuthController",
     "Method": "ResetPasswordWithOtp",
     "RelativePath": "api/auth/forgot-password/reset",

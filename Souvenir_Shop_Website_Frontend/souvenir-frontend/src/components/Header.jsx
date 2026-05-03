@@ -1,18 +1,10 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useMemo } from "react";
 import logo from "../assets/img/logo.png";
+import { useLanguage } from "../contexts/LanguageContext.jsx";
+import { commonTranslations } from "../i18n/common";
 
 const HEADER_HEIGHT = 96;
-
-const navLinkStyle = ({ isActive }) => ({
-  color: isActive ? "#ee4d2d" : "#111827",
-  fontWeight: 700,
-  textDecoration: "none",
-  padding: "10px 14px",
-  borderRadius: 10,
-  transition: "all 0.2s ease",
-  background: isActive ? "#fff1ee" : "transparent",
-});
 
 const socialStyle = {
   width: 36,
@@ -27,11 +19,31 @@ const socialStyle = {
   border: "1px solid #fed7aa",
 };
 
+const languageOptions = [
+  { value: "vi", label: "VI - Tiếng Việt" },
+  { value: "en", label: "EN - English" },
+  { value: "ja", label: "JA - 日本語" },
+  { value: "ko", label: "KO - 한국어" },
+  { value: "zh", label: "ZH - 中文" },
+];
+
 export default function Header() {
   const navigate = useNavigate();
+  const { language, setLanguage } = useLanguage();
+  const t = commonTranslations?.[language] || commonTranslations?.vi || {};
 
   const token = localStorage.getItem("token");
   const isLoggedIn = useMemo(() => !!token, [token]);
+
+  const navLinkStyle = ({ isActive }) => ({
+    color: isActive ? "#ee4d2d" : "#111827",
+    fontWeight: 700,
+    textDecoration: "none",
+    padding: "10px 14px",
+    borderRadius: 10,
+    transition: "all 0.2s ease",
+    background: isActive ? "#fff1ee" : "transparent",
+  });
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -40,6 +52,10 @@ export default function Header() {
   };
 
   const preventDefault = (e) => e.preventDefault();
+
+  const handleChangeLanguage = (e) => {
+    setLanguage(e.target.value);
+  };
 
   return (
     <>
@@ -57,7 +73,6 @@ export default function Header() {
           borderBottom: "1px solid #f1f5f9",
         }}
       >
-        {/* TOP BAR */}
         <div
           style={{
             background: "#ee4d2d",
@@ -72,26 +87,64 @@ export default function Header() {
               minHeight: 36,
             }}
           >
-            <div>SouVN Shop - Website bán đồ lưu niệm cho khách tham quan</div>
+            <div>
+              {t.headerTopText ||
+                "SouVN Shop - Website bán đồ lưu niệm cho khách tham quan"}
+            </div>
 
             <div className="d-flex align-items-center gap-2">
-              <a href="#" onClick={preventDefault} style={{ ...socialStyle, background: "rgba(255,255,255,0.18)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)" }}>
+              <a
+                href="#"
+                onClick={preventDefault}
+                style={{
+                  ...socialStyle,
+                  background: "rgba(255,255,255,0.18)",
+                  color: "#fff",
+                  border: "1px solid rgba(255,255,255,0.25)",
+                }}
+              >
                 <i className="bi bi-facebook"></i>
               </a>
-              <a href="#" onClick={preventDefault} style={{ ...socialStyle, background: "rgba(255,255,255,0.18)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)" }}>
+              <a
+                href="#"
+                onClick={preventDefault}
+                style={{
+                  ...socialStyle,
+                  background: "rgba(255,255,255,0.18)",
+                  color: "#fff",
+                  border: "1px solid rgba(255,255,255,0.25)",
+                }}
+              >
                 <i className="bi bi-instagram"></i>
               </a>
-              <a href="#" onClick={preventDefault} style={{ ...socialStyle, background: "rgba(255,255,255,0.18)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)" }}>
+              <a
+                href="#"
+                onClick={preventDefault}
+                style={{
+                  ...socialStyle,
+                  background: "rgba(255,255,255,0.18)",
+                  color: "#fff",
+                  border: "1px solid rgba(255,255,255,0.25)",
+                }}
+              >
                 <i className="bi bi-tiktok"></i>
               </a>
-              <a href="#" onClick={preventDefault} style={{ ...socialStyle, background: "rgba(255,255,255,0.18)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)" }}>
+              <a
+                href="#"
+                onClick={preventDefault}
+                style={{
+                  ...socialStyle,
+                  background: "rgba(255,255,255,0.18)",
+                  color: "#fff",
+                  border: "1px solid rgba(255,255,255,0.25)",
+                }}
+              >
                 <i className="bi bi-youtube"></i>
               </a>
             </div>
           </div>
         </div>
 
-        {/* MAIN HEADER */}
         <div
           style={{
             height: `${HEADER_HEIGHT - 36}px`,
@@ -135,38 +188,64 @@ export default function Header() {
                     fontWeight: 600,
                   }}
                 >
-                  Souvenir Shop
+                  {t.headerBrandSub || "Souvenir Shop"}
                 </div>
               </div>
             </Link>
 
-            <nav className="d-none d-xl-flex align-items-center" style={{ gap: 8 }}>
+            <nav
+              className="d-none d-xl-flex align-items-center"
+              style={{ gap: 8 }}
+            >
               <NavLink to="/" end style={navLinkStyle}>
-                Trang chủ
+                {t.navHome || "Trang chủ"}
               </NavLink>
 
               <NavLink to="/products" style={navLinkStyle}>
-                Sản phẩm
+                {t.navProducts || "Sản phẩm"}
               </NavLink>
 
               {isLoggedIn && (
                 <NavLink to="/cart" style={navLinkStyle}>
-                  Giỏ hàng
+                  {t.navCart || "Giỏ hàng"}
                 </NavLink>
               )}
 
               {isLoggedIn && (
                 <NavLink to="/orders" style={navLinkStyle}>
-                  Đơn hàng
+                  {t.navOrders || "Đơn hàng"}
                 </NavLink>
               )}
 
               <NavLink to="/contact" style={navLinkStyle}>
-                Liên hệ
+                {t.contact || "Liên hệ"}
               </NavLink>
             </nav>
 
             <div className="d-flex align-items-center gap-2">
+              <select
+                value={language}
+                onChange={handleChangeLanguage}
+                style={{
+                  height: 40,
+                  minWidth: 150,
+                  padding: "0 12px",
+                  borderRadius: 10,
+                  border: "1px solid #d1d5db",
+                  background: "#fff",
+                  color: "#374151",
+                  fontWeight: 700,
+                  outline: "none",
+                  cursor: "pointer",
+                }}
+              >
+                {languageOptions.map((item) => (
+                  <option key={item.value} value={item.value}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+
               {isLoggedIn ? (
                 <>
                   <Link
@@ -186,7 +265,7 @@ export default function Header() {
                     }}
                   >
                     <i className="bi bi-person-circle me-2"></i>
-                    Tài khoản
+                    {t.navAccount || "Tài khoản"}
                   </Link>
 
                   <button
@@ -202,7 +281,7 @@ export default function Header() {
                       fontWeight: 700,
                     }}
                   >
-                    Đăng xuất
+                    {t.navLogout || "Đăng xuất"}
                   </button>
                 </>
               ) : (
@@ -223,7 +302,7 @@ export default function Header() {
                       justifyContent: "center",
                     }}
                   >
-                    Đăng nhập
+                    {t.loginPageTitle || "Đăng nhập"}
                   </Link>
 
                   <Link
@@ -242,7 +321,7 @@ export default function Header() {
                       justifyContent: "center",
                     }}
                   >
-                    Đăng ký
+                    {t.registerNow || "Đăng ký"}
                   </Link>
                 </>
               )}
