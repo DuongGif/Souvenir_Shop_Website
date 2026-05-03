@@ -99,6 +99,8 @@ namespace Souvenir_Shop_Website
 			builder.Configuration.GetSection("Gemini"));
 			builder.Services.AddScoped<GeminiTranslateService>();
 
+			builder.Services.AddHttpClient<GeminiProductChatService>();
+
 
 			var app = builder.Build();
 				app.UseStaticFiles();

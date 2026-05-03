@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { adminProductsService } from "../../services/admin/adminProductsService";
 
@@ -14,7 +14,9 @@ const CATEGORY_OPTIONS = [
   { value: 7, label: "Khác" },
 ];
 
-const emptyForm = {
+const API_ORIGIN = "https://localhost:7020";
+
+const createEmptyForm = () => ({
   slug: "",
   categoryId: "",
   basePrice: "",
@@ -30,25 +32,26 @@ const emptyForm = {
     isActive: true,
     initialStock: 0,
   },
-};
-
-const API_ORIGIN = "https://localhost:7020";
+});
 
 const getErrorMessage = (ex, fallback) => {
   const data = ex?.response?.data;
+
   if (typeof data === "string") return data;
   if (data?.message) return data.message;
   if (data?.title) return data.title;
+
   if (data?.errors) {
     const firstError = Object.values(data.errors)?.flat?.()[0];
     if (firstError) return firstError;
   }
+
   return fallback;
 };
 
 const formatPrice = (value) => {
   if (value === null || value === undefined || value === "") return "0 ₫";
-  return Number(value).toLocaleString("vi-VN") + " ₫";
+  return `${Number(value).toLocaleString("vi-VN")} ₫`;
 };
 
 const getImageSrc = (url) => {
@@ -58,23 +61,36 @@ const getImageSrc = (url) => {
 };
 
 const getStatusText = (status) => {
-  const s = String(status || "").toLowerCase();
+  const value = String(status || "").toLowerCase();
 
-  if (s === "active") return "Đang hoạt động";
-  if (s === "inactive") return "Ngừng hoạt động";
-  if (s === "hidden") return "Ẩn";
+  if (value === "active") return "Đang hoạt động";
+  if (value === "inactive") return "Ngừng hoạt động";
+  if (value === "hidden") return "Ẩn";
 
   return status || "Không xác định";
 };
 
+const getStatusClass = (status) => {
+  const value = String(status || "").toLowerCase();
+
+  if (value === "active") return "active";
+  if (value === "inactive") return "inactive";
+  if (value === "hidden") return "hidden";
+
+  return "unknown";
+};
+
 const getCategoryText = (categoryId) => {
-  const found = CATEGORY_OPTIONS.find((x) => x.value === Number(categoryId));
+  const found = CATEGORY_OPTIONS.find((item) => {
+    return item.value === Number(categoryId);
+  });
+
   return found ? found.label : "Không xác định";
 };
 
 export default function AdminProductsPage() {
   const [list, setList] = useState([]);
-  const [form, setForm] = useState(emptyForm);
+  const [form, setForm] = useState(createEmptyForm);
   const [editingId, setEditingId] = useState(null);
 
   const [loading, setLoading] = useState(true);
@@ -88,7 +104,7 @@ export default function AdminProductsPage() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     setErr("");
 
@@ -100,34 +116,36 @@ export default function AdminProductsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   useEffect(() => {
     setCurrentPage(1);
   }, [searchKeyword, categoryFilter]);
 
   const resetForm = () => {
-    setForm(emptyForm);
+    setForm(createEmptyForm());
     setEditingId(null);
   };
 
-  const startEdit = async (p) => {
+  const startEdit = async (product) => {
     setErr("");
+
     try {
-      const imgRes = await adminProductsService.getImages(p.id);
+      const imgRes = await adminProductsService.getImages(product.id);
       const imageUrls = imgRes.data || [];
 
-      setEditingId(p.id);
+      setEditingId(product.id);
+
       setForm({
-        slug: p.slug || "",
-        categoryId: p.categoryId ?? "",
-        basePrice: p.basePrice ?? "",
-        status: p.status || "active",
-        isFeatured: !!p.isFeatured,
+        slug: product.slug || "",
+        categoryId: product.categoryId ?? "",
+        basePrice: product.basePrice ?? "",
+        status: product.status || "active",
+        isFeatured: !!product.isFeatured,
         imageUrls: imageUrls.length > 0 ? imageUrls : [""],
         firstVariant: {
           sku: "",
@@ -139,7 +157,10 @@ export default function AdminProductsPage() {
         },
       });
 
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
     } catch (ex) {
       setErr(getErrorMessage(ex, "Không thể tải ảnh sản phẩm"));
     }
@@ -153,10 +174,13 @@ export default function AdminProductsPage() {
   };
 
   const removeImageField = (index) => {
-    const newUrls = form.imageUrls.filter((_, i) => i !== index);
-    setForm({
-      ...form,
-      imageUrls: newUrls.length > 0 ? newUrls : [""],
+    setForm((prev) => {
+      const newUrls = prev.imageUrls.filter((_, i) => i !== index);
+
+      return {
+        ...prev,
+        imageUrls: newUrls.length > 0 ? newUrls : [""],
+      };
     });
   };
 
@@ -178,13 +202,15 @@ export default function AdminProductsPage() {
         );
       }
 
-      const newUrls = [...form.imageUrls];
-      newUrls[index] = uploadedUrl;
+      setForm((prev) => {
+        const newUrls = [...prev.imageUrls];
+        newUrls[index] = uploadedUrl;
 
-      setForm((prev) => ({
-        ...prev,
-        imageUrls: newUrls,
-      }));
+        return {
+          ...prev,
+          imageUrls: newUrls,
+        };
+      });
 
       setMsg("Tải ảnh lên thành công");
     } catch (ex) {
@@ -205,29 +231,29 @@ export default function AdminProductsPage() {
   };
 
   const validateCreateVariant = () => {
-    const v = form.firstVariant;
+    const variant = form.firstVariant;
 
-    if (!v.sku.trim()) {
+    if (!variant.sku.trim()) {
       setErr("SKU biến thể đầu tiên là bắt buộc");
       return false;
     }
 
-    if (!v.variantName.trim()) {
+    if (!variant.variantName.trim()) {
       setErr("Tên biến thể đầu tiên là bắt buộc");
       return false;
     }
 
-    if (v.price !== "" && Number(v.price) < 0) {
+    if (variant.price !== "" && Number(variant.price) < 0) {
       setErr("Giá biến thể không hợp lệ");
       return false;
     }
 
-    if (v.weightGrams !== "" && Number(v.weightGrams) < 0) {
+    if (variant.weightGrams !== "" && Number(variant.weightGrams) < 0) {
       setErr("Khối lượng biến thể không hợp lệ");
       return false;
     }
 
-    if (v.initialStock === "" || Number(v.initialStock) < 0) {
+    if (variant.initialStock === "" || Number(variant.initialStock) < 0) {
       setErr("Tồn kho ban đầu không hợp lệ");
       return false;
     }
@@ -254,7 +280,9 @@ export default function AdminProductsPage() {
       return;
     }
 
-    const cleanImageUrls = form.imageUrls.filter((x) => x.trim() !== "");
+    const cleanImageUrls = form.imageUrls.filter((url) => {
+      return url.trim() !== "";
+    });
 
     try {
       setSaving(true);
@@ -271,6 +299,7 @@ export default function AdminProductsPage() {
         };
 
         await adminProductsService.update(editingId, productPayload);
+
         setMsg(`Đã cập nhật sản phẩm #${editingId}`);
       } else {
         if (!validateCreateVariant()) {
@@ -278,7 +307,7 @@ export default function AdminProductsPage() {
           return;
         }
 
-        const v = form.firstVariant;
+        const variant = form.firstVariant;
 
         const productPayload = {
           slug: form.slug.trim(),
@@ -289,21 +318,27 @@ export default function AdminProductsPage() {
           images: cleanImageUrls,
           variants: [
             {
-              sku: v.sku.trim(),
-              variantName: v.variantName.trim(),
-              price: v.price === "" ? Number(form.basePrice) : Number(v.price),
-              weightGrams: v.weightGrams === "" ? null : Number(v.weightGrams),
-              isActive: !!v.isActive,
-              initialStock: Number(v.initialStock || 0),
+              sku: variant.sku.trim(),
+              variantName: variant.variantName.trim(),
+              price:
+                variant.price === ""
+                  ? Number(form.basePrice)
+                  : Number(variant.price),
+              weightGrams:
+                variant.weightGrams === "" ? null : Number(variant.weightGrams),
+              isActive: !!variant.isActive,
+              initialStock: Number(variant.initialStock || 0),
             },
           ],
         };
 
         await adminProductsService.create(productPayload);
+
         setMsg(`Đã tạo sản phẩm ${productPayload.slug}`);
       }
 
       resetForm();
+
       await load();
     } catch (ex) {
       setErr(
@@ -321,11 +356,14 @@ export default function AdminProductsPage() {
     setErr("");
     setMsg("");
 
-    if (!window.confirm(`Bạn có chắc muốn xóa sản phẩm #${id}?`)) return;
+    const ok = window.confirm(`Bạn có chắc muốn xóa sản phẩm #${id}?`);
+    if (!ok) return;
 
     try {
       await adminProductsService.remove(id);
+
       setMsg(`Đã xóa sản phẩm #${id}`);
+
       await load();
     } catch (ex) {
       setErr(getErrorMessage(ex, "Xóa sản phẩm thất bại"));
@@ -335,27 +373,22 @@ export default function AdminProductsPage() {
   const filteredList = useMemo(() => {
     const keyword = searchKeyword.trim().toLowerCase();
 
-    return list.filter((p) => {
+    return list.filter((product) => {
       const matchKeyword =
         !keyword ||
-        String(p.id || "")
+        String(product.id || "").toLowerCase().includes(keyword) ||
+        String(product.slug || "").toLowerCase().includes(keyword) ||
+        String(product.categoryId || "").toLowerCase().includes(keyword) ||
+        String(getCategoryText(product.categoryId) || "")
           .toLowerCase()
           .includes(keyword) ||
-        String(p.slug || "")
-          .toLowerCase()
-          .includes(keyword) ||
-        String(p.categoryId || "")
-          .toLowerCase()
-          .includes(keyword) ||
-        String(getCategoryText(p.categoryId) || "")
-          .toLowerCase()
-          .includes(keyword) ||
-        String(getStatusText(p.status) || "")
+        String(getStatusText(product.status) || "")
           .toLowerCase()
           .includes(keyword);
 
       const matchCategory =
-        !categoryFilter || String(p.categoryId || "") === String(categoryFilter);
+        !categoryFilter ||
+        String(product.categoryId || "") === String(categoryFilter);
 
       return matchKeyword && matchCategory;
     });
@@ -371,17 +404,21 @@ export default function AdminProductsPage() {
 
   const goToPage = (page) => {
     if (page < 1 || page > totalPages) return;
+
     setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   };
 
   return (
-    <div>
-      <div className="mb-4">
-        <h2 style={{ marginBottom: 6, color: "#0f172a", fontWeight: 700 }}>
-          Quản lý sản phẩm
-        </h2>
-        <p style={{ marginBottom: 0, color: "#64748b" }}>
+    <div className="admin-products-page">
+      <div className="admin-products-header">
+        <h2 className="admin-products-title">Quản lý sản phẩm</h2>
+
+        <p className="admin-products-desc">
           Tạo mới, chỉnh sửa, tìm kiếm, lọc theo danh mục và phân trang sản phẩm.
         </p>
       </div>
@@ -391,54 +428,46 @@ export default function AdminProductsPage() {
 
       <div className="row g-4 align-items-start">
         <div className="col-lg-4 col-xl-3">
-          <div
-            style={{
-              background: "#fff",
-              borderRadius: 20,
-              padding: 20,
-              boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
-              position: "sticky",
-              top: 20,
-            }}
-          >
-            <h4
-              style={{
-                color: "#0f172a",
-                fontWeight: 700,
-                marginBottom: 16,
-                fontSize: 28,
-                lineHeight: 1.25,
-              }}
-            >
+          <div className="admin-products-form-card">
+            <h4 className="admin-products-form-title">
               {editingId ? "Chỉnh sửa sản phẩm" : "Tạo sản phẩm mới"}
             </h4>
 
-            <div className="d-grid gap-3">
+            <div className="admin-products-form-grid">
               <div>
-                <label className="form-label" style={labelStyle}>
+                <label className="form-label admin-products-label">
                   Tên / Slug
                 </label>
+
                 <input
-                  className="form-control"
+                  className="form-control admin-products-input"
                   value={form.slug}
-                  onChange={(e) => setForm({ ...form, slug: e.target.value })}
-                  style={inputStyle}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      slug: e.target.value,
+                    }))
+                  }
                 />
               </div>
 
               <div>
-                <label className="form-label" style={labelStyle}>
+                <label className="form-label admin-products-label">
                   Danh mục
                 </label>
+
                 <select
-                  className="form-select"
+                  className="form-select admin-products-input"
                   value={String(form.categoryId ?? "")}
                   onChange={(e) =>
-                    setForm({ ...form, categoryId: e.target.value })
+                    setForm((prev) => ({
+                      ...prev,
+                      categoryId: e.target.value,
+                    }))
                   }
-                  style={inputStyle}
                 >
                   <option value="">Chọn danh mục</option>
+
                   {CATEGORY_OPTIONS.map((item) => (
                     <option key={item.value} value={item.value}>
                       {item.label}
@@ -448,29 +477,37 @@ export default function AdminProductsPage() {
               </div>
 
               <div>
-                <label className="form-label" style={labelStyle}>
+                <label className="form-label admin-products-label">
                   Giá cơ bản
                 </label>
+
                 <input
                   type="number"
-                  className="form-control"
+                  className="form-control admin-products-input"
                   value={form.basePrice}
                   onChange={(e) =>
-                    setForm({ ...form, basePrice: e.target.value })
+                    setForm((prev) => ({
+                      ...prev,
+                      basePrice: e.target.value,
+                    }))
                   }
-                  style={inputStyle}
                 />
               </div>
 
               <div>
-                <label className="form-label" style={labelStyle}>
+                <label className="form-label admin-products-label">
                   Trạng thái
                 </label>
+
                 <select
-                  className="form-select"
+                  className="form-select admin-products-input"
                   value={form.status}
-                  onChange={(e) => setForm({ ...form, status: e.target.value })}
-                  style={inputStyle}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      status: e.target.value,
+                    }))
+                  }
                 >
                   <option value="active">Đang hoạt động</option>
                   <option value="inactive">Ngừng hoạt động</option>
@@ -485,97 +522,92 @@ export default function AdminProductsPage() {
                   className="form-check-input"
                   checked={form.isFeatured}
                   onChange={(e) =>
-                    setForm({ ...form, isFeatured: e.target.checked })
+                    setForm((prev) => ({
+                      ...prev,
+                      isFeatured: e.target.checked,
+                    }))
                   }
                 />
+
                 <label
                   htmlFor="isFeatured"
-                  className="form-check-label"
-                  style={labelStyle}
+                  className="form-check-label admin-products-label"
                 >
                   Sản phẩm nổi bật
                 </label>
               </div>
 
               {!editingId && (
-                <div
-                  style={{
-                    border: "1px solid #e5e7eb",
-                    borderRadius: 16,
-                    padding: 14,
-                    background: "#f8fafc",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontWeight: 700,
-                      color: "#0f172a",
-                      marginBottom: 12,
-                      fontSize: 15,
-                    }}
-                  >
+                <div className="admin-products-variant-box">
+                  <div className="admin-products-variant-title">
                     Biến thể đầu tiên khi tạo mới
                   </div>
 
-                  <div className="d-grid gap-3">
+                  <div className="admin-products-form-grid">
                     <div>
-                      <label className="form-label" style={labelStyle}>
+                      <label className="form-label admin-products-label">
                         SKU biến thể
                       </label>
+
                       <input
-                        className="form-control"
+                        className="form-control admin-products-input"
                         value={form.firstVariant.sku}
                         onChange={(e) =>
                           updateFirstVariantField("sku", e.target.value)
                         }
-                        style={inputStyle}
                         placeholder="VD: SP-001-DEFAULT"
                       />
                     </div>
 
                     <div>
-                      <label className="form-label" style={labelStyle}>
+                      <label className="form-label admin-products-label">
                         Tên biến thể
                       </label>
+
                       <input
-                        className="form-control"
+                        className="form-control admin-products-input"
                         value={form.firstVariant.variantName}
                         onChange={(e) =>
-                          updateFirstVariantField("variantName", e.target.value)
+                          updateFirstVariantField(
+                            "variantName",
+                            e.target.value
+                          )
                         }
-                        style={inputStyle}
                         placeholder="VD: Mặc định / Đỏ / Size M"
                       />
                     </div>
 
                     <div>
-                      <label className="form-label" style={labelStyle}>
+                      <label className="form-label admin-products-label">
                         Giá biến thể
                       </label>
+
                       <input
                         type="number"
-                        className="form-control"
+                        className="form-control admin-products-input"
                         value={form.firstVariant.price}
                         onChange={(e) =>
                           updateFirstVariantField("price", e.target.value)
                         }
-                        style={inputStyle}
                         placeholder="Để trống sẽ lấy giá cơ bản"
                       />
                     </div>
 
                     <div>
-                      <label className="form-label" style={labelStyle}>
+                      <label className="form-label admin-products-label">
                         Tồn kho ban đầu
                       </label>
+
                       <input
                         type="number"
-                        className="form-control"
+                        className="form-control admin-products-input"
                         value={form.firstVariant.initialStock}
                         onChange={(e) =>
-                          updateFirstVariantField("initialStock", e.target.value)
+                          updateFirstVariantField(
+                            "initialStock",
+                            e.target.value
+                          )
                         }
-                        style={inputStyle}
                       />
                     </div>
 
@@ -586,13 +618,16 @@ export default function AdminProductsPage() {
                         className="form-check-input"
                         checked={form.firstVariant.isActive}
                         onChange={(e) =>
-                          updateFirstVariantField("isActive", e.target.checked)
+                          updateFirstVariantField(
+                            "isActive",
+                            e.target.checked
+                          )
                         }
                       />
+
                       <label
                         htmlFor="firstVariantIsActive"
-                        className="form-check-label"
-                        style={labelStyle}
+                        className="form-check-label admin-products-label"
                       >
                         Biến thể đang hoạt động
                       </label>
@@ -602,31 +637,25 @@ export default function AdminProductsPage() {
               )}
 
               <div>
-                <label className="form-label" style={labelStyle}>
+                <label className="form-label admin-products-label">
                   Ảnh sản phẩm
                 </label>
 
-                <div className="d-grid gap-2">
+                <div className="admin-products-image-list">
                   {form.imageUrls.map((url, index) => (
-                    <div key={index} className="border rounded-3 p-2">
-                      <div className="d-flex gap-2 align-items-start">
+                    <div key={index} className="admin-products-image-field">
+                      <div className="admin-products-image-row">
                         <input
-                          className="form-control"
+                          className="form-control admin-products-input"
                           value={url}
                           readOnly
                           placeholder="Chưa chọn ảnh"
-                          style={inputStyle}
                         />
 
                         <button
                           type="button"
-                          className="btn btn-outline-danger"
+                          className="btn btn-outline-danger admin-products-remove-image-btn"
                           onClick={() => removeImageField(index)}
-                          style={{
-                            borderRadius: 12,
-                            minWidth: 62,
-                            whiteSpace: "nowrap",
-                          }}
                         >
                           Xóa
                         </button>
@@ -636,19 +665,15 @@ export default function AdminProductsPage() {
                         <input
                           type="file"
                           accept=".jpg,.jpeg,.png,.webp"
-                          className="form-control"
+                          className="form-control admin-products-input"
                           onChange={(e) =>
                             handleChooseImage(index, e.target.files?.[0])
                           }
-                          style={inputStyle}
                         />
                       </div>
 
                       {uploadingIndex === index && (
-                        <div
-                          className="mt-2"
-                          style={{ color: "#2563eb", fontSize: 14 }}
-                        >
+                        <div className="admin-products-uploading">
                           Đang tải ảnh lên...
                         </div>
                       )}
@@ -658,28 +683,21 @@ export default function AdminProductsPage() {
 
                 <button
                   type="button"
-                  className="btn btn-outline-primary btn-sm mt-2"
+                  className="btn btn-outline-primary btn-sm admin-products-add-image-btn"
                   onClick={addImageField}
-                  style={{ borderRadius: 10 }}
                 >
                   + Thêm ảnh
                 </button>
 
-                <div className="mt-3 d-flex flex-wrap gap-2">
+                <div className="admin-products-preview-list">
                   {form.imageUrls
-                    .filter((x) => x.trim() !== "")
-                    .map((url, idx) => (
+                    .filter((url) => url.trim() !== "")
+                    .map((url, index) => (
                       <img
-                        key={idx}
+                        key={`${url}-${index}`}
                         src={getImageSrc(url)}
-                        alt={`preview-${idx}`}
-                        style={{
-                          width: 64,
-                          height: 64,
-                          objectFit: "cover",
-                          borderRadius: 10,
-                          border: "1px solid #e5e7eb",
-                        }}
+                        alt={`preview-${index}`}
+                        className="admin-products-preview-img"
                         onError={(e) => {
                           e.currentTarget.style.display = "none";
                         }}
@@ -688,37 +706,21 @@ export default function AdminProductsPage() {
                 </div>
               </div>
 
-              <div className="d-flex gap-2 flex-wrap">
+              <div className="admin-products-form-actions">
                 <button
+                  type="button"
                   onClick={save}
-                  className="btn btn-primary"
+                  className="btn btn-primary admin-products-main-btn"
                   disabled={saving}
-                  style={{
-                    height: 44,
-                    borderRadius: 12,
-                    fontWeight: 600,
-                    paddingLeft: 18,
-                    paddingRight: 18,
-                  }}
                 >
-                  {saving
-                    ? "Đang lưu..."
-                    : editingId
-                    ? "Cập nhật"
-                    : "Tạo mới"}
+                  {saving ? "Đang lưu..." : editingId ? "Cập nhật" : "Tạo mới"}
                 </button>
 
                 {editingId && (
                   <button
+                    type="button"
                     onClick={resetForm}
-                    className="btn btn-outline-secondary"
-                    style={{
-                      height: 44,
-                      borderRadius: 12,
-                      fontWeight: 600,
-                      paddingLeft: 18,
-                      paddingRight: 18,
-                    }}
+                    className="btn btn-outline-secondary admin-products-main-btn"
                   >
                     Hủy
                   </button>
@@ -729,51 +731,38 @@ export default function AdminProductsPage() {
         </div>
 
         <div className="col-lg-8 col-xl-9">
-          <div
-            style={{
-              background: "#fff",
-              borderRadius: 20,
-              overflow: "hidden",
-              boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
-            }}
-          >
-            <div style={{ padding: 20, borderBottom: "1px solid #e5e7eb" }}>
-              <h4
-                style={{
-                  marginBottom: 16,
-                  color: "#0f172a",
-                  fontWeight: 700,
-                  fontSize: 30,
-                }}
-              >
+          <div className="admin-products-list-card">
+            <div className="admin-products-list-head">
+              <h4 className="admin-products-list-title">
                 Danh sách sản phẩm
               </h4>
 
               <div className="row g-3 align-items-end">
                 <div className="col-md-6 col-xl-5">
-                  <label className="form-label" style={labelStyle}>
+                  <label className="form-label admin-products-label">
                     Tìm kiếm sản phẩm
                   </label>
+
                   <input
-                    className="form-control"
+                    className="form-control admin-products-input"
                     placeholder="Nhập mã, tên, danh mục hoặc trạng thái..."
                     value={searchKeyword}
                     onChange={(e) => setSearchKeyword(e.target.value)}
-                    style={inputStyle}
                   />
                 </div>
 
                 <div className="col-md-3 col-xl-3">
-                  <label className="form-label" style={labelStyle}>
+                  <label className="form-label admin-products-label">
                     Danh mục
                   </label>
+
                   <select
-                    className="form-select"
+                    className="form-select admin-products-input"
                     value={categoryFilter}
                     onChange={(e) => setCategoryFilter(e.target.value)}
-                    style={inputStyle}
                   >
                     <option value="">Tất cả</option>
+
                     {CATEGORY_OPTIONS.map((item) => (
                       <option key={item.value} value={item.value}>
                         {item.label}
@@ -783,13 +772,7 @@ export default function AdminProductsPage() {
                 </div>
 
                 <div className="col-md-3 col-xl-4">
-                  <div
-                    style={{
-                      color: "#64748b",
-                      fontWeight: 500,
-                      lineHeight: 1.7,
-                    }}
-                  >
+                  <div className="admin-products-list-meta">
                     Trang {safeCurrentPage} / {totalPages}
                     <br />
                     Kết quả: {filteredList.length}
@@ -799,124 +782,95 @@ export default function AdminProductsPage() {
             </div>
 
             {loading ? (
-              <div className="text-center py-5">Đang tải sản phẩm...</div>
+              <div className="admin-products-loading">Đang tải sản phẩm...</div>
             ) : filteredList.length === 0 ? (
-              <div style={{ padding: 24, color: "#64748b" }}>
+              <div className="admin-products-empty">
                 Không tìm thấy sản phẩm nào.
               </div>
             ) : (
               <>
                 <div className="table-responsive">
-                  <table
-                    style={{
-                      width: "100%",
-                      minWidth: 980,
-                      borderCollapse: "collapse",
-                    }}
-                  >
+                  <table className="admin-products-table">
                     <thead>
-                      <tr style={{ background: "#f8fafc" }}>
-                        <th style={{ ...thStyle, minWidth: 70 }}>Mã</th>
-                        <th style={{ ...thStyle, minWidth: 90 }}>Ảnh</th>
-                        <th style={{ ...thStyle, minWidth: 220 }}>Tên</th>
-                        <th
-                          style={{
-                            ...thStyle,
-                            minWidth: 170,
-                            whiteSpace: "nowrap",
-                          }}
-                        >
+                      <tr>
+                        <th className="admin-products-th-id">Mã</th>
+                        <th className="admin-products-th-image">Ảnh</th>
+                        <th className="admin-products-th-name">Tên</th>
+                        <th className="admin-products-th-category">
                           Danh mục
                         </th>
-                        <th style={{ ...thStyle, minWidth: 130 }}>Giá</th>
-                        <th
-                          style={{
-                            ...thStyle,
-                            minWidth: 150,
-                            whiteSpace: "nowrap",
-                          }}
-                        >
+                        <th className="admin-products-th-price">Giá</th>
+                        <th className="admin-products-th-status">
                           Trạng thái
                         </th>
-                        <th style={{ ...thStyle, minWidth: 230 }}>Thao tác</th>
+                        <th className="admin-products-th-actions">
+                          Thao tác
+                        </th>
                       </tr>
                     </thead>
 
                     <tbody>
-                      {pagedList.map((p) => (
-                        <tr key={p.id}>
-                          <td style={tdStyle}>{p.id}</td>
+                      {pagedList.map((product) => (
+                        <tr key={product.id}>
+                          <td>{product.id}</td>
 
-                          <td style={tdStyle}>
-                            {p.imageUrl ? (
+                          <td>
+                            {product.imageUrl ? (
                               <img
-                                src={getImageSrc(p.imageUrl)}
-                                alt={p.slug}
-                                style={{
-                                  width: 60,
-                                  height: 60,
-                                  objectFit: "cover",
-                                  borderRadius: 10,
-                                }}
+                                src={getImageSrc(product.imageUrl)}
+                                alt={product.slug}
+                                className="admin-products-table-image"
                               />
                             ) : (
-                              <span style={{ color: "#94a3b8" }}>
+                              <span className="admin-products-no-image">
                                 Chưa có ảnh
                               </span>
                             )}
                           </td>
 
-                          <td
-                            style={{
-                              ...tdStyle,
-                              fontWeight: 600,
-                              lineHeight: 1.6,
-                            }}
-                          >
-                            {p.slug}
+                          <td className="admin-products-name">
+                            {product.slug}
                           </td>
 
-                          <td
-                            style={{
-                              ...tdStyle,
-                              minWidth: 170,
-                              whiteSpace: "nowrap",
-                              fontWeight: 500,
-                            }}
-                          >
-                            {getCategoryText(p.categoryId)}
+                          <td className="admin-products-category">
+                            {getCategoryText(product.categoryId)}
                           </td>
 
-                          <td style={{ ...tdStyle, whiteSpace: "nowrap" }}>
-                            {formatPrice(p.basePrice)}
+                          <td className="admin-products-nowrap">
+                            {formatPrice(product.basePrice)}
                           </td>
 
-                          <td style={{ ...tdStyle, whiteSpace: "nowrap" }}>
-                            {getStatusText(p.status)}
+                          <td className="admin-products-nowrap">
+                            <span
+                              className={`admin-products-status ${getStatusClass(
+                                product.status
+                              )}`}
+                            >
+                              {getStatusText(product.status)}
+                            </span>
                           </td>
 
-                          <td style={tdStyle}>
-                            <div className="d-flex gap-2 flex-wrap">
+                          <td>
+                            <div className="admin-products-action-list">
                               <button
-                                onClick={() => startEdit(p)}
-                                className="btn btn-outline-primary btn-sm"
-                                style={{ borderRadius: 10 }}
+                                type="button"
+                                onClick={() => startEdit(product)}
+                                className="btn btn-outline-primary btn-sm admin-products-action-btn"
                               >
                                 Sửa
                               </button>
 
                               <button
-                                onClick={() => remove(p.id)}
-                                className="btn btn-outline-danger btn-sm"
-                                style={{ borderRadius: 10 }}
+                                type="button"
+                                onClick={() => remove(product.id)}
+                                className="btn btn-outline-danger btn-sm admin-products-action-btn"
                               >
                                 Xóa
                               </button>
 
                               <Link
-                                to={`/admin/products/${p.id}/variants`}
-                                className="btn btn-outline-success btn-sm"
-                                style={{ borderRadius: 10 }}
+                                to={`/admin/products/${product.id}/variants`}
+                                className="btn btn-outline-success btn-sm admin-products-action-btn"
                               >
                                 Biến thể
                               </Link>
@@ -928,47 +882,44 @@ export default function AdminProductsPage() {
                   </table>
                 </div>
 
-                <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 p-3 border-top">
-                  <div style={{ color: "#64748b", fontWeight: 500 }}>
+                <div className="admin-products-footer">
+                  <div className="admin-products-limit-text">
                     Hiển thị tối đa {PAGE_SIZE} sản phẩm mỗi trang
                   </div>
 
-                  <div className="d-flex align-items-center gap-2 flex-wrap">
+                  <div className="admin-products-pagination">
                     <button
-                      className="btn btn-outline-secondary btn-sm"
+                      type="button"
+                      className="btn btn-outline-secondary btn-sm admin-products-page-btn"
                       onClick={() => goToPage(safeCurrentPage - 1)}
                       disabled={safeCurrentPage === 1}
-                      style={{ borderRadius: 10, fontWeight: 600 }}
                     >
                       Trang trước
                     </button>
 
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                      (page) => (
-                        <button
-                          key={page}
-                          className={`btn btn-sm ${
-                            safeCurrentPage === page
-                              ? "btn-primary"
-                              : "btn-outline-primary"
-                          }`}
-                          onClick={() => goToPage(page)}
-                          style={{
-                            minWidth: 40,
-                            borderRadius: 10,
-                            fontWeight: 600,
-                          }}
-                        >
-                          {page}
-                        </button>
-                      )
-                    )}
+                    {Array.from(
+                      { length: totalPages },
+                      (_, index) => index + 1
+                    ).map((page) => (
+                      <button
+                        key={page}
+                        type="button"
+                        onClick={() => goToPage(page)}
+                        className={`btn btn-sm admin-products-page-btn ${
+                          safeCurrentPage === page
+                            ? "active"
+                            : "btn-outline-primary"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
 
                     <button
-                      className="btn btn-outline-secondary btn-sm"
+                      type="button"
+                      className="btn btn-outline-secondary btn-sm admin-products-page-btn"
                       onClick={() => goToPage(safeCurrentPage + 1)}
                       disabled={safeCurrentPage === totalPages}
-                      style={{ borderRadius: 10, fontWeight: 600 }}
                     >
                       Trang sau
                     </button>
@@ -982,29 +933,3 @@ export default function AdminProductsPage() {
     </div>
   );
 }
-
-const labelStyle = {
-  color: "#111827",
-  fontWeight: 600,
-};
-
-const inputStyle = {
-  height: 44,
-  borderRadius: 12,
-  color: "#111827",
-};
-
-const thStyle = {
-  padding: "14px",
-  textAlign: "left",
-  color: "#0f172a",
-  fontWeight: 700,
-  borderBottom: "1px solid #e5e7eb",
-};
-
-const tdStyle = {
-  padding: "14px",
-  color: "#334155",
-  borderBottom: "1px solid #e5e7eb",
-  verticalAlign: "middle",
-};

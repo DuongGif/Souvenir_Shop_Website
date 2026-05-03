@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import MainLayout from "../layouts/MainLayout";
 import { contactService } from "../services/contactService";
 import { useLanguage } from "../contexts/LanguageContext.jsx";
@@ -19,46 +19,30 @@ const getErrorMessage = (ex, fallback) => {
   return fallback;
 };
 
-const pageCard = {
-  background: "#ffffff",
-  borderRadius: 20,
-  boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
-};
-
-const inputStyle = {
-  height: 44,
-  borderRadius: 10,
-  border: "1px solid #e5e7eb",
-  background: "#fff",
-  color: "#111827",
-  boxShadow: "none",
-};
-
-const labelStyle = {
-  color: "#111827",
-  fontWeight: 700,
-  marginBottom: 8,
-  fontSize: 14,
+const initialForm = {
+  fullName: "",
+  email: "",
+  phone: "",
+  subject: "",
+  message: "",
 };
 
 export default function ContactPage() {
   const { language } = useLanguage();
   const t = commonTranslations?.[language] || commonTranslations?.vi || {};
 
-  const [form, setForm] = useState({
-    fullName: "",
-    email: "",
-    phone: "",
-    subject: "",
-    message: "",
-  });
-
+  const [form, setForm] = useState(initialForm);
   const [err, setErr] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
   const change = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const submit = async (e) => {
@@ -97,15 +81,11 @@ export default function ContactPage() {
           "Gửi liên hệ thành công. SouVN sẽ phản hồi bạn sớm nhất có thể."
       );
 
-      setForm({
-        fullName: "",
-        email: "",
-        phone: "",
-        subject: "",
-        message: "",
-      });
+      setForm(initialForm);
     } catch (ex) {
-      setErr(getErrorMessage(ex, t.contactSendFailed || "Gửi liên hệ thất bại."));
+      setErr(
+        getErrorMessage(ex, t.contactSendFailed || "Gửi liên hệ thất bại.")
+      );
     } finally {
       setLoading(false);
     }
@@ -113,56 +93,21 @@ export default function ContactPage() {
 
   return (
     <MainLayout>
-      <section
-        className="section"
-        style={{
-          background: "#f5f5f5",
-          minHeight: "100vh",
-          paddingTop: 32,
-          paddingBottom: 48,
-        }}
-      >
+      <section className="section contact-page-section">
         <div className="container">
-          <div
-            style={{
-              ...pageCard,
-              padding: 24,
-              marginBottom: 20,
-              borderLeft: "5px solid #ee4d2d",
-            }}
-          >
-            <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
+          <div className="contact-card contact-header-card">
+            <div className="contact-header-top">
               <div>
-                <div
-                  style={{
-                    fontSize: 14,
-                    color: "#6b7280",
-                    marginBottom: 8,
-                    fontWeight: 600,
-                  }}
-                >
+                <div className="contact-kicker">
                   {t.contactHeaderSmall || "Liên hệ SouVN"}
                 </div>
 
-                <h2
-                  style={{
-                    margin: 0,
-                    fontWeight: 800,
-                    color: "#111827",
-                    fontSize: "clamp(24px, 4vw, 34px)",
-                  }}
-                >
+                <h2 className="contact-title">
                   {t.contactHeaderTitle || "Chúng tôi luôn sẵn sàng hỗ trợ bạn"}
                 </h2>
               </div>
 
-              <div
-                style={{
-                  fontSize: 14,
-                  color: "#6b7280",
-                  fontWeight: 600,
-                }}
-              >
+              <div className="contact-header-badge">
                 {t.contactHeaderBadge || "Hỗ trợ nhanh và tiện lợi"}
               </div>
             </div>
@@ -170,169 +115,78 @@ export default function ContactPage() {
 
           <div className="row g-4 align-items-stretch">
             <div className="col-lg-5">
-              <div
-                style={{
-                  ...pageCard,
-                  padding: 24,
-                  height: "100%",
-                }}
-              >
-                <h3
-                  style={{
-                    color: "#111827",
-                    fontWeight: 800,
-                    marginBottom: 18,
-                    fontSize: 24,
-                  }}
-                >
+              <div className="contact-card contact-info-card">
+                <h3 className="contact-block-title">
                   {t.contactInfoTitle || "Thông tin liên hệ"}
                 </h3>
 
-                <p
-                  style={{
-                    color: "#6b7280",
-                    lineHeight: 1.8,
-                    marginBottom: 20,
-                  }}
-                >
+                <p className="contact-desc">
                   {t.contactInfoDesc ||
                     "Hãy liên hệ với SouVN nếu bạn cần tư vấn sản phẩm lưu niệm, hỗ trợ đơn hàng, hợp tác kinh doanh hoặc giải đáp các thắc mắc trong quá trình mua sắm."}
                 </p>
 
-                <div className="d-grid gap-3">
-                  <div
-                    style={{
-                      background: "#fafafa",
-                      borderRadius: 14,
-                      padding: 16,
-                    }}
-                  >
-                    <div
-                      style={{
-                        color: "#111827",
-                        fontWeight: 800,
-                        marginBottom: 6,
-                      }}
-                    >
-                      <i
-                        className="bi bi-geo-alt me-2"
-                        style={{ color: "#ee4d2d" }}
-                      ></i>
+                <div className="contact-info-list">
+                  <div className="contact-info-item">
+                    <div className="contact-info-label">
+                      <i className="bi bi-geo-alt me-2"></i>
                       {t.addressLabel || "Địa chỉ"}
                     </div>
-                    <div style={{ color: "#4b5563" }}>
+
+                    <div className="contact-info-value">
                       {t.addressValue || "Hà Nội, Việt Nam"}
                     </div>
                   </div>
 
-                  <div
-                    style={{
-                      background: "#fafafa",
-                      borderRadius: 14,
-                      padding: 16,
-                    }}
-                  >
-                    <div
-                      style={{
-                        color: "#111827",
-                        fontWeight: 800,
-                        marginBottom: 6,
-                      }}
-                    >
-                      <i
-                        className="bi bi-telephone me-2"
-                        style={{ color: "#ee4d2d" }}
-                      ></i>
+                  <div className="contact-info-item">
+                    <div className="contact-info-label">
+                      <i className="bi bi-telephone me-2"></i>
                       {t.phoneLabel || "Số điện thoại"}
                     </div>
-                    <div style={{ color: "#4b5563" }}>0123 456 789</div>
+
+                    <div className="contact-info-value">0123 456 789</div>
                   </div>
 
-                  <div
-                    style={{
-                      background: "#fafafa",
-                      borderRadius: 14,
-                      padding: 16,
-                    }}
-                  >
-                    <div
-                      style={{
-                        color: "#111827",
-                        fontWeight: 800,
-                        marginBottom: 6,
-                      }}
-                    >
-                      <i
-                        className="bi bi-envelope me-2"
-                        style={{ color: "#ee4d2d" }}
-                      ></i>
+                  <div className="contact-info-item">
+                    <div className="contact-info-label">
+                      <i className="bi bi-envelope me-2"></i>
                       {t.emailLabel || "Email"}
                     </div>
-                    <div style={{ color: "#4b5563" }}>souvn@example.com</div>
+
+                    <div className="contact-info-value">souvn@example.com</div>
                   </div>
 
-                  <div
-                    style={{
-                      background: "#fafafa",
-                      borderRadius: 14,
-                      padding: 16,
-                    }}
-                  >
-                    <div
-                      style={{
-                        color: "#111827",
-                        fontWeight: 800,
-                        marginBottom: 6,
-                      }}
-                    >
-                      <i
-                        className="bi bi-clock me-2"
-                        style={{ color: "#ee4d2d" }}
-                      ></i>
+                  <div className="contact-info-item">
+                    <div className="contact-info-label">
+                      <i className="bi bi-clock me-2"></i>
                       {t.workingHoursLabel || "Giờ làm việc"}
                     </div>
-                    <div style={{ color: "#4b5563" }}>
+
+                    <div className="contact-info-value">
                       {t.workingHoursValue ||
                         "08:00 - 22:00, tất cả các ngày trong tuần"}
                     </div>
                   </div>
                 </div>
 
-                <div style={{ marginTop: 24 }}>
-                  <div
-                    style={{
-                      color: "#111827",
-                      fontWeight: 800,
-                      marginBottom: 12,
-                    }}
-                  >
+                <div className="contact-social-wrap">
+                  <div className="contact-social-title">
                     {t.connectWithUs || "Kết nối với chúng tôi"}
                   </div>
 
-                  <div className="d-flex gap-3 flex-wrap">
+                  <div className="contact-social-list">
                     {[
-                      "bi-facebook",
-                      "bi-instagram",
-                      "bi-tiktok",
-                      "bi-youtube",
-                    ].map((icon, index) => (
+                      { icon: "bi-facebook", label: "Facebook" },
+                      { icon: "bi-instagram", label: "Instagram" },
+                      { icon: "bi-tiktok", label: "TikTok" },
+                      { icon: "bi-youtube", label: "YouTube" },
+                    ].map((item) => (
                       <a
-                        key={index}
+                        key={item.icon}
                         href="#"
-                        style={{
-                          width: 42,
-                          height: 42,
-                          borderRadius: "50%",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          background: "#fff7ed",
-                          color: "#ee4d2d",
-                          textDecoration: "none",
-                          border: "1px solid #fed7aa",
-                        }}
+                        className="contact-social-link"
+                        aria-label={item.label}
                       >
-                        <i className={`bi ${icon}`}></i>
+                        <i className={`bi ${item.icon}`}></i>
                       </a>
                     ))}
                   </div>
@@ -341,50 +195,19 @@ export default function ContactPage() {
             </div>
 
             <div className="col-lg-7">
-              <div
-                style={{
-                  ...pageCard,
-                  padding: 24,
-                  height: "100%",
-                }}
-              >
-                <h3
-                  style={{
-                    color: "#111827",
-                    fontWeight: 800,
-                    marginBottom: 20,
-                    fontSize: 24,
-                  }}
-                >
+              <div className="contact-card contact-form-card">
+                <h3 className="contact-form-title">
                   {t.contactFormTitle || "Gửi thông tin liên hệ"}
                 </h3>
 
                 {err && (
-                  <div
-                    className="alert mb-3"
-                    role="alert"
-                    style={{
-                      background: "#fef2f2",
-                      color: "#b91c1c",
-                      border: "1px solid #fecaca",
-                      borderRadius: 12,
-                    }}
-                  >
+                  <div className="contact-alert-error" role="alert">
                     {err}
                   </div>
                 )}
 
                 {success && (
-                  <div
-                    className="alert mb-3"
-                    role="alert"
-                    style={{
-                      background: "#ecfdf5",
-                      color: "#047857",
-                      border: "1px solid #a7f3d0",
-                      borderRadius: 12,
-                    }}
-                  >
+                  <div className="contact-alert-success" role="alert">
                     {success}
                   </div>
                 )}
@@ -392,69 +215,72 @@ export default function ContactPage() {
                 <form onSubmit={submit}>
                   <div className="row g-3">
                     <div className="col-md-6">
-                      <label className="form-label" style={labelStyle}>
+                      <label className="form-label contact-form-label">
                         {t.fullNameLabel || "Họ và tên"}
                       </label>
+
                       <input
                         name="fullName"
-                        className="form-control"
+                        className="form-control contact-input"
                         placeholder={t.fullNamePlaceholder || "Nhập họ và tên"}
                         value={form.fullName}
                         onChange={change}
-                        style={inputStyle}
                       />
                     </div>
 
                     <div className="col-md-6">
-                      <label className="form-label" style={labelStyle}>
+                      <label className="form-label contact-form-label">
                         {t.emailLabel || "Email"}
                       </label>
+
                       <input
                         name="email"
                         type="email"
-                        className="form-control"
+                        className="form-control contact-input"
                         placeholder={t.emailPlaceholder || "Nhập email"}
                         value={form.email}
                         onChange={change}
-                        style={inputStyle}
                       />
                     </div>
 
                     <div className="col-md-6">
-                      <label className="form-label" style={labelStyle}>
+                      <label className="form-label contact-form-label">
                         {t.phoneLabel || "Số điện thoại"}
                       </label>
+
                       <input
                         name="phone"
-                        className="form-control"
+                        className="form-control contact-input"
                         placeholder={t.phonePlaceholder || "Nhập số điện thoại"}
                         value={form.phone}
                         onChange={change}
-                        style={inputStyle}
                       />
                     </div>
 
                     <div className="col-md-6">
-                      <label className="form-label" style={labelStyle}>
+                      <label className="form-label contact-form-label">
                         {t.subjectLabel || "Chủ đề"}
                       </label>
+
                       <input
                         name="subject"
-                        className="form-control"
-                        placeholder={t.subjectPlaceholder || "Ví dụ: Hỗ trợ đơn hàng"}
+                        className="form-control contact-input"
+                        placeholder={
+                          t.subjectPlaceholder || "Ví dụ: Hỗ trợ đơn hàng"
+                        }
                         value={form.subject}
                         onChange={change}
-                        style={inputStyle}
                       />
                     </div>
 
                     <div className="col-12">
-                      <label className="form-label" style={labelStyle}>
+                      <label className="form-label contact-form-label">
                         {t.content || "Nội dung"}
                       </label>
+
                       <textarea
                         name="message"
-                        className="form-control"
+                        className="form-control contact-textarea"
                         rows={6}
                         placeholder={
                           t.contactMessagePlaceholder ||
@@ -462,12 +288,6 @@ export default function ContactPage() {
                         }
                         value={form.message}
                         onChange={change}
-                        style={{
-                          borderRadius: 10,
-                          border: "1px solid #e5e7eb",
-                          color: "#111827",
-                          boxShadow: "none",
-                        }}
                       />
                     </div>
                   </div>
@@ -475,16 +295,7 @@ export default function ContactPage() {
                   <button
                     type="submit"
                     disabled={loading}
-                    style={{
-                      minWidth: 180,
-                      height: 46,
-                      borderRadius: 10,
-                      border: "none",
-                      background: "#ee4d2d",
-                      color: "#fff",
-                      fontWeight: 700,
-                      marginTop: 18,
-                    }}
+                    className="contact-submit-button"
                   >
                     {loading
                       ? t.contactSending || "Đang gửi..."
@@ -495,30 +306,14 @@ export default function ContactPage() {
             </div>
           </div>
 
-          <div className="mt-4">
-            <div
-              style={{
-                ...pageCard,
-                padding: 16,
-              }}
-            >
-              <div
-                style={{
-                  color: "#111827",
-                  fontWeight: 800,
-                  fontSize: 22,
-                  marginBottom: 14,
-                }}
-              >
-                {t.mapTitle || "Bản đồ"}
-              </div>
+          <div className="contact-map-wrap">
+            <div className="contact-card contact-map-card">
+              <div className="contact-map-title">{t.mapTitle || "Bản đồ"}</div>
 
               <iframe
                 title="SouVN Map"
                 src="https://www.google.com/maps?q=Ha%20Noi%2C%20Viet%20Nam&z=13&output=embed"
-                width="100%"
-                height="360"
-                style={{ border: 0, borderRadius: 14 }}
+                className="contact-map-iframe"
                 allowFullScreen=""
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"

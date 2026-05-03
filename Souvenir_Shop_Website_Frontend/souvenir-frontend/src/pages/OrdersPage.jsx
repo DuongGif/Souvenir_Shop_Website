@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import { orderService } from "../services/orderService";
@@ -7,18 +7,21 @@ import { commonTranslations } from "../i18n/common";
 
 const formatPrice = (value) => {
   if (value === null || value === undefined) return "0 ₫";
-  return Number(value).toLocaleString("vi-VN") + " ₫";
+  return `${Number(value).toLocaleString("vi-VN")} ₫`;
 };
 
 const getErrorMessage = (ex, fallback) => {
   const data = ex?.response?.data;
+
   if (typeof data === "string") return data;
   if (data?.message) return data.message;
   if (data?.title) return data.title;
+
   if (data?.errors) {
     const firstError = Object.values(data.errors)?.flat?.()[0];
     if (firstError) return firstError;
   }
+
   return fallback;
 };
 
@@ -28,8 +31,7 @@ const getStatusBadge = (status, t) => {
   if (s === "pending" || s === "cho_xu_ly" || s === "cho_xac_nhan") {
     return {
       text: t.orderStatusPending || "Chờ xử lý",
-      bg: "#fff7ed",
-      color: "#c2410c",
+      className: "orders-status-pending",
     };
   }
 
@@ -41,55 +43,48 @@ const getStatusBadge = (status, t) => {
   ) {
     return {
       text: t.orderStatusCancelRequested || "Đang yêu cầu hủy đơn",
-      bg: "#fff7ed",
-      color: "#c2410c",
+      className: "orders-status-cancel-requested",
     };
   }
 
   if (s === "confirmed" || s === "da_xac_nhan") {
     return {
       text: t.orderStatusConfirmed || "Đã xác nhận",
-      bg: "#eff6ff",
-      color: "#1d4ed8",
+      className: "orders-status-confirmed",
     };
   }
 
   if (s === "paid" || s === "da_thanh_toan") {
     return {
       text: t.orderStatusPaid || "Đã thanh toán",
-      bg: "#ecfdf5",
-      color: "#047857",
+      className: "orders-status-paid",
     };
   }
 
   if (s === "shipping" || s === "dang_giao") {
     return {
       text: t.orderStatusShipping || "Đang giao hàng",
-      bg: "#eff6ff",
-      color: "#1d4ed8",
+      className: "orders-status-shipping",
     };
   }
 
   if (s === "completed" || s === "hoan_thanh") {
     return {
       text: t.orderStatusCompleted || "Hoàn thành",
-      bg: "#ecfdf5",
-      color: "#047857",
+      className: "orders-status-completed",
     };
   }
 
   if (s === "cancelled" || s === "canceled" || s === "da_huy") {
     return {
       text: t.orderStatusCancelled || "Đã hủy",
-      bg: "#fef2f2",
-      color: "#b91c1c",
+      className: "orders-status-cancelled",
     };
   }
 
   return {
     text: t.orderStatusUnknown || "Không xác định",
-    bg: "#f3f4f6",
-    color: "#374151",
+    className: "orders-status-unknown",
   };
 };
 
@@ -108,7 +103,7 @@ const getFulfillmentText = (value, t) => {
     return t.fulfillmentHotel || "Giao tại khách sạn";
   }
 
-  return value || (t.orderUnknown || "Không xác định");
+  return value || t.orderUnknown || "Không xác định";
 };
 
 const normalizeStatus = (status) => String(status || "").toLowerCase();
@@ -150,12 +145,6 @@ const matchesFilter = (status, filterKey) => {
   return true;
 };
 
-const pageCard = {
-  background: "#ffffff",
-  borderRadius: 20,
-  boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
-};
-
 export default function OrdersPage() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -181,15 +170,15 @@ export default function OrdersPage() {
   const [msg, setMsg] = useState("");
 
   useEffect(() => {
-    if (location.state?.successMessage) {
-      setMsg(location.state.successMessage);
+    if (!location.state?.successMessage) return;
 
-      navigate(location.pathname, {
-        replace: true,
-        state: {},
-      });
-    }
-  }, [location, navigate]);
+    setMsg(location.state.successMessage);
+
+    navigate(location.pathname, {
+      replace: true,
+      state: {},
+    });
+  }, [location.pathname, location.state, navigate]);
 
   useEffect(() => {
     const loadOrders = async () => {
@@ -221,117 +210,63 @@ export default function OrdersPage() {
   const counts = useMemo(() => {
     return {
       all: orders.length,
-      pending: orders.filter((o) => matchesFilter(o.status, "pending")).length,
-      confirmed: orders.filter((o) => matchesFilter(o.status, "confirmed"))
+      pending: orders.filter((order) => matchesFilter(order.status, "pending"))
         .length,
-      shipping: orders.filter((o) => matchesFilter(o.status, "shipping")).length,
-      completed: orders.filter((o) => matchesFilter(o.status, "completed")).length,
-      cancelled: orders.filter((o) => matchesFilter(o.status, "cancelled")).length,
+      confirmed: orders.filter((order) =>
+        matchesFilter(order.status, "confirmed")
+      ).length,
+      shipping: orders.filter((order) => matchesFilter(order.status, "shipping"))
+        .length,
+      completed: orders.filter((order) =>
+        matchesFilter(order.status, "completed")
+      ).length,
+      cancelled: orders.filter((order) =>
+        matchesFilter(order.status, "cancelled")
+      ).length,
     };
   }, [orders]);
 
+  const activeTabLabel =
+    filterTabs.find((tab) => tab.key === activeTab)?.label ||
+    t.orderTabAll ||
+    "Tất cả";
+
   return (
     <MainLayout>
-      <section
-        className="section"
-        style={{
-          background: "#f5f5f5",
-          minHeight: "100vh",
-          paddingTop: 32,
-          paddingBottom: 48,
-        }}
-      >
+      <section className="section orders-page-section">
         <div className="container">
-          <div
-            style={{
-              ...pageCard,
-              padding: 24,
-              marginBottom: 20,
-              borderLeft: "5px solid #ee4d2d",
-            }}
-          >
-            <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
+          <div className="orders-card orders-header-card">
+            <div className="orders-header-top">
               <div>
-                <div
-                  style={{
-                    fontSize: 14,
-                    color: "#6b7280",
-                    marginBottom: 8,
-                  }}
-                >
+                <div className="orders-kicker">
                   {t.ordersHeaderSmall || "Quản lý đơn hàng"}
                 </div>
 
-                <h2
-                  style={{
-                    margin: 0,
-                    fontWeight: 800,
-                    color: "#111827",
-                    fontSize: "clamp(24px, 4vw, 34px)",
-                  }}
-                >
+                <h2 className="orders-title">
                   {t.ordersHeaderTitle || "Đơn mua của tôi"}
                 </h2>
               </div>
 
-              <div
-                style={{
-                  fontSize: 14,
-                  color: "#6b7280",
-                  fontWeight: 600,
-                }}
-              >
-                {t.ordersTotal || "Tổng số đơn:"}{" "}
-                <span style={{ color: "#ee4d2d" }}>{orders.length}</span>
+              <div className="orders-total">
+                {t.ordersTotal || "Tổng số đơn:"} <span>{orders.length}</span>
               </div>
             </div>
           </div>
 
           {msg && (
-            <div
-              className="alert mb-4"
-              role="alert"
-              style={{
-                background: "#ecfdf5",
-                color: "#047857",
-                border: "1px solid #a7f3d0",
-                borderRadius: 12,
-              }}
-            >
+            <div className="orders-alert orders-alert-success" role="alert">
               {msg}
             </div>
           )}
 
           {err && (
-            <div
-              className="alert mb-4"
-              role="alert"
-              style={{
-                background: "#fef2f2",
-                color: "#b91c1c",
-                border: "1px solid #fecaca",
-                borderRadius: 12,
-              }}
-            >
+            <div className="orders-alert orders-alert-error" role="alert">
               {err}
             </div>
           )}
 
-          <div
-            style={{
-              ...pageCard,
-              padding: 12,
-              marginBottom: 20,
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                gap: 8,
-                overflowX: "auto",
-                paddingBottom: 4,
-              }}
-            >
+          <div className="orders-card orders-tabs-card">
+            <div className="orders-tabs-list">
               {filterTabs.map((tab) => {
                 const isActive = activeTab === tab.key;
 
@@ -340,20 +275,7 @@ export default function OrdersPage() {
                     key={tab.key}
                     type="button"
                     onClick={() => setActiveTab(tab.key)}
-                    style={{
-                      border: "none",
-                      outline: "none",
-                      background: isActive ? "#ee4d2d" : "#fff",
-                      color: isActive ? "#fff" : "#374151",
-                      fontWeight: 700,
-                      borderRadius: 999,
-                      padding: "10px 16px",
-                      whiteSpace: "nowrap",
-                      boxShadow: isActive
-                        ? "0 8px 18px rgba(238,77,45,0.2)"
-                        : "none",
-                      borderColor: "#e5e7eb",
-                    }}
+                    className={`orders-tab-button ${isActive ? "active" : ""}`}
                   >
                     {tab.label} ({counts[tab.key] || 0})
                   </button>
@@ -363,115 +285,69 @@ export default function OrdersPage() {
           </div>
 
           {loading ? (
-            <div style={{ ...pageCard, padding: 40 }} className="text-center">
+            <div className="orders-card orders-loading-card">
               <div className="spinner-border text-danger" role="status"></div>
-              <p className="mt-3 mb-0" style={{ color: "#6b7280" }}>
+              <p className="orders-loading-text">
                 {t.ordersLoading || "Đang tải danh sách đơn hàng..."}
               </p>
             </div>
           ) : filteredOrders.length === 0 ? (
-            <div style={{ ...pageCard, padding: 40 }} className="text-center">
-              <div
-                style={{
-                  fontSize: 54,
-                  color: "#d1d5db",
-                  marginBottom: 12,
-                }}
-              >
+            <div className="orders-card orders-empty-card">
+              <div className="orders-empty-icon">
                 <i className="bi bi-bag-x"></i>
               </div>
 
-              <h4 style={{ color: "#111827", fontWeight: 700 }}>
+              <h4 className="orders-empty-title">
                 {t.ordersEmptyTitle || "Không có đơn hàng phù hợp"}
               </h4>
 
-              <p style={{ color: "#6b7280", marginBottom: 20 }}>
+              <p className="orders-empty-text">
                 {t.ordersEmptyDescPrefix || "Không có đơn hàng nào trong mục"}{" "}
-                <strong>{filterTabs.find((x) => x.key === activeTab)?.label}</strong>.
+                <strong>{activeTabLabel}</strong>.
               </p>
 
-              <Link
-                to="/products"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
-                  padding: "12px 18px",
-                  borderRadius: 10,
-                  border: "none",
-                  background: "#ee4d2d",
-                  color: "#fff",
-                  fontWeight: 700,
-                  textDecoration: "none",
-                }}
-              >
+              <Link to="/products" className="orders-main-button">
                 <i className="bi bi-bag"></i>
                 {t.shopNow || "Mua sắm ngay"}
               </Link>
             </div>
           ) : (
-            <div className="d-grid gap-3">
+            <div className="orders-list">
               {filteredOrders.map((order) => {
                 const badge = getStatusBadge(order.status, t);
 
                 return (
                   <div
                     key={order.id || order.orderCode}
-                    style={{
-                      ...pageCard,
-                      padding: 20,
-                    }}
+                    className="orders-card orders-item-card"
                   >
-                    <div className="d-flex flex-wrap justify-content-between align-items-start gap-3">
-                      <div style={{ flex: 1 }}>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            flexWrap: "wrap",
-                            gap: 10,
-                            marginBottom: 10,
-                          }}
-                        >
-                          <h4
-                            style={{
-                              margin: 0,
-                              color: "#111827",
-                              fontWeight: 800,
-                              fontSize: 20,
-                            }}
-                          >
-                            {order.orderCode}
-                          </h4>
+                    <div className="orders-item-layout">
+                      <div className="orders-item-info">
+                        <div className="orders-code-row">
+                          <h4 className="orders-code">{order.orderCode}</h4>
 
                           <span
-                            style={{
-                              background: badge.bg,
-                              color: badge.color,
-                              padding: "6px 12px",
-                              borderRadius: 999,
-                              fontSize: 13,
-                              fontWeight: 700,
-                            }}
+                            className={`orders-status-badge ${badge.className}`}
                           >
                             {badge.text}
                           </span>
                         </div>
 
-                        <div style={{ color: "#4b5563", lineHeight: 1.9 }}>
+                        <div className="orders-meta">
                           {order.createdAt && (
                             <div>
-                              <strong style={{ color: "#111827" }}>
+                              <strong>
                                 {t.orderCreatedDate || "Ngày tạo:"}
                               </strong>{" "}
-                              {new Date(order.createdAt).toLocaleString("vi-VN")}
+                              {new Date(order.createdAt).toLocaleString(
+                                "vi-VN"
+                              )}
                             </div>
                           )}
 
                           {order.fulfillmentType && (
                             <div>
-                              <strong style={{ color: "#111827" }}>
+                              <strong>
                                 {t.orderFulfillmentType || "Hình thức nhận:"}
                               </strong>{" "}
                               {getFulfillmentText(order.fulfillmentType, t)}
@@ -479,16 +355,14 @@ export default function OrdersPage() {
                           )}
 
                           <div>
-                            <strong style={{ color: "#111827" }}>
-                              {t.subtotal || "Tạm tính:"}
-                            </strong>{" "}
+                            <strong>{t.subtotal || "Tạm tính:"}</strong>{" "}
                             {formatPrice(order.subtotal)}
                           </div>
 
                           {order.shippingFee !== undefined &&
                             order.shippingFee !== null && (
                               <div>
-                                <strong style={{ color: "#111827" }}>
+                                <strong>
                                   {t.shippingFee || "Phí vận chuyển:"}
                                 </strong>{" "}
                                 {formatPrice(order.shippingFee)}
@@ -497,43 +371,18 @@ export default function OrdersPage() {
                         </div>
                       </div>
 
-                      <div className="text-md-end" style={{ minWidth: 220 }}>
-                        <div
-                          style={{
-                            color: "#6b7280",
-                            fontSize: 14,
-                            marginBottom: 8,
-                          }}
-                        >
+                      <div className="orders-payment-box">
+                        <div className="orders-payment-label">
                           {t.totalPayment || "Tổng thanh toán"}
                         </div>
 
-                        <div
-                          style={{
-                            color: "#ee4d2d",
-                            fontSize: 26,
-                            fontWeight: 800,
-                            marginBottom: 14,
-                          }}
-                        >
+                        <div className="orders-payment-amount">
                           {formatPrice(order.totalAmount)}
                         </div>
 
                         <Link
                           to={`/orders/${order.orderCode}`}
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            gap: 8,
-                            padding: "10px 16px",
-                            borderRadius: 10,
-                            border: "1px solid #ee4d2d",
-                            background: "#fff",
-                            color: "#ee4d2d",
-                            fontWeight: 700,
-                            textDecoration: "none",
-                          }}
+                          className="orders-detail-button"
                         >
                           <i className="bi bi-eye"></i>
                           {t.viewDetails || "Xem chi tiết"}

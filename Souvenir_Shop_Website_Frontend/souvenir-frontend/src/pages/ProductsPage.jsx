@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import { productService } from "../services/productService";
@@ -7,39 +7,37 @@ import Pagination from "../components/Pagination";
 import { useLanguage } from "../contexts/LanguageContext.jsx";
 import { commonTranslations } from "../i18n/common";
 
-const pageCard = {
-  background: "#ffffff",
-  borderRadius: 20,
-  boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
-};
-
-const inputStyle = {
-  height: 44,
-  borderRadius: 10,
-  border: "1px solid #e5e7eb",
-  background: "#fff",
-  color: "#111827",
-  boxShadow: "none",
-};
-
-const labelStyle = {
-  color: "#374151",
-  fontWeight: 700,
-  marginBottom: 8,
-  fontSize: 14,
-};
-
 const getErrorMessage = (ex, fallback) => {
   const data = ex?.response?.data;
+
   if (typeof data === "string") return data;
   if (data?.message) return data.message;
   if (data?.title) return data.title;
+
   if (data?.errors) {
     const firstError = Object.values(data.errors)?.flat?.()[0];
     if (firstError) return firstError;
   }
+
   return fallback;
 };
+
+const toPositiveNumber = (value, fallback) => {
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
+};
+
+const buildQueryFromSearchParams = (searchParams) => ({
+  keyword: searchParams.get("keyword") || "",
+  categoryIds: searchParams.get("categoryIds") || "",
+  minPrice: searchParams.get("minPrice") || "",
+  maxPrice: searchParams.get("maxPrice") || "",
+  minRating: searchParams.get("minRating") || "",
+  inStockOnly: searchParams.get("inStockOnly") === "true",
+  sort: searchParams.get("sort") || "newest",
+  page: toPositiveNumber(searchParams.get("page"), 1),
+  pageSize: toPositiveNumber(searchParams.get("pageSize"), 6),
+});
 
 export default function ProductsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -59,28 +57,46 @@ export default function ProductsPage() {
 
   const categoryOptions = useMemo(
     () => [
-      { id: "1", label: t.categorySouvenir || "Quà lưu niệm", icon: "bi bi-gift" },
-      { id: "2", label: t.categoryHandmade || "Đồ thủ công", icon: "bi bi-palette" },
-      { id: "3", label: t.categoryKeychain || "Móc khóa", icon: "bi bi-key" },
-      { id: "4", label: t.categoryTravelShirt || "Áo du lịch", icon: "bi bi-handbag" },
-      { id: "5", label: t.categoryAccessories || "Phụ kiện", icon: "bi bi-stars" },
-      { id: "6", label: t.categorySpecialties || "Đặc sản", icon: "bi bi-box-seam" },
-      { id: "7", label: t.categoryOther || "Khác", icon: "bi bi-three-dots" },
+      {
+        id: "1",
+        label: t.categorySouvenir || "Quà lưu niệm",
+        icon: "bi bi-gift",
+      },
+      {
+        id: "2",
+        label: t.categoryHandmade || "Đồ thủ công",
+        icon: "bi bi-palette",
+      },
+      {
+        id: "3",
+        label: t.categoryKeychain || "Móc khóa",
+        icon: "bi bi-key",
+      },
+      {
+        id: "4",
+        label: t.categoryTravelShirt || "Áo du lịch",
+        icon: "bi bi-handbag",
+      },
+      {
+        id: "5",
+        label: t.categoryAccessories || "Phụ kiện",
+        icon: "bi bi-stars",
+      },
+      {
+        id: "6",
+        label: t.categorySpecialties || "Đặc sản",
+        icon: "bi bi-box-seam",
+      },
+      {
+        id: "7",
+        label: t.categoryOther || "Khác",
+        icon: "bi bi-three-dots",
+      },
     ],
     [t]
   );
 
-  const [q, setQ] = useState({
-    keyword: searchParams.get("keyword") || "",
-    categoryIds: searchParams.get("categoryIds") || "",
-    minPrice: searchParams.get("minPrice") || "",
-    maxPrice: searchParams.get("maxPrice") || "",
-    minRating: searchParams.get("minRating") || "",
-    inStockOnly: searchParams.get("inStockOnly") === "true",
-    sort: searchParams.get("sort") || "newest",
-    page: Number(searchParams.get("page") || 1),
-    pageSize: Number(searchParams.get("pageSize") || 6),
-  });
+  const [q, setQ] = useState(() => buildQueryFromSearchParams(searchParams));
 
   const [data, setData] = useState({
     items: [],
@@ -93,24 +109,18 @@ export default function ProductsPage() {
   const [err, setErr] = useState("");
 
   useEffect(() => {
-    setQ({
-      keyword: searchParams.get("keyword") || "",
-      categoryIds: searchParams.get("categoryIds") || "",
-      minPrice: searchParams.get("minPrice") || "",
-      maxPrice: searchParams.get("maxPrice") || "",
-      minRating: searchParams.get("minRating") || "",
-      inStockOnly: searchParams.get("inStockOnly") === "true",
-      sort: searchParams.get("sort") || "newest",
-      page: Number(searchParams.get("page") || 1),
-      pageSize: Number(searchParams.get("pageSize") || 6),
-    });
+    setQ(buildQueryFromSearchParams(searchParams));
   }, [searchParams]);
 
   const params = useMemo(() => {
     const p = { ...q };
-    Object.keys(p).forEach((k) => {
-      if (p[k] === "" || p[k] === null || p[k] === false) delete p[k];
+
+    Object.keys(p).forEach((key) => {
+      if (p[key] === "" || p[key] === null || p[key] === false) {
+        delete p[key];
+      }
     });
+
     return p;
   }, [q]);
 
@@ -121,6 +131,7 @@ export default function ProductsPage() {
 
       try {
         const res = await productService.search(params);
+
         setData(
           res?.data || {
             items: [],
@@ -155,7 +166,9 @@ export default function ProductsPage() {
     if (q.inStockOnly) nextParams.inStockOnly = "true";
     if (q.sort) nextParams.sort = q.sort;
     if (q.page && q.page !== 1) nextParams.page = String(q.page);
-    if (q.pageSize && q.pageSize !== 6) nextParams.pageSize = String(q.pageSize);
+    if (q.pageSize && q.pageSize !== 6) {
+      nextParams.pageSize = String(q.pageSize);
+    }
 
     setSearchParams(nextParams, { replace: true });
   }, [q, setSearchParams]);
@@ -164,6 +177,18 @@ export default function ProductsPage() {
     1,
     Math.ceil((data.totalItems || 0) / (data.pageSize || 6))
   );
+
+  const selectedCategory = categoryOptions.find(
+    (item) => item.id === q.categoryIds
+  );
+
+  const updateFilter = (changes) => {
+    setQ((prev) => ({
+      ...prev,
+      ...changes,
+      page: 1,
+    }));
+  };
 
   const clearFilters = () => {
     setQ({
@@ -187,119 +212,68 @@ export default function ProductsPage() {
     }));
   };
 
-  const selectedCategory = categoryOptions.find((x) => x.id === q.categoryIds);
-
   return (
     <MainLayout>
-      <section
-        className="section"
-        style={{
-          background: "#f5f5f5",
-          minHeight: "100vh",
-          paddingTop: 32,
-          paddingBottom: 48,
-        }}
-      >
+      <section className="section products-page-section">
         <div className="container">
-          <div
-            style={{
-              ...pageCard,
-              padding: 24,
-              marginBottom: 20,
-              borderLeft: "5px solid #ee4d2d",
-            }}
-          >
-            <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
+          <div className="products-card products-header-card">
+            <div className="products-header-top">
               <div>
-                <div
-                  style={{
-                    fontSize: 14,
-                    color: "#6b7280",
-                    marginBottom: 8,
-                    fontWeight: 600,
-                  }}
-                >
+                <div className="products-kicker">
                   {t.shopName || "SouVN Shop"}
                 </div>
 
-                <h2
-                  style={{
-                    margin: 0,
-                    fontWeight: 700,
-                    color: "#111827",
-                    fontSize: "clamp(24px, 4vw, 34px)",
-                  }}
-                >
+                <h2 className="products-title">
                   {t.productList || "Danh sách sản phẩm"}
                 </h2>
               </div>
 
-              <div
-                style={{
-                  fontSize: 14,
-                  color: "#6b7280",
-                  fontWeight: 600,
-                }}
-              >
+              <div className="products-total">
                 {t.totalProducts || "Tổng số sản phẩm:"}{" "}
-                <span style={{ color: "#ee4d2d" }}>{data.totalItems || 0}</span>
+                <span className="products-total-number">
+                  {data.totalItems || 0}
+                </span>
               </div>
             </div>
           </div>
 
           {err && (
-            <div
-              className="alert mb-4"
-              role="alert"
-              style={{
-                background: "#fef2f2",
-                color: "#b91c1c",
-                border: "1px solid #fecaca",
-                borderRadius: 12,
-              }}
-            >
+            <div className="products-alert" role="alert">
               {String(err)}
             </div>
           )}
 
           <div className="row g-4 align-items-start">
             <div className="col-lg-3">
-              <div style={{ ...pageCard, padding: 20, position: "sticky", top: 24 }}>
-                <div
-                  style={{
-                    fontSize: 18,
-                    fontWeight: 700,
-                    color: "#111827",
-                    marginBottom: 18,
-                  }}
-                >
-                  <i className="bi bi-funnel me-2" style={{ color: "#ee4d2d" }}></i>
+              <div className="products-card products-filter-card">
+                <div className="products-filter-title">
+                  <i className="bi bi-funnel me-2"></i>
                   {t.searchFilters || "Bộ lọc tìm kiếm"}
                 </div>
 
                 <div className="d-grid gap-3">
                   <div>
-                    <label className="form-label" style={labelStyle}>
+                    <label className="form-label products-form-label">
                       {t.keyword || "Từ khóa"}
                     </label>
+
                     <input
                       type="text"
-                      className="form-control"
+                      className="form-control products-input"
                       placeholder={t.enterProductName || "Nhập tên sản phẩm..."}
                       value={q.keyword}
                       onChange={(e) =>
-                        setQ({ ...q, keyword: e.target.value, page: 1 })
+                        updateFilter({ keyword: e.target.value })
                       }
-                      style={inputStyle}
                     />
                   </div>
 
                   <div>
-                    <label className="form-label" style={labelStyle}>
+                    <label className="form-label products-form-label">
                       {t.category || "Danh mục"}
                     </label>
 
-                    <div className="d-grid gap-2">
+                    <div className="products-category-list">
                       {categoryOptions.map((item) => {
                         const isActive = q.categoryIds === item.id;
 
@@ -308,22 +282,9 @@ export default function ProductsPage() {
                             key={item.id}
                             type="button"
                             onClick={() => toggleCategory(item.id)}
-                            style={{
-                              border: "none",
-                              outline: "none",
-                              background: isActive ? "#ee4d2d" : "#fff7ed",
-                              color: isActive ? "#fff" : "#c2410c",
-                              fontWeight: 700,
-                              borderRadius: 12,
-                              padding: "12px 14px",
-                              textAlign: "left",
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 10,
-                              boxShadow: isActive
-                                ? "0 8px 18px rgba(238,77,45,0.2)"
-                                : "inset 0 0 0 1px #fed7aa",
-                            }}
+                            className={`products-category-button ${
+                              isActive ? "active" : ""
+                            }`}
                           >
                             <i className={item.icon}></i>
                             <span>{item.label}</span>
@@ -333,97 +294,82 @@ export default function ProductsPage() {
                     </div>
 
                     {selectedCategory && (
-                      <div
-                        style={{
-                          marginTop: 10,
-                          fontSize: 13,
-                          color: "#6b7280",
-                          fontWeight: 600,
-                        }}
-                      >
+                      <div className="products-selected-category">
                         {t.selected || "Đang chọn:"}{" "}
-                        <span style={{ color: "#ee4d2d" }}>
-                          {selectedCategory.label}
-                        </span>
+                        <span>{selectedCategory.label}</span>
                       </div>
                     )}
                   </div>
 
                   <div className="row g-2">
                     <div className="col-6">
-                      <label className="form-label" style={labelStyle}>
+                      <label className="form-label products-form-label">
                         {t.priceFrom || "Giá từ"}
                       </label>
+
                       <input
                         type="number"
-                        className="form-control"
+                        className="form-control products-input"
                         placeholder="0"
+                        min="0"
                         value={q.minPrice}
                         onChange={(e) =>
-                          setQ({ ...q, minPrice: e.target.value, page: 1 })
+                          updateFilter({ minPrice: e.target.value })
                         }
-                        style={inputStyle}
                       />
                     </div>
 
                     <div className="col-6">
-                      <label className="form-label" style={labelStyle}>
+                      <label className="form-label products-form-label">
                         {t.priceTo || "Giá đến"}
                       </label>
+
                       <input
                         type="number"
-                        className="form-control"
+                        className="form-control products-input"
                         placeholder="1000000"
+                        min="0"
                         value={q.maxPrice}
                         onChange={(e) =>
-                          setQ({ ...q, maxPrice: e.target.value, page: 1 })
+                          updateFilter({ maxPrice: e.target.value })
                         }
-                        style={inputStyle}
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="form-label" style={labelStyle}>
+                    <label className="form-label products-form-label">
                       {t.minRating || "Đánh giá tối thiểu"}
                     </label>
+
                     <input
                       type="number"
-                      className="form-control"
+                      className="form-control products-input"
                       min="0"
                       max="5"
                       step="0.1"
                       placeholder={t.minRatingExample || "Ví dụ: 4"}
                       value={q.minRating}
                       onChange={(e) =>
-                        setQ({ ...q, minRating: e.target.value, page: 1 })
+                        updateFilter({ minRating: e.target.value })
                       }
-                      style={inputStyle}
                     />
                   </div>
 
-                  <div
-                    className="form-check"
-                    style={{
-                      background: "#fff7ed",
-                      border: "1px solid #fed7aa",
-                      borderRadius: 12,
-                      padding: "12px 14px 12px 38px",
-                    }}
-                  >
+                  <div className="form-check products-stock-check">
                     <input
                       className="form-check-input"
                       type="checkbox"
                       id="inStockOnly"
                       checked={q.inStockOnly}
                       onChange={(e) =>
-                        setQ({ ...q, inStockOnly: e.target.checked, page: 1 })
+                        updateFilter({ inStockOnly: e.target.checked })
                       }
                     />
+
                     <label
-                      className="form-check-label"
+                      className="form-check-label products-stock-label"
                       htmlFor="inStockOnly"
-                      style={{ color: "#9a3412", fontWeight: 600 }}
                     >
                       {t.inStockOnly || "Chỉ hiển thị sản phẩm còn hàng"}
                     </label>
@@ -431,16 +377,8 @@ export default function ProductsPage() {
 
                   <button
                     type="button"
-                    className="btn"
+                    className="btn products-clear-button"
                     onClick={clearFilters}
-                    style={{
-                      height: 44,
-                      borderRadius: 10,
-                      fontWeight: 700,
-                      background: "#ee4d2d",
-                      color: "#fff",
-                      border: "none",
-                    }}
                   >
                     <i className="bi bi-arrow-counterclockwise me-2"></i>
                     {t.clearFilters || "Xóa bộ lọc"}
@@ -450,23 +388,10 @@ export default function ProductsPage() {
             </div>
 
             <div className="col-lg-9">
-              <div style={{ ...pageCard, padding: 20, marginBottom: 16 }}>
-                <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 10,
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    <span
-                      style={{
-                        color: "#6b7280",
-                        fontWeight: 700,
-                        fontSize: 14,
-                      }}
-                    >
+              <div className="products-card products-toolbar-card">
+                <div className="products-toolbar-inner">
+                  <div className="products-sort-group">
+                    <span className="products-sort-label">
                       {t.sortBy || "Sắp xếp theo"}
                     </span>
 
@@ -477,22 +402,10 @@ export default function ProductsPage() {
                         <button
                           key={option.value}
                           type="button"
-                          onClick={() =>
-                            setQ({ ...q, sort: option.value, page: 1 })
-                          }
-                          style={{
-                            border: "none",
-                            outline: "none",
-                            background: isActive ? "#ee4d2d" : "#fff",
-                            color: isActive ? "#fff" : "#374151",
-                            fontWeight: 700,
-                            borderRadius: 999,
-                            padding: "10px 16px",
-                            whiteSpace: "nowrap",
-                            boxShadow: isActive
-                              ? "0 8px 18px rgba(238,77,45,0.2)"
-                              : "inset 0 0 0 1px #e5e7eb",
-                          }}
+                          onClick={() => updateFilter({ sort: option.value })}
+                          className={`products-sort-button ${
+                            isActive ? "active" : ""
+                          }`}
                         >
                           {option.label}
                         </button>
@@ -500,47 +413,34 @@ export default function ProductsPage() {
                     })}
                   </div>
 
-                  <div
-                    style={{
-                      color: "#6b7280",
-                      fontSize: 14,
-                      fontWeight: 600,
-                    }}
-                  >
+                  <div className="products-count">
                     {t.showing || "Hiển thị"}{" "}
-                    <span style={{ color: "#ee4d2d" }}>
-                      {data.items?.length || 0}
-                    </span>{" "}
+                    <span>{data.items?.length || 0}</span>{" "}
                     {t.products || "sản phẩm"}
                   </div>
                 </div>
               </div>
 
               {loading ? (
-                <div style={{ ...pageCard, padding: 40 }} className="text-center">
+                <div className="products-card products-loading-card">
                   <div className="spinner-border text-danger" role="status"></div>
-                  <p className="mt-3 mb-0" style={{ color: "#6b7280" }}>
+                  <p className="products-loading-text">
                     {t.loadingProducts || "Đang tải sản phẩm..."}
                   </p>
                 </div>
               ) : (data.items || []).length === 0 ? (
-                <div style={{ ...pageCard, padding: 40 }} className="text-center">
-                  <div
-                    style={{
-                      fontSize: 54,
-                      color: "#d1d5db",
-                      marginBottom: 12,
-                    }}
-                  >
+                <div className="products-card products-empty-card">
+                  <div className="products-empty-icon">
                     <i className="bi bi-search"></i>
                   </div>
 
-                  <h4 style={{ color: "#111827", fontWeight: 700 }}>
+                  <h4 className="products-empty-title">
                     {t.noMatchingProducts || "Không tìm thấy sản phẩm phù hợp"}
                   </h4>
 
-                  <p style={{ color: "#6b7280", marginBottom: 0 }}>
-                    {t.tryDifferentFilters || "Hãy thử thay đổi từ khóa tìm kiếm hoặc bộ lọc."}
+                  <p className="products-empty-text">
+                    {t.tryDifferentFilters ||
+                      "Hãy thử thay đổi từ khóa tìm kiếm hoặc bộ lọc."}
                   </p>
                 </div>
               ) : (
@@ -553,7 +453,7 @@ export default function ProductsPage() {
                     ))}
                   </div>
 
-                  <div className="mt-4 d-flex justify-content-center">
+                  <div className="products-pagination-wrap">
                     <Pagination
                       page={q.page}
                       totalPages={totalPages}

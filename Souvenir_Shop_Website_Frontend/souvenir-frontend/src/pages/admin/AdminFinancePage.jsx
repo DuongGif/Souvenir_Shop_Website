@@ -1,30 +1,36 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { adminOrdersService } from "../../services/admin/adminOrdersService";
 
 const PAGE_SIZE = 5;
 
 const getErrorMessage = (ex, fallback) => {
   const data = ex?.response?.data;
+
   if (typeof data === "string") return data;
   if (data?.message) return data.message;
   if (data?.title) return data.title;
+
   if (data?.errors) {
     const firstError = Object.values(data.errors)?.flat?.()[0];
     if (firstError) return firstError;
   }
+
   return fallback;
 };
 
 const formatPrice = (value) => {
   if (value === null || value === undefined || value === "") return "0 ₫";
-  return Number(value).toLocaleString("vi-VN") + " ₫";
+  return `${Number(value).toLocaleString("vi-VN")} ₫`;
 };
 
 const formatDateTime = (value) => {
   if (!value) return "-";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return "-";
-  return d.toLocaleString("vi-VN", {
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return "-";
+
+  return date.toLocaleString("vi-VN", {
     hour: "2-digit",
     minute: "2-digit",
     day: "2-digit",
@@ -34,85 +40,123 @@ const formatDateTime = (value) => {
 };
 
 const normalizeStatus = (status) => {
-  const s = String(status || "").trim().toLowerCase();
+  const value = String(status || "").trim().toLowerCase();
 
   if (
-    s === "dang_giao" ||
-    s === "đang giao" ||
-    s === "da_giao_van" ||
-    s === "shipped"
+    value === "dang_giao" ||
+    value === "đang giao" ||
+    value === "da_giao_van" ||
+    value === "shipped"
   ) {
     return "shipping";
   }
 
-  if (s === "canceled") return "cancelled";
-  if (s === "pending_cancel") return "cancel_requested";
-  if (s === "cho_duyet_huy") return "cancel_requested";
-  if (s === "yeu_cau_huy") return "cancel_requested";
-  if (s === "yeu_cau_hoan_hang") return "return_requested";
-  if (s === "da_hoan_hang") return "returned";
+  if (value === "canceled") return "cancelled";
+  if (value === "pending_cancel") return "cancel_requested";
+  if (value === "cho_duyet_huy") return "cancel_requested";
+  if (value === "yeu_cau_huy") return "cancel_requested";
+  if (value === "yeu_cau_hoan_hang") return "return_requested";
+  if (value === "da_hoan_hang") return "returned";
 
-  return s || "pending";
+  return value || "pending";
 };
 
 const getStatusText = (status) => {
-  const s = normalizeStatus(status);
+  const value = normalizeStatus(status);
 
-  if (s === "pending") return "Chờ xử lý";
-  if (s === "confirmed") return "Đã xác nhận";
-  if (s === "paid") return "Đã thanh toán";
-  if (s === "shipping") return "Đang giao hàng";
-  if (s === "completed") return "Hoàn thành";
-  if (s === "cancel_requested") return "Chờ duyệt hủy";
-  if (s === "return_requested") return "Yêu cầu hoàn hàng";
-  if (s === "returned") return "Đã hoàn hàng";
-  if (s === "cancelled") return "Đã hủy";
+  if (value === "pending") return "Chờ xử lý";
+  if (value === "confirmed") return "Đã xác nhận";
+  if (value === "paid") return "Đã thanh toán";
+  if (value === "shipping") return "Đang giao hàng";
+  if (value === "completed") return "Hoàn thành";
+  if (value === "cancel_requested") return "Chờ duyệt hủy";
+  if (value === "return_requested") return "Yêu cầu hoàn hàng";
+  if (value === "returned") return "Đã hoàn hàng";
+  if (value === "cancelled") return "Đã hủy";
 
   return status || "Không xác định";
 };
 
 const getStatusBadge = (status) => {
-  const s = normalizeStatus(status);
+  const value = normalizeStatus(status);
 
-  if (s === "pending") {
-    return { text: "Chờ xử lý", bg: "#fef3c7", color: "#92400e" };
-  }
-  if (s === "confirmed") {
-    return { text: "Đã xác nhận", bg: "#e5e7eb", color: "#374151" };
-  }
-  if (s === "paid") {
-    return { text: "Đã thanh toán", bg: "#dcfce7", color: "#166534" };
-  }
-  if (s === "shipping") {
-    return { text: "Đang giao hàng", bg: "#dbeafe", color: "#1d4ed8" };
-  }
-  if (s === "completed") {
-    return { text: "Hoàn thành", bg: "#dcfce7", color: "#166534" };
-  }
-  if (s === "cancel_requested") {
-    return { text: "Chờ duyệt hủy", bg: "#fff7ed", color: "#9a3412" };
-  }
-  if (s === "return_requested") {
-    return { text: "Yêu cầu hoàn hàng", bg: "#f3e8ff", color: "#7e22ce" };
-  }
-  if (s === "returned") {
-    return { text: "Đã hoàn hàng", bg: "#ede9fe", color: "#5b21b6" };
-  }
-  if (s === "cancelled") {
-    return { text: "Đã hủy", bg: "#fee2e2", color: "#991b1b" };
+  if (value === "pending") {
+    return {
+      text: "Chờ xử lý",
+      className: "pending",
+    };
   }
 
-  return { text: getStatusText(status), bg: "#e5e7eb", color: "#374151" };
+  if (value === "confirmed") {
+    return {
+      text: "Đã xác nhận",
+      className: "confirmed",
+    };
+  }
+
+  if (value === "paid") {
+    return {
+      text: "Đã thanh toán",
+      className: "paid",
+    };
+  }
+
+  if (value === "shipping") {
+    return {
+      text: "Đang giao hàng",
+      className: "shipping",
+    };
+  }
+
+  if (value === "completed") {
+    return {
+      text: "Hoàn thành",
+      className: "completed",
+    };
+  }
+
+  if (value === "cancel_requested") {
+    return {
+      text: "Chờ duyệt hủy",
+      className: "cancel-requested",
+    };
+  }
+
+  if (value === "return_requested") {
+    return {
+      text: "Yêu cầu hoàn hàng",
+      className: "return-requested",
+    };
+  }
+
+  if (value === "returned") {
+    return {
+      text: "Đã hoàn hàng",
+      className: "returned",
+    };
+  }
+
+  if (value === "cancelled") {
+    return {
+      text: "Đã hủy",
+      className: "cancelled",
+    };
+  }
+
+  return {
+    text: getStatusText(status),
+    className: "unknown",
+  };
 };
 
 const isPlacedOrder = (order) => {
-  const s = normalizeStatus(order?.status);
-  return s !== "cancelled" && s !== "returned";
+  const status = normalizeStatus(order?.status);
+  return status !== "cancelled" && status !== "returned";
 };
 
 const isDeliveredOrder = (order) => {
-  const s = normalizeStatus(order?.status);
-  return s === "completed";
+  const status = normalizeStatus(order?.status);
+  return status === "completed";
 };
 
 const isPendingDeliveryOrder = (order) => {
@@ -120,24 +164,27 @@ const isPendingDeliveryOrder = (order) => {
 };
 
 const sumRevenue = (items) => {
-  return items.reduce((sum, item) => sum + Number(item?.totalAmount || 0), 0);
+  return items.reduce((sum, item) => {
+    return sum + Number(item?.totalAmount || 0);
+  }, 0);
 };
 
 const isInDateRange = (dateValue, fromDate, toDate) => {
   if (!fromDate && !toDate) return true;
   if (!dateValue) return false;
 
-  const d = new Date(dateValue);
-  if (Number.isNaN(d.getTime())) return false;
+  const date = new Date(dateValue);
+
+  if (Number.isNaN(date.getTime())) return false;
 
   if (fromDate) {
     const from = new Date(`${fromDate}T00:00:00`);
-    if (d < from) return false;
+    if (date < from) return false;
   }
 
   if (toDate) {
     const to = new Date(`${toDate}T23:59:59`);
-    if (d > to) return false;
+    if (date > to) return false;
   }
 
   return true;
@@ -154,7 +201,7 @@ export default function AdminFinancePage() {
   const [tab, setTab] = useState("placed");
   const [currentPage, setCurrentPage] = useState(1);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     setErr("");
 
@@ -166,74 +213,80 @@ export default function AdminFinancePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   useEffect(() => {
     setCurrentPage(1);
   }, [keyword, fromDate, toDate, tab]);
 
   const reportOrders = useMemo(() => {
-    return orders.filter((o) => isInDateRange(o?.createdAt, fromDate, toDate));
+    return orders.filter((order) => {
+      return isInDateRange(order?.createdAt, fromDate, toDate);
+    });
   }, [orders, fromDate, toDate]);
 
-  const placedOrders = useMemo(
-    () => reportOrders.filter(isPlacedOrder),
-    [reportOrders]
-  );
+  const placedOrders = useMemo(() => {
+    return reportOrders.filter(isPlacedOrder);
+  }, [reportOrders]);
 
-  const deliveredOrders = useMemo(
-    () => reportOrders.filter(isDeliveredOrder),
-    [reportOrders]
-  );
+  const deliveredOrders = useMemo(() => {
+    return reportOrders.filter(isDeliveredOrder);
+  }, [reportOrders]);
 
-  const pendingDeliveryOrders = useMemo(
-    () => reportOrders.filter(isPendingDeliveryOrder),
-    [reportOrders]
-  );
+  const pendingDeliveryOrders = useMemo(() => {
+    return reportOrders.filter(isPendingDeliveryOrder);
+  }, [reportOrders]);
 
-  const placedRevenue = useMemo(() => sumRevenue(placedOrders), [placedOrders]);
-  const deliveredRevenue = useMemo(
-    () => sumRevenue(deliveredOrders),
-    [deliveredOrders]
-  );
-  const pendingDeliveryRevenue = useMemo(
-    () => sumRevenue(pendingDeliveryOrders),
-    [pendingDeliveryOrders]
-  );
+  const placedRevenue = useMemo(() => {
+    return sumRevenue(placedOrders);
+  }, [placedOrders]);
+
+  const deliveredRevenue = useMemo(() => {
+    return sumRevenue(deliveredOrders);
+  }, [deliveredOrders]);
+
+  const pendingDeliveryRevenue = useMemo(() => {
+    return sumRevenue(pendingDeliveryOrders);
+  }, [pendingDeliveryOrders]);
 
   const completionRate = useMemo(() => {
     if (placedOrders.length === 0) return 0;
+
     return Math.round((deliveredOrders.length / placedOrders.length) * 100);
   }, [placedOrders.length, deliveredOrders.length]);
 
   const detailSource = useMemo(() => {
     if (tab === "delivered") return deliveredOrders;
     if (tab === "pending") return pendingDeliveryOrders;
+
     return placedOrders;
   }, [tab, placedOrders, deliveredOrders, pendingDeliveryOrders]);
 
   const detailOrders = useMemo(() => {
-    const k = keyword.trim().toLowerCase();
+    const searchText = keyword.trim().toLowerCase();
 
-    const result = detailSource.filter((o) => {
-      if (!k) return true;
+    const result = detailSource.filter((order) => {
+      if (!searchText) return true;
 
       return (
-        String(o?.id || "").toLowerCase().includes(k) ||
-        String(o?.orderCode || "").toLowerCase().includes(k) ||
-        String(o?.userId || "").toLowerCase().includes(k) ||
-        String(getStatusText(o?.status) || "").toLowerCase().includes(k)
+        String(order?.id || "").toLowerCase().includes(searchText) ||
+        String(order?.orderCode || "").toLowerCase().includes(searchText) ||
+        String(order?.userId || "").toLowerCase().includes(searchText) ||
+        String(getStatusText(order?.status) || "")
+          .toLowerCase()
+          .includes(searchText)
       );
     });
 
     return result.sort((a, b) => {
-      const da = new Date(a?.createdAt || 0).getTime();
-      const db = new Date(b?.createdAt || 0).getTime();
-      return db - da;
+      const dateA = new Date(a?.createdAt || 0).getTime();
+      const dateB = new Date(b?.createdAt || 0).getTime();
+
+      return dateB - dateA;
     });
   }, [detailSource, keyword]);
 
@@ -247,17 +300,29 @@ export default function AdminFinancePage() {
 
   const goToPage = (page) => {
     if (page < 1 || page > totalPages) return;
+
     setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
+  const clearFilters = () => {
+    setKeyword("");
+    setFromDate("");
+    setToDate("");
+    setTab("placed");
+    setCurrentPage(1);
   };
 
   return (
-    <div>
-      <div className="mb-4">
-        <h2 style={{ marginBottom: 6, color: "#0f172a", fontWeight: 800 }}>
-          Báo cáo tài chính
-        </h2>
-        <p style={{ marginBottom: 0, color: "#64748b" }}>
+    <div className="admin-finance-page">
+      <div className="admin-finance-header">
+        <h2 className="admin-finance-title">Báo cáo tài chính</h2>
+
+        <p className="admin-finance-desc">
           Thống kê doanh thu từ đơn khách đã đặt và đơn đã giao thành công.
         </p>
       </div>
@@ -268,28 +333,14 @@ export default function AdminFinancePage() {
         </div>
       )}
 
-      <div
-        style={{
-          background: "#fff7f5",
-          border: "1px solid #ffd7cc",
-          borderRadius: 20,
-          padding: 18,
-          marginBottom: 20,
-        }}
-      >
-        <div className="d-flex justify-content-between align-items-start flex-wrap gap-3">
+      <div className="admin-finance-alert-box">
+        <div className="admin-finance-alert-inner">
           <div>
-            <div
-              style={{
-                fontWeight: 800,
-                fontSize: 22,
-                color: "#9a3412",
-                marginBottom: 8,
-              }}
-            >
+            <div className="admin-finance-alert-title">
               Tổng quan doanh thu
             </div>
-            <div style={{ color: "#7c2d12", lineHeight: 1.7 }}>
+
+            <div className="admin-finance-alert-text">
               Trang này đang tính theo dữ liệu đơn hàng hiện có trong hệ thống.
               <br />
               Đơn đã đặt: không tính đơn đã hủy và đã hoàn hàng.
@@ -301,8 +352,7 @@ export default function AdminFinancePage() {
           <button
             type="button"
             onClick={load}
-            className="btn btn-outline-danger"
-            style={{ borderRadius: 12, fontWeight: 700 }}
+            className="btn btn-outline-danger admin-finance-reload-btn"
           >
             Tải lại
           </button>
@@ -311,107 +361,108 @@ export default function AdminFinancePage() {
 
       <div className="row g-4 mb-4">
         <div className="col-md-6 col-xl-3">
-          <div style={summaryCardStyle}>
-            <div style={summaryLabelStyle}>Đơn đã đặt</div>
-            <div style={summaryValueStyle}>{formatPrice(placedRevenue)}</div>
-            <div style={summarySubStyle}>{placedOrders.length} đơn</div>
+          <div className="admin-finance-summary-card">
+            <div className="admin-finance-summary-label">Đơn đã đặt</div>
+
+            <div className="admin-finance-summary-value">
+              {formatPrice(placedRevenue)}
+            </div>
+
+            <div className="admin-finance-summary-sub">
+              {placedOrders.length} đơn
+            </div>
           </div>
         </div>
 
         <div className="col-md-6 col-xl-3">
-          <div style={summaryCardStyle}>
-            <div style={summaryLabelStyle}>Đơn đã giao</div>
-            <div style={{ ...summaryValueStyle, color: "#16a34a" }}>
+          <div className="admin-finance-summary-card">
+            <div className="admin-finance-summary-label">Đơn đã giao</div>
+
+            <div className="admin-finance-summary-value green">
               {formatPrice(deliveredRevenue)}
             </div>
-            <div style={summarySubStyle}>{deliveredOrders.length} đơn</div>
+
+            <div className="admin-finance-summary-sub">
+              {deliveredOrders.length} đơn
+            </div>
           </div>
         </div>
 
         <div className="col-md-6 col-xl-3">
-          <div style={summaryCardStyle}>
-            <div style={summaryLabelStyle}>Doanh thu chờ giao</div>
-            <div style={{ ...summaryValueStyle, color: "#2563eb" }}>
+          <div className="admin-finance-summary-card">
+            <div className="admin-finance-summary-label">
+              Doanh thu chờ giao
+            </div>
+
+            <div className="admin-finance-summary-value blue">
               {formatPrice(pendingDeliveryRevenue)}
             </div>
-            <div style={summarySubStyle}>{pendingDeliveryOrders.length} đơn</div>
+
+            <div className="admin-finance-summary-sub">
+              {pendingDeliveryOrders.length} đơn
+            </div>
           </div>
         </div>
 
         <div className="col-md-6 col-xl-3">
-          <div style={summaryCardStyle}>
-            <div style={summaryLabelStyle}>Tỷ lệ hoàn thành</div>
-            <div style={{ ...summaryValueStyle, color: "#7c3aed" }}>
+          <div className="admin-finance-summary-card">
+            <div className="admin-finance-summary-label">
+              Tỷ lệ hoàn thành
+            </div>
+
+            <div className="admin-finance-summary-value purple">
               {completionRate}%
             </div>
-            <div style={summarySubStyle}>
+
+            <div className="admin-finance-summary-sub">
               {deliveredOrders.length}/{placedOrders.length} đơn
             </div>
           </div>
         </div>
       </div>
 
-      <div
-        style={{
-          background: "#fff",
-          borderRadius: 22,
-          padding: 18,
-          boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
-          marginBottom: 20,
-        }}
-      >
+      <div className="admin-finance-filter-card">
         <div className="row g-3 align-items-end">
           <div className="col-md-4">
-            <label className="form-label" style={labelStyle}>
+            <label className="form-label admin-finance-label">
               Tìm kiếm đơn hàng
             </label>
+
             <input
-              className="form-control"
+              className="form-control admin-finance-input"
               placeholder="Nhập mã đơn, ID hoặc trạng thái..."
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
-              style={inputStyle}
             />
           </div>
 
           <div className="col-md-3">
-            <label className="form-label" style={labelStyle}>
-              Từ ngày
-            </label>
+            <label className="form-label admin-finance-label">Từ ngày</label>
+
             <input
               type="date"
-              className="form-control"
+              className="form-control admin-finance-input"
               value={fromDate}
               onChange={(e) => setFromDate(e.target.value)}
-              style={inputStyle}
             />
           </div>
 
           <div className="col-md-3">
-            <label className="form-label" style={labelStyle}>
-              Đến ngày
-            </label>
+            <label className="form-label admin-finance-label">Đến ngày</label>
+
             <input
               type="date"
-              className="form-control"
+              className="form-control admin-finance-input"
               value={toDate}
               onChange={(e) => setToDate(e.target.value)}
-              style={inputStyle}
             />
           </div>
 
           <div className="col-md-2">
             <button
               type="button"
-              onClick={() => {
-                setKeyword("");
-                setFromDate("");
-                setToDate("");
-                setTab("placed");
-                setCurrentPage(1);
-              }}
-              className="btn btn-outline-secondary w-100"
-              style={{ borderRadius: 12, height: 46, fontWeight: 700 }}
+              onClick={clearFilters}
+              className="btn btn-outline-secondary w-100 admin-finance-clear-btn"
             >
               Xóa lọc
             </button>
@@ -419,39 +470,22 @@ export default function AdminFinancePage() {
         </div>
       </div>
 
-      <div
-        style={{
-          background: "#fff",
-          borderRadius: 22,
-          overflow: "hidden",
-          boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
-        }}
-      >
-        <div style={{ padding: 18, borderBottom: "1px solid #e5e7eb" }}>
-          <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
-            <h4
-              style={{
-                margin: 0,
-                color: "#0f172a",
-                fontWeight: 800,
-                fontSize: 26,
-              }}
-            >
-              Chi tiết doanh thu
-            </h4>
+      <div className="admin-finance-detail-card">
+        <div className="admin-finance-detail-head">
+          <div className="admin-finance-detail-head-top">
+            <h4 className="admin-finance-detail-title">Chi tiết doanh thu</h4>
 
-            <div style={{ color: "#64748b", fontWeight: 600 }}>
+            <div className="admin-finance-detail-count">
               Hiển thị {detailOrders.length} đơn hàng • Trang {safeCurrentPage}/
               {totalPages}
             </div>
           </div>
 
-          <div className="d-flex gap-2 flex-wrap">
+          <div className="admin-finance-tabs">
             <button
               type="button"
               onClick={() => setTab("placed")}
-              className={`btn ${tab === "placed" ? "btn-danger" : "btn-outline-danger"}`}
-              style={{ borderRadius: 999, fontWeight: 700 }}
+              className={`admin-finance-tab ${tab === "placed" ? "active" : ""}`}
             >
               Đơn đã đặt
             </button>
@@ -459,8 +493,9 @@ export default function AdminFinancePage() {
             <button
               type="button"
               onClick={() => setTab("delivered")}
-              className={`btn ${tab === "delivered" ? "btn-danger" : "btn-outline-danger"}`}
-              style={{ borderRadius: 999, fontWeight: 700 }}
+              className={`admin-finance-tab ${
+                tab === "delivered" ? "active" : ""
+              }`}
             >
               Đơn đã giao
             </button>
@@ -468,8 +503,7 @@ export default function AdminFinancePage() {
             <button
               type="button"
               onClick={() => setTab("pending")}
-              className={`btn ${tab === "pending" ? "btn-danger" : "btn-outline-danger"}`}
-              style={{ borderRadius: 999, fontWeight: 700 }}
+              className={`admin-finance-tab ${tab === "pending" ? "active" : ""}`}
             >
               Đơn chờ giao
             </button>
@@ -477,86 +511,66 @@ export default function AdminFinancePage() {
         </div>
 
         {loading ? (
-          <div className="text-center py-5">
+          <div className="admin-finance-loading">
             <div className="spinner-border text-danger" role="status"></div>
-            <p className="mt-3 mb-0">Đang tải báo cáo tài chính...</p>
+
+            <p className="admin-finance-loading-text">
+              Đang tải báo cáo tài chính...
+            </p>
           </div>
         ) : detailOrders.length === 0 ? (
-          <div style={{ padding: 24, color: "#64748b" }}>
-            Không có dữ liệu phù hợp.
-          </div>
+          <div className="admin-finance-empty">Không có dữ liệu phù hợp.</div>
         ) : (
           <>
             <div className="table-responsive">
-              <table
-                style={{
-                  width: "100%",
-                  minWidth: 980,
-                  borderCollapse: "collapse",
-                }}
-              >
+              <table className="admin-finance-table">
                 <thead>
-                  <tr style={{ background: "#f8fafc" }}>
-                    <th style={thStyle}>Mã đơn</th>
-                    <th style={thStyle}>ID</th>
-                    <th style={thStyle}>Khách hàng</th>
-                    <th style={thStyle}>Ngày tạo</th>
-                    <th style={thStyle}>Trạng thái</th>
-                    <th style={thStyle}>Tạm tính</th>
-                    <th style={thStyle}>Phí ship</th>
-                    <th style={thStyle}>Tổng tiền</th>
+                  <tr>
+                    <th>Mã đơn</th>
+                    <th>ID</th>
+                    <th>Khách hàng</th>
+                    <th>Ngày tạo</th>
+                    <th>Trạng thái</th>
+                    <th>Tạm tính</th>
+                    <th>Phí ship</th>
+                    <th>Tổng tiền</th>
                   </tr>
                 </thead>
 
                 <tbody>
-                  {pagedOrders.map((o) => {
-                    const badge = getStatusBadge(o.status);
+                  {pagedOrders.map((order) => {
+                    const badge = getStatusBadge(order.status);
 
                     return (
-                      <tr key={o.id}>
-                        <td style={{ ...tdStyle, fontWeight: 700 }}>
-                          {o.orderCode || "-"}
+                      <tr key={order.id}>
+                        <td className="admin-finance-order-code">
+                          {order.orderCode || "-"}
                         </td>
 
-                        <td style={tdStyle}>{o.id}</td>
+                        <td>{order.id}</td>
 
-                        <td style={tdStyle}>{o.userId ? `#${o.userId}` : "-"}</td>
+                        <td>{order.userId ? `#${order.userId}` : "-"}</td>
 
-                        <td style={tdStyle}>{formatDateTime(o.createdAt)}</td>
+                        <td>{formatDateTime(order.createdAt)}</td>
 
-                        <td style={tdStyle}>
+                        <td>
                           <span
-                            style={{
-                              background: badge.bg,
-                              color: badge.color,
-                              padding: "6px 12px",
-                              borderRadius: 999,
-                              fontSize: 13,
-                              fontWeight: 700,
-                              whiteSpace: "nowrap",
-                            }}
+                            className={`admin-finance-status ${badge.className}`}
                           >
                             {badge.text}
                           </span>
                         </td>
 
-                        <td style={{ ...tdStyle, whiteSpace: "nowrap" }}>
-                          {formatPrice(o.subtotal)}
+                        <td className="admin-finance-nowrap">
+                          {formatPrice(order.subtotal)}
                         </td>
 
-                        <td style={{ ...tdStyle, whiteSpace: "nowrap" }}>
-                          {formatPrice(o.shippingFee)}
+                        <td className="admin-finance-nowrap">
+                          {formatPrice(order.shippingFee)}
                         </td>
 
-                        <td
-                          style={{
-                            ...tdStyle,
-                            whiteSpace: "nowrap",
-                            fontWeight: 800,
-                            color: "#ee4d2d",
-                          }}
-                        >
-                          {formatPrice(o.totalAmount)}
+                        <td className="admin-finance-total">
+                          {formatPrice(order.totalAmount)}
                         </td>
                       </tr>
                     );
@@ -565,36 +579,32 @@ export default function AdminFinancePage() {
               </table>
             </div>
 
-            <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 p-3 border-top">
-              <div style={{ color: "#64748b", fontWeight: 500 }}>
+            <div className="admin-finance-footer">
+              <div className="admin-finance-page-limit">
                 Hiển thị tối đa {PAGE_SIZE} đơn hàng mỗi trang
               </div>
 
-              <div className="d-flex align-items-center gap-2 flex-wrap">
+              <div className="admin-finance-pagination">
                 <button
-                  className="btn btn-outline-primary btn-sm"
+                  type="button"
+                  className="btn btn-outline-primary btn-sm admin-finance-page-btn"
                   onClick={() => goToPage(safeCurrentPage - 1)}
                   disabled={safeCurrentPage === 1}
-                  style={{ borderRadius: 10, fontWeight: 600 }}
                 >
                   Trang trước
                 </button>
 
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                {Array.from({ length: totalPages }, (_, index) => index + 1).map(
                   (page) => (
                     <button
                       key={page}
-                      className={`btn btn-sm ${
+                      type="button"
+                      onClick={() => goToPage(page)}
+                      className={`btn btn-sm admin-finance-page-btn ${
                         safeCurrentPage === page
-                          ? "btn-primary"
+                          ? "active"
                           : "btn-outline-primary"
                       }`}
-                      onClick={() => goToPage(page)}
-                      style={{
-                        minWidth: 40,
-                        borderRadius: 10,
-                        fontWeight: 600,
-                      }}
                     >
                       {page}
                     </button>
@@ -602,10 +612,10 @@ export default function AdminFinancePage() {
                 )}
 
                 <button
-                  className="btn btn-outline-primary btn-sm"
+                  type="button"
+                  className="btn btn-outline-primary btn-sm admin-finance-page-btn"
                   onClick={() => goToPage(safeCurrentPage + 1)}
                   disabled={safeCurrentPage === totalPages}
-                  style={{ borderRadius: 10, fontWeight: 600 }}
                 >
                   Trang sau
                 </button>
@@ -617,59 +627,3 @@ export default function AdminFinancePage() {
     </div>
   );
 }
-
-const summaryCardStyle = {
-  background: "#fff",
-  borderRadius: 20,
-  padding: 20,
-  boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
-  height: "100%",
-};
-
-const summaryLabelStyle = {
-  color: "#64748b",
-  fontWeight: 700,
-  marginBottom: 12,
-  fontSize: 15,
-};
-
-const summaryValueStyle = {
-  color: "#0f172a",
-  fontWeight: 800,
-  fontSize: 32,
-  lineHeight: 1.2,
-  marginBottom: 8,
-};
-
-const summarySubStyle = {
-  color: "#6b7280",
-  fontSize: 14,
-  fontWeight: 600,
-};
-
-const labelStyle = {
-  color: "#111827",
-  fontWeight: 700,
-};
-
-const inputStyle = {
-  height: 46,
-  borderRadius: 12,
-  color: "#111827",
-};
-
-const thStyle = {
-  padding: "14px",
-  textAlign: "left",
-  color: "#0f172a",
-  fontWeight: 800,
-  borderBottom: "1px solid #e5e7eb",
-  whiteSpace: "nowrap",
-};
-
-const tdStyle = {
-  padding: "14px",
-  color: "#334155",
-  borderBottom: "1px solid #e5e7eb",
-  verticalAlign: "middle",
-};

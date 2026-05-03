@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import { orderService } from "../services/orderService";
@@ -7,94 +7,141 @@ import { cartService } from "../services/cartService";
 import { useLanguage } from "../contexts/LanguageContext.jsx";
 import { commonTranslations } from "../i18n/common";
 
-/* ================== UI HELPERS ================== */
+const formatPrice = (value) => {
+  return `${Number(value || 0).toLocaleString("vi-VN")} ₫`;
+};
 
-const formatPrice = (v) => Number(v || 0).toLocaleString("vi-VN") + " ₫";
+const normalizeStatus = (status) => String(status || "").toLowerCase();
 
 const getOrderStatusBadge = (status, t) => {
-  const s = String(status || "").toLowerCase();
+  const s = normalizeStatus(status);
 
-  if (s === "pending") {
-    return { text: t.orderStatusPending || "Chờ xử lý", color: "#f59e0b", bg: "#fff7ed" };
-  }
-  if (s === "confirmed") {
-    return { text: t.orderStatusConfirmed || "Đã xác nhận", color: "#2563eb", bg: "#eff6ff" };
-  }
-  if (s === "paid") {
-    return { text: t.orderStatusPaid || "Đã thanh toán", color: "#10b981", bg: "#ecfdf5" };
-  }
-  if (s === "shipping") {
-    return { text: t.orderStatusShipping || "Đang giao hàng", color: "#3b82f6", bg: "#eff6ff" };
-  }
-  if (s === "completed") {
-    return { text: t.orderStatusCompleted || "Hoàn thành", color: "#22c55e", bg: "#ecfdf5" };
-  }
-  if (s === "cancel_requested" || s === "pending_cancel") {
-    return { text: t.orderStatusCancelPending || "Chờ duyệt hủy", color: "#9a3412", bg: "#fff7ed" };
-  }
-  if (s === "return_requested") {
-    return { text: t.orderStatusReturnRequested || "Yêu cầu hoàn hàng", color: "#7c3aed", bg: "#f5f3ff" };
-  }
-  if (s === "returned") {
-    return { text: t.orderStatusReturned || "Đã hoàn hàng", color: "#5b21b6", bg: "#ede9fe" };
-  }
-  if (s === "cancelled" || s === "canceled") {
-    return { text: t.orderStatusCancelled || "Đã hủy", color: "#ef4444", bg: "#fef2f2" };
+  if (s === "pending" || s === "cho_xu_ly" || s === "cho_xac_nhan") {
+    return {
+      text: t.orderStatusPending || "Chờ xử lý",
+      className: "order-detail-status-pending",
+    };
   }
 
-  return { text: t.orderStatusUnknown || "Không xác định", color: "#6b7280", bg: "#f3f4f6" };
+  if (s === "confirmed" || s === "da_xac_nhan") {
+    return {
+      text: t.orderStatusConfirmed || "Đã xác nhận",
+      className: "order-detail-status-confirmed",
+    };
+  }
+
+  if (s === "paid" || s === "da_thanh_toan") {
+    return {
+      text: t.orderStatusPaid || "Đã thanh toán",
+      className: "order-detail-status-paid",
+    };
+  }
+
+  if (s === "shipping" || s === "dang_giao") {
+    return {
+      text: t.orderStatusShipping || "Đang giao hàng",
+      className: "order-detail-status-shipping",
+    };
+  }
+
+  if (s === "completed" || s === "hoan_thanh") {
+    return {
+      text: t.orderStatusCompleted || "Hoàn thành",
+      className: "order-detail-status-completed",
+    };
+  }
+
+  if (
+    s === "cancel_requested" ||
+    s === "pending_cancel" ||
+    s === "yeu_cau_huy" ||
+    s === "dang_yeu_cau_huy"
+  ) {
+    return {
+      text: t.orderStatusCancelRequested || "Đang yêu cầu hủy đơn",
+      className: "order-detail-status-cancel-requested",
+    };
+  }
+
+  if (s === "return_requested" || s === "yeu_cau_hoan_hang") {
+    return {
+      text: t.orderStatusReturnRequested || "Yêu cầu hoàn hàng",
+      className: "order-detail-status-return-requested",
+    };
+  }
+
+  if (s === "returned" || s === "da_hoan_hang") {
+    return {
+      text: t.orderStatusReturned || "Đã hoàn hàng",
+      className: "order-detail-status-returned",
+    };
+  }
+
+  if (s === "cancelled" || s === "canceled" || s === "da_huy") {
+    return {
+      text: t.orderStatusCancelled || "Đã hủy",
+      className: "order-detail-status-cancelled",
+    };
+  }
+
+  return {
+    text: t.orderStatusUnknown || "Không xác định",
+    className: "order-detail-status-unknown",
+  };
 };
 
 const getOrderTopNotice = (status, t) => {
-  const s = String(status || "").toLowerCase();
+  const s = normalizeStatus(status);
 
-  if (s === "paid") {
+  if (s === "paid" || s === "da_thanh_toan") {
     return {
-      icon: "✔",
+      icon: "✓",
       text: t.orderTopPaid || "Thanh toán thành công",
-      color: "#047857",
-      bg: "#ecfdf5",
-      border: "#a7f3d0",
+      alertClass: "order-detail-alert-success",
+      colorClass: "success",
     };
   }
 
-  if (s === "cancel_requested" || s === "pending_cancel") {
+  if (
+    s === "cancel_requested" ||
+    s === "pending_cancel" ||
+    s === "yeu_cau_huy" ||
+    s === "dang_yeu_cau_huy"
+  ) {
     return {
       icon: "⏳",
-      text: t.orderTopCancelPending || "Đơn hàng đang chờ admin duyệt hủy",
-      color: "#9a3412",
-      bg: "#fff7ed",
-      border: "#fdba74",
+      text:
+        t.orderTopCancelPending ||
+        "Đơn hàng đang chờ admin duyệt yêu cầu hủy",
+      alertClass: "order-detail-alert-warning",
+      colorClass: "warning",
     };
   }
 
-  if (s === "cancelled" || s === "canceled") {
+  if (s === "cancelled" || s === "canceled" || s === "da_huy") {
     return {
       icon: "✕",
       text: t.orderTopCancelled || "Đơn hàng đã bị hủy",
-      color: "#b91c1c",
-      bg: "#fef2f2",
-      border: "#fecaca",
+      alertClass: "order-detail-alert-error",
+      colorClass: "danger",
     };
   }
 
-  if (s === "return_requested") {
+  if (s === "return_requested" || s === "yeu_cau_hoan_hang") {
     return {
       icon: "↩",
       text: t.orderTopReturnRequested || "Đã gửi yêu cầu hoàn hàng",
-      color: "#7c3aed",
-      bg: "#f5f3ff",
-      border: "#ddd6fe",
+      alertClass: "order-detail-alert-purple",
+      colorClass: "purple",
     };
   }
 
-  if (s === "returned") {
+  if (s === "returned" || s === "da_hoan_hang") {
     return {
       icon: "↺",
       text: t.orderTopReturned || "Đơn hàng đã hoàn hàng",
-      color: "#5b21b6",
-      bg: "#ede9fe",
-      border: "#c4b5fd",
+      alertClass: "order-detail-alert-purple-dark",
+      colorClass: "purple-dark",
     };
   }
 
@@ -105,7 +152,10 @@ const getPaymentMethodText = (method, t) => {
   const s = String(method || "").toLowerCase();
 
   if (s === "cod") return t.paymentMethodCod || "Thanh toán khi nhận hàng";
-  if (s === "bank_transfer") return t.paymentMethodBankTransfer || "Chuyển khoản ngân hàng";
+
+  if (s === "bank_transfer") {
+    return t.paymentMethodBankTransfer || "Chuyển khoản ngân hàng";
+  }
 
   return t.notAvailable || "Chưa có";
 };
@@ -118,7 +168,10 @@ const getPaymentStatusText = (status, t) => {
   if (s === "failed") return t.paymentStatusFailedLong || "Thanh toán thất bại";
   if (s === "expired") return t.paymentStatusExpired || "Đã hết hạn";
   if (s === "refunded") return t.paymentStatusRefunded || "Đã hoàn tiền";
-  if (s === "cancelled" || s === "canceled") return t.paymentStatusCancelled || "Đã hủy";
+
+  if (s === "cancelled" || s === "canceled") {
+    return t.paymentStatusCancelled || "Đã hủy";
+  }
 
   return t.notAvailable || "Chưa có";
 };
@@ -136,22 +189,21 @@ const getQrImageUrl = (payment) => {
   ].filter(Boolean);
 
   const isImageLikeUrl = (url) => {
-    const u = String(url || "").toLowerCase();
+    const value = String(url || "").toLowerCase();
+
     return (
-      u.includes("img.vietqr.io") ||
-      u.endsWith(".png") ||
-      u.endsWith(".jpg") ||
-      u.endsWith(".jpeg") ||
-      u.endsWith(".webp") ||
-      u.endsWith(".gif") ||
-      u.endsWith(".svg")
+      value.includes("img.vietqr.io") ||
+      value.endsWith(".png") ||
+      value.endsWith(".jpg") ||
+      value.endsWith(".jpeg") ||
+      value.endsWith(".webp") ||
+      value.endsWith(".gif") ||
+      value.endsWith(".svg")
     );
   };
 
   return candidates.find(isImageLikeUrl) || "";
 };
-
-/* ================== PROGRESS BAR ================== */
 
 const getSteps = (t) => [
   { key: "pending", label: t.orderStepPending || "Chờ xử lý" },
@@ -161,71 +213,37 @@ const getSteps = (t) => [
 ];
 
 const getStepIndex = (status) => {
-  const s = String(status || "").toLowerCase();
+  const s = normalizeStatus(status);
 
-  if (s === "pending") return 0;
-  if (s === "confirmed") return 1;
-  if (s === "paid") return 1;
-  if (s === "cancel_requested" || s === "pending_cancel") return 1;
-  if (s === "shipping") return 2;
-  if (s === "completed" || s === "return_requested" || s === "returned") return 3;
+  if (s === "pending" || s === "cho_xu_ly" || s === "cho_xac_nhan") return 0;
+
+  if (
+    s === "confirmed" ||
+    s === "da_xac_nhan" ||
+    s === "paid" ||
+    s === "da_thanh_toan" ||
+    s === "cancel_requested" ||
+    s === "pending_cancel" ||
+    s === "yeu_cau_huy" ||
+    s === "dang_yeu_cau_huy"
+  ) {
+    return 1;
+  }
+
+  if (s === "shipping" || s === "dang_giao") return 2;
+
+  if (
+    s === "completed" ||
+    s === "hoan_thanh" ||
+    s === "return_requested" ||
+    s === "yeu_cau_hoan_hang" ||
+    s === "returned" ||
+    s === "da_hoan_hang"
+  ) {
+    return 3;
+  }
 
   return 0;
-};
-
-const cardStyle = {
-  background: "#fff",
-  borderRadius: 16,
-  padding: 20,
-  boxShadow: "0 6px 18px rgba(0,0,0,0.05)",
-};
-
-const titleStyle = {
-  margin: 0,
-  color: "#111827",
-  fontWeight: 700,
-};
-
-const textStyle = {
-  color: "#374151",
-  lineHeight: 1.8,
-};
-
-const subTextStyle = {
-  color: "#6b7280",
-};
-
-const primaryBtn = {
-  background: "#ee4d2d",
-  color: "#fff",
-  border: "none",
-  borderRadius: 10,
-  padding: "12px 18px",
-  fontWeight: 700,
-  cursor: "pointer",
-  width: "100%",
-};
-
-const secondaryBtn = {
-  background: "#fff",
-  color: "#111827",
-  border: "1px solid #d1d5db",
-  borderRadius: 10,
-  padding: "12px 18px",
-  fontWeight: 700,
-  cursor: "pointer",
-  width: "100%",
-};
-
-const dangerBtn = {
-  background: "#fff",
-  color: "#dc2626",
-  border: "1px solid #fecaca",
-  borderRadius: 10,
-  padding: "12px 18px",
-  fontWeight: 700,
-  cursor: "pointer",
-  width: "100%",
 };
 
 export default function OrderDetailPage() {
@@ -248,36 +266,36 @@ export default function OrderDetailPage() {
 
   const steps = useMemo(() => getSteps(t), [t]);
 
-  const loadAll = async () => {
-    const o = await orderService.byCode(orderCode);
-    setOrder(o.data);
+  const loadAll = useCallback(async () => {
+    const orderRes = await orderService.byCode(orderCode);
+    setOrder(orderRes.data);
 
     try {
-      const p = await paymentService.byOrderCode(orderCode);
-      setPayment(p.data);
+      const paymentRes = await paymentService.byOrderCode(orderCode);
+      setPayment(paymentRes.data);
     } catch {
       setPayment(null);
     }
-  };
-
-  useEffect(() => {
-    loadAll();
   }, [orderCode]);
 
   useEffect(() => {
-    if (payment?.status === "paid") {
+    loadAll();
+  }, [loadAll]);
+
+  useEffect(() => {
+    const paymentMethod = String(payment?.paymentMethod || "").toLowerCase();
+    const paymentStatus = String(payment?.status || "").toLowerCase();
+
+    if (paymentStatus === "paid") {
       setShowQr(false);
       loadAll();
       return;
     }
 
-    const paymentMethod = String(payment?.paymentMethod || "").toLowerCase();
-    const paymentStatus = String(payment?.status || "").toLowerCase();
-
     if (paymentMethod === "bank_transfer" && paymentStatus === "pending") {
       setShowQr(true);
     }
-  }, [payment]);
+  }, [payment, loadAll]);
 
   useEffect(() => {
     if (!showQr) return;
@@ -286,10 +304,10 @@ export default function OrderDetailPage() {
 
     const timer = setInterval(async () => {
       try {
-        const p = await paymentService.byOrderCode(orderCode);
-        setPayment(p.data);
+        const paymentRes = await paymentService.byOrderCode(orderCode);
+        setPayment(paymentRes.data);
       } catch {
-        // giữ im lặng để tránh nhấp nháy UI
+        // Không hiển thị lỗi để tránh nhấp nháy giao diện.
       }
     }, 3000);
 
@@ -310,8 +328,7 @@ export default function OrderDetailPage() {
         paymentMethod: "bank_transfer",
       });
 
-      const createdPayment = res?.data || null;
-      setPayment(createdPayment);
+      setPayment(res?.data || null);
       setShowQr(true);
       setMsg(t.scanQrToPay || "Quét QR để thanh toán");
 
@@ -321,7 +338,7 @@ export default function OrderDetailPage() {
           setPayment(refreshed.data);
         }
       } catch {
-        // bỏ qua nếu chưa lấy được ngay
+        // Bỏ qua nếu backend chưa trả thanh toán mới ngay lập tức.
       }
     } catch {
       setErr(t.cannotContinuePayment || "Không thể tiếp tục thanh toán.");
@@ -354,7 +371,10 @@ export default function OrderDetailPage() {
   };
 
   const handleInstantCancel = async () => {
-    const ok = window.confirm(t.confirmCancelOrder || "Bạn có chắc muốn hủy đơn hàng này?");
+    const ok = window.confirm(
+      t.confirmCancelOrder || "Bạn có chắc muốn hủy đơn hàng này?"
+    );
+
     if (!ok) return;
 
     try {
@@ -374,7 +394,10 @@ export default function OrderDetailPage() {
   };
 
   const handleRequestCancel = async () => {
-    const ok = window.confirm(t.confirmRequestCancel || "Gửi yêu cầu hủy đơn cho admin?");
+    const ok = window.confirm(
+      t.confirmRequestCancel || "Gửi yêu cầu hủy đơn cho admin?"
+    );
+
     if (!ok) return;
 
     try {
@@ -384,7 +407,11 @@ export default function OrderDetailPage() {
 
       await orderService.requestCancel(orderCode);
       await loadAll();
-      setMsg(t.cancelRequestSent || "Đã gửi yêu cầu hủy đơn. Vui lòng chờ admin duyệt.");
+
+      setMsg(
+        t.cancelRequestSent ||
+          "Đã gửi yêu cầu hủy đơn. Vui lòng chờ admin duyệt."
+      );
     } catch {
       setErr(t.cannotRequestCancel || "Không thể gửi yêu cầu hủy đơn.");
     } finally {
@@ -393,7 +420,10 @@ export default function OrderDetailPage() {
   };
 
   const handleRequestReturn = async () => {
-    const ok = window.confirm(t.confirmRequestReturn || "Gửi yêu cầu hoàn hàng cho đơn này?");
+    const ok = window.confirm(
+      t.confirmRequestReturn || "Gửi yêu cầu hoàn hàng cho đơn này?"
+    );
+
     if (!ok) return;
 
     try {
@@ -457,7 +487,9 @@ export default function OrderDetailPage() {
 
   const goToReview = (item) => {
     if (!item?.productId) {
-      setErr(t.productNotFoundForReview || "Không tìm thấy sản phẩm để đánh giá.");
+      setErr(
+        t.productNotFoundForReview || "Không tìm thấy sản phẩm để đánh giá."
+      );
       return;
     }
 
@@ -467,10 +499,10 @@ export default function OrderDetailPage() {
   if (!order) {
     return (
       <MainLayout>
-        <div style={{ background: "#f5f5f5", minHeight: "100vh", padding: 30 }}>
+        <div className="order-detail-page">
           <div className="container">
-            <div style={cardStyle}>
-              <div style={{ color: "#111827", fontWeight: 700 }}>
+            <div className="order-detail-card">
+              <div className="order-detail-title">
                 {t.loading || "Đang tải..."}
               </div>
             </div>
@@ -485,26 +517,58 @@ export default function OrderDetailPage() {
   const currentStep = getStepIndex(order.status);
   const qrImageUrl = getQrImageUrl(payment);
 
-  const orderStatus = String(order.status || "").toLowerCase();
+  const orderStatus = normalizeStatus(order.status);
   const paymentMethod = String(payment?.paymentMethod || "").toLowerCase();
   const paymentStatus = String(payment?.status || "").toLowerCase();
 
-  const isPaid = orderStatus === "paid";
+  const isPaid = orderStatus === "paid" || orderStatus === "da_thanh_toan";
   const isCod = paymentMethod === "cod";
-  const isCanceled = orderStatus === "cancelled" || orderStatus === "canceled";
-  const isCompleted = orderStatus === "completed";
-  const isReturned = orderStatus === "returned";
+
+  const isCanceled =
+    orderStatus === "cancelled" ||
+    orderStatus === "canceled" ||
+    orderStatus === "da_huy";
+
+  const isCompleted =
+    orderStatus === "completed" || orderStatus === "hoan_thanh";
+
+  const isReturned =
+    orderStatus === "returned" || orderStatus === "da_hoan_hang";
+
   const isCancelRequested =
-    orderStatus === "cancel_requested" || orderStatus === "pending_cancel";
-  const isReturnRequested = orderStatus === "return_requested";
+    orderStatus === "cancel_requested" ||
+    orderStatus === "pending_cancel" ||
+    orderStatus === "yeu_cau_huy" ||
+    orderStatus === "dang_yeu_cau_huy";
+
+  const isReturnRequested =
+    orderStatus === "return_requested" || orderStatus === "yeu_cau_hoan_hang";
 
   const showPayButton =
-    orderStatus === "pending" && !isCod && !isPaid && !isCancelRequested;
+    (orderStatus === "pending" ||
+      orderStatus === "cho_xu_ly" ||
+      orderStatus === "cho_xac_nhan") &&
+    !isCod &&
+    !isPaid &&
+    !isCancelRequested;
 
   const canRepurchase = isCanceled || isCompleted || isReturned;
   const canReview = isCompleted;
-  const canInstantCancel = orderStatus === "pending";
-  const canRequestCancel = ["confirmed", "paid", "shipping"].includes(orderStatus);
+
+  const canInstantCancel =
+    orderStatus === "pending" ||
+    orderStatus === "cho_xu_ly" ||
+    orderStatus === "cho_xac_nhan";
+
+  const canRequestCancel = [
+    "confirmed",
+    "da_xac_nhan",
+    "paid",
+    "da_thanh_toan",
+    "shipping",
+    "dang_giao",
+  ].includes(orderStatus);
+
   const canRequestReturn = isCompleted && !isReturnRequested && !isReturned;
 
   const hasQrToShow =
@@ -515,127 +579,83 @@ export default function OrderDetailPage() {
 
   return (
     <MainLayout>
-      <div style={{ background: "#f5f5f5", padding: 30, minHeight: "100vh" }}>
+      <div className="order-detail-page">
         <div className="container">
           {err && (
-            <div
-              style={{
-                background: "#fef2f2",
-                color: "#b91c1c",
-                padding: 12,
-                marginBottom: 20,
-                borderRadius: 10,
-                border: "1px solid #fecaca",
-                fontWeight: 600,
-              }}
-            >
+            <div className="order-detail-alert order-detail-alert-error">
               {err}
             </div>
           )}
 
           {msg && (
-            <div
-              style={{
-                background: "#ecfdf5",
-                color: "#047857",
-                padding: 12,
-                marginBottom: 20,
-                borderRadius: 10,
-                border: "1px solid #a7f3d0",
-                fontWeight: 600,
-              }}
-            >
+            <div className="order-detail-alert order-detail-alert-success">
               {msg}
             </div>
           )}
 
           {topNotice && (
             <>
-              <div
-                style={{
-                  background: topNotice.bg,
-                  color: topNotice.color,
-                  padding: 12,
-                  marginBottom: 20,
-                  borderRadius: 10,
-                  border: `1px solid ${topNotice.border}`,
-                  fontWeight: 700,
-                }}
-              >
+              <div className={`order-detail-alert ${topNotice.alertClass}`}>
                 {topNotice.text}
               </div>
 
-              <div style={{ textAlign: "center", marginBottom: 20 }}>
-                <div style={{ fontSize: 48, color: topNotice.color, lineHeight: 1 }}>
+              <div className="order-detail-top-icon-wrap">
+                <div
+                  className={`order-detail-top-icon ${topNotice.colorClass}`}
+                >
                   {topNotice.icon}
                 </div>
-                <div style={{ color: topNotice.color, fontWeight: 700 }}>
+
+                <div
+                  className={`order-detail-top-text ${topNotice.colorClass}`}
+                >
                   {topNotice.text}
                 </div>
               </div>
             </>
           )}
 
-          <div style={cardStyle}>
-            <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
+          <div className="order-detail-card">
+            <div className="order-detail-header">
               <div>
-                <div style={{ ...subTextStyle, marginBottom: 8, fontSize: 14 }}>
+                <div className="order-detail-kicker">
                   {t.orderCodeText || "Mã đơn hàng"}
                 </div>
-                <h2 style={{ ...titleStyle, fontSize: "clamp(24px, 4vw, 34px)" }}>
-                  {order.orderCode}
-                </h2>
+
+                <h2 className="order-detail-title">{order.orderCode}</h2>
               </div>
 
               <span
-                style={{
-                  background: badge.bg,
-                  color: badge.color,
-                  padding: "8px 14px",
-                  borderRadius: 999,
-                  fontWeight: 700,
-                  fontSize: 14,
-                }}
+                className={`order-detail-status-badge ${badge.className}`}
               >
                 {badge.text}
               </span>
             </div>
           </div>
 
-          <div style={{ ...cardStyle, marginTop: 20 }}>
+          <div className="order-detail-card">
             <div className="row g-3">
-              {steps.map((s, i) => {
-                const active = i <= currentStep;
+              {steps.map((step, index) => {
+                const active = index <= currentStep;
 
                 return (
-                  <div key={i} className="col-6 col-md-3 text-center">
-                    <div
-                      style={{
-                        width: 42,
-                        height: 42,
-                        margin: "0 auto",
-                        borderRadius: "50%",
-                        background: active ? "#ee4d2d" : "#d1d5db",
-                        color: "#fff",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontWeight: 700,
-                        fontSize: 18,
-                      }}
-                    >
-                      {i + 1}
-                    </div>
+                  <div key={step.key} className="col-6 col-md-3">
+                    <div className="order-detail-step">
+                      <div
+                        className={`order-detail-step-circle ${
+                          active ? "active" : ""
+                        }`}
+                      >
+                        {index + 1}
+                      </div>
 
-                    <div
-                      style={{
-                        marginTop: 10,
-                        fontSize: 14,
-                        fontWeight: active ? 700 : 600,
-                        color: active ? "#ee4d2d" : "#6b7280",
-                      }}
-                    >
-                      {s.label}
+                      <div
+                        className={`order-detail-step-label ${
+                          active ? "active" : ""
+                        }`}
+                      >
+                        {step.label}
+                      </div>
                     </div>
                   </div>
                 );
@@ -643,85 +663,61 @@ export default function OrderDetailPage() {
             </div>
           </div>
 
-          <div style={{ ...cardStyle, marginTop: 20 }}>
-            <h3 style={{ ...titleStyle, marginBottom: 16 }}>
+          <div className="order-detail-card">
+            <h3 className="order-detail-section-title">
               {t.orderProductsTitle || "Sản phẩm"}
             </h3>
 
             {(order.items || []).length === 0 ? (
-              <div style={subTextStyle}>{t.noProducts || "Không có sản phẩm nào."}</div>
+              <div className="order-detail-sub-text">
+                {t.noProducts || "Không có sản phẩm nào."}
+              </div>
             ) : (
-              <div className="d-grid gap-3">
-                {order.items.map((i, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      border: "1px solid #e5e7eb",
-                      borderRadius: 12,
-                      padding: 16,
-                    }}
-                  >
+              <div className="order-detail-products-list">
+                {order.items.map((item, index) => (
+                  <div key={index} className="order-detail-product-item">
                     <div className="row g-3 align-items-center">
                       <div className="col-md-8">
-                        <div
-                          style={{
-                            color: "#111827",
-                            fontWeight: 700,
-                            fontSize: 20,
-                            marginBottom: 8,
-                          }}
-                        >
-                          {i.productName}
+                        <div className="order-detail-product-name">
+                          {item.productName}
                         </div>
 
-                        <div style={textStyle}>
+                        <div className="order-detail-text">
                           <div>
-                            <strong style={{ color: "#111827" }}>
-                              {t.variantLabel || "Biến thể:"}
-                            </strong>{" "}
-                            {i.variantName || (t.defaultVariant || "Mặc định")}
+                            <strong>{t.variantLabel || "Biến thể:"}</strong>{" "}
+                            {item.variantName || t.defaultVariant || "Mặc định"}
                           </div>
+
                           <div>
-                            <strong style={{ color: "#111827" }}>
-                              {t.quantityLabel || "Số lượng:"}
-                            </strong>{" "}
-                            {i.quantity}
+                            <strong>{t.quantityLabel || "Số lượng:"}</strong>{" "}
+                            {item.quantity}
                           </div>
+
                           <div>
-                            <strong style={{ color: "#111827" }}>
-                              {t.unitPriceLabel || "Đơn giá:"}
-                            </strong>{" "}
-                            {formatPrice(i.unitPrice)}
+                            <strong>{t.unitPriceLabel || "Đơn giá:"}</strong>{" "}
+                            {formatPrice(item.unitPrice)}
                           </div>
+
                           <div>
-                            <strong style={{ color: "#111827" }}>
-                              {t.lineTotalLabel || "Thành tiền:"}
-                            </strong>{" "}
-                            <span style={{ color: "#ee4d2d", fontWeight: 700 }}>
-                              {formatPrice(i.lineTotal)}
+                            <strong>{t.lineTotalLabel || "Thành tiền:"}</strong>{" "}
+                            <span className="order-detail-line-total">
+                              {formatPrice(item.lineTotal)}
                             </span>
                           </div>
                         </div>
                       </div>
 
                       <div className="col-md-4 text-md-end">
-                        <div
-                          style={{
-                            fontSize: 22,
-                            fontWeight: 800,
-                            color: "#ee4d2d",
-                            marginBottom: 12,
-                          }}
-                        >
-                          {formatPrice(i.lineTotal)}
+                        <div className="order-detail-product-price">
+                          {formatPrice(item.lineTotal)}
                         </div>
 
                         <div className="d-flex flex-column gap-2">
                           {(isCanceled || isCompleted || isReturned) && (
                             <button
                               type="button"
-                              onClick={() => goToProduct(i)}
-                              style={secondaryBtn}
+                              onClick={() => goToProduct(item)}
+                              className="order-detail-btn order-detail-btn-secondary"
                             >
                               {t.viewProductAgain || "Xem lại sản phẩm"}
                             </button>
@@ -730,8 +726,8 @@ export default function OrderDetailPage() {
                           {canReview && (
                             <button
                               type="button"
-                              onClick={() => goToReview(i)}
-                              style={primaryBtn}
+                              onClick={() => goToReview(item)}
+                              className="order-detail-btn order-detail-btn-primary"
                             >
                               {t.reviewProduct || "Đánh giá sản phẩm"}
                             </button>
@@ -745,44 +741,30 @@ export default function OrderDetailPage() {
             )}
           </div>
 
-          <div style={{ ...cardStyle, marginTop: 20 }}>
-            <h3 style={{ ...titleStyle, marginBottom: 16 }}>
+          <div className="order-detail-card">
+            <h3 className="order-detail-section-title">
               {t.paymentInfoTitleShort || "Thanh toán"}
             </h3>
 
-            <div style={textStyle}>
+            <div className="order-detail-text">
               <div>
-                <strong style={{ color: "#111827" }}>
-                  {t.paymentMethodLabelShort || "Phương thức:"}
-                </strong>{" "}
+                <strong>{t.paymentMethodLabelShort || "Phương thức:"}</strong>{" "}
                 {getPaymentMethodText(payment?.paymentMethod, t)}
               </div>
+
               <div>
-                <strong style={{ color: "#111827" }}>
-                  {t.paymentStatusLabelShort || "Trạng thái:"}
-                </strong>{" "}
+                <strong>{t.paymentStatusLabelShort || "Trạng thái:"}</strong>{" "}
                 {getPaymentStatusText(payment?.status, t)}
               </div>
+
               <div>
-                <strong style={{ color: "#111827" }}>
-                  {t.paymentAmountLabelShort || "Số tiền:"}
-                </strong>{" "}
+                <strong>{t.paymentAmountLabelShort || "Số tiền:"}</strong>{" "}
                 {formatPrice(payment?.amount || order.totalAmount)}
               </div>
             </div>
 
             {isCod && (
-              <div
-                style={{
-                  marginTop: 14,
-                  background: "#fff7ed",
-                  color: "#9a3412",
-                  border: "1px solid #fdba74",
-                  padding: 12,
-                  borderRadius: 10,
-                  fontWeight: 600,
-                }}
-              >
+              <div className="order-detail-alert order-detail-alert-warning order-detail-cod-note">
                 {t.codNoPrepayHint ||
                   "Đơn hàng này dùng phương thức COD nên không cần thanh toán trước."}
               </div>
@@ -790,115 +772,113 @@ export default function OrderDetailPage() {
           </div>
 
           {showQr && (
-            <div style={{ ...cardStyle, marginTop: 20 }}>
-              <h3 style={{ ...titleStyle, marginBottom: 16 }}>
+            <div className="order-detail-card">
+              <h3 className="order-detail-section-title">
                 {t.scanQrSectionTitle || "Quét QR để thanh toán"}
               </h3>
 
               {qrImageUrl ? (
                 <img
                   src={qrImageUrl}
-                  width={220}
                   alt={t.paymentQrAlt || "QR thanh toán"}
-                  style={{
-                    borderRadius: 12,
-                    border: "1px solid #e5e7eb",
-                    display: "block",
-                    marginBottom: 12,
-                    maxWidth: "100%",
-                  }}
+                  className="order-detail-qr-image"
                 />
               ) : (
-                <div style={subTextStyle}>
+                <div className="order-detail-sub-text">
                   {t.qrMissingBackendHint ||
                     "Chưa có ảnh QR. Backend cần trả về một trong các field như qrCodeUrl, qrUrl, paymentQrUrl, vietQrUrl hoặc paymentUrl là link ảnh QR."}
                 </div>
               )}
 
-              <div style={textStyle}>
-                <strong style={{ color: "#111827" }}>
-                  {t.transferContentLabel || "Nội dung chuyển khoản:"}
-                </strong>{" "}
-                {payment?.transactionCode || (t.notAvailable || "Chưa có")}
+              <div className="order-detail-text">
+                <strong>{t.transferContentLabel || "Nội dung chuyển khoản:"}</strong>{" "}
+                {payment?.transactionCode || t.notAvailable || "Chưa có"}
               </div>
 
               {polling && (
-                <div style={{ ...subTextStyle, marginTop: 10, fontWeight: 600 }}>
+                <div className="order-detail-waiting">
                   {t.waitingForPayment || "Đang chờ thanh toán..."}
                 </div>
               )}
             </div>
           )}
 
-          <div style={{ ...cardStyle, marginTop: 20 }}>
-            <div
-              className="d-flex justify-content-between align-items-center flex-wrap gap-2"
-              style={{ color: "#111827", fontWeight: 700, fontSize: 22 }}
-            >
+          <div className="order-detail-card">
+            <div className="order-detail-total-box">
               <span>{t.totalPayment || "Tổng thanh toán"}</span>
-              <span style={{ color: "#ee4d2d" }}>{formatPrice(order.totalAmount)}</span>
+              <span className="order-detail-total-price">
+                {formatPrice(order.totalAmount)}
+              </span>
             </div>
           </div>
 
-          <div className="d-flex flex-column gap-2" style={{ marginTop: 20 }}>
+          <div className="order-detail-actions">
             {showPayButton && !hasQrToShow && (
-              <button onClick={handlePayment} style={primaryBtn} disabled={actionLoading}>
+              <button
+                onClick={handlePayment}
+                disabled={actionLoading}
+                className="order-detail-btn order-detail-btn-primary"
+              >
                 {actionLoading
-                  ? (t.creatingQr || "Đang tạo QR...")
-                  : (t.continuePayment || "Thanh toán tiếp")}
+                  ? t.creatingQr || "Đang tạo QR..."
+                  : t.continuePayment || "Thanh toán tiếp"}
               </button>
             )}
 
             {showPayButton && hasQrToShow && (
               <button
                 onClick={handleConfirmPayment}
-                style={primaryBtn}
                 disabled={confirmingPayment}
+                className="order-detail-btn order-detail-btn-primary"
               >
                 {confirmingPayment
-                  ? (t.confirmingPayment || "Đang xác nhận...")
-                  : (t.confirmPayment || "Xác nhận thanh toán")}
+                  ? t.confirmingPayment || "Đang xác nhận..."
+                  : t.confirmPayment || "Xác nhận thanh toán"}
               </button>
             )}
 
             {canInstantCancel && (
               <button
                 onClick={handleInstantCancel}
-                style={dangerBtn}
                 disabled={cancelLoading}
+                className="order-detail-btn order-detail-btn-danger"
               >
                 {cancelLoading
-                  ? (t.cancelling || "Đang hủy...")
-                  : (t.cancelOrder || "Hủy đơn hàng")}
+                  ? t.cancelling || "Đang hủy..."
+                  : t.cancelOrder || "Hủy đơn hàng"}
               </button>
             )}
 
             {canRequestCancel && !isCancelRequested && (
               <button
                 onClick={handleRequestCancel}
-                style={dangerBtn}
                 disabled={cancelLoading}
+                className="order-detail-btn order-detail-btn-danger"
               >
                 {cancelLoading
-                  ? (t.sendingRequest || "Đang gửi yêu cầu...")
-                  : (t.requestCancelOrder || "Yêu cầu hủy đơn")}
+                  ? t.sendingRequest || "Đang gửi yêu cầu..."
+                  : t.requestCancelOrder || "Yêu cầu hủy đơn"}
               </button>
             )}
 
             {canRequestReturn && (
               <button
                 onClick={handleRequestReturn}
-                style={secondaryBtn}
                 disabled={returnLoading}
+                className="order-detail-btn order-detail-btn-secondary"
               >
                 {returnLoading
-                  ? (t.sendingRequest || "Đang gửi yêu cầu...")
-                  : (t.returnOrder || "Hoàn hàng")}
+                  ? t.sendingRequest || "Đang gửi yêu cầu..."
+                  : t.returnOrder || "Hoàn hàng"}
               </button>
             )}
 
             {canRepurchase && (
-              <button onClick={handleBuyAgain} style={secondaryBtn} disabled={actionLoading}>
+              <button
+                onClick={handleBuyAgain}
+                disabled={actionLoading}
+                className="order-detail-btn order-detail-btn-secondary"
+              >
                 {t.buyAgain || "Mua lại"}
               </button>
             )}

@@ -1,10 +1,13 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { chatService } from "../../services/chatService";
 import ChatMessageContent from "./ChatMessageContent";
+import AiChatBox from "./AiChatBox";
 import { buildProductChatMessage } from "./chatProductMessage";
+import { useLanguage } from "../../contexts/LanguageContext.jsx";
+import { commonTranslations } from "../../i18n/common";
 
-const getErrorMessage = (ex, fallback) => {
+const getErrorMessage = (ex, fallback, t) => {
   const data = ex?.response?.data;
 
   if (typeof data === "string" && data.trim()) return data;
@@ -12,19 +15,22 @@ const getErrorMessage = (ex, fallback) => {
   if (data?.title) return data.title;
 
   if (ex?.response?.status === 401) {
-    return "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
+    return (
+      t.chatSessionExpired ||
+      "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại."
+    );
   }
 
   if (ex?.response?.status === 403) {
-    return "Bạn không có quyền sử dụng chức năng chat.";
+    return t.chatNoPermission || "Bạn không có quyền sử dụng chức năng chat.";
   }
 
   if (ex?.response?.status === 404) {
-    return "Không tìm thấy API chat.";
+    return t.chatApiNotFound || "Không tìm thấy API chat.";
   }
 
   if (ex?.response?.status >= 500) {
-    return "Máy chủ chat đang lỗi.";
+    return t.chatServerError || "Máy chủ chat đang lỗi.";
   }
 
   if (ex?.message) return ex.message;
@@ -34,8 +40,10 @@ const getErrorMessage = (ex, fallback) => {
 
 const formatTime = (value) => {
   if (!value) return "";
-  const d = new Date(value);
-  return d.toLocaleTimeString("vi-VN", {
+
+  const date = new Date(value);
+
+  return date.toLocaleTimeString("vi-VN", {
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -43,16 +51,20 @@ const formatTime = (value) => {
 
 export default function CustomerChatWidget() {
   const location = useLocation();
+  const { language } = useLanguage();
+  const t = commonTranslations?.[language] || commonTranslations?.vi || {};
 
-  const isAdminPage = useMemo(
-    () => location.pathname.startsWith("/admin"),
-    [location.pathname]
-  );
+  const isAdminPage = useMemo(() => {
+    return location.pathname.startsWith("/admin");
+  }, [location.pathname]);
 
   const [open, setOpen] = useState(false);
+  const [chatMode, setChatMode] = useState("shop");
+
   const [conversationId, setConversationId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [needLogin, setNeedLogin] = useState(false);
@@ -61,25 +73,35 @@ export default function CustomerChatWidget() {
 
   const listRef = useRef(null);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     requestAnimationFrame(() => {
-      if (listRef.current) {
-        listRef.current.scrollTop = listRef.current.scrollHeight;
-      }
+      if (!listRef.current) return;
+
+      listRef.current.scrollTop = listRef.current.scrollHeight;
     });
-  };
+  }, []);
 
-  const loadMessages = async (id) => {
-    try {
-      const res = await chatService.getMyMessages(id);
-      setMessages(res.data || []);
-      scrollToBottom();
-    } catch (ex) {
-      setErr(getErrorMessage(ex, "Không thể tải tin nhắn"));
-    }
-  };
+  const loadMessages = useCallback(
+    async (id) => {
+      try {
+        const res = await chatService.getMyMessages(id);
 
-  const initConversation = async () => {
+        setMessages(res.data || []);
+        scrollToBottom();
+      } catch (ex) {
+        setErr(
+          getErrorMessage(
+            ex,
+            t.chatLoadMessagesFailed || "Không thể tải tin nhắn",
+            t
+          )
+        );
+      }
+    },
+    [scrollToBottom, t]
+  );
+
+  const initConversation = useCallback(async () => {
     setErr("");
     setLoading(true);
     setNeedLogin(false);
@@ -90,7 +112,10 @@ export default function CustomerChatWidget() {
       const id = data.conversationId || data.id;
 
       if (!id) {
-        setErr("Backend không trả về conversationId.");
+        setErr(
+          t.chatMissingConversationId ||
+            "Backend không trả về conversationId."
+        );
         return;
       }
 
@@ -99,14 +124,16 @@ export default function CustomerChatWidget() {
     } catch (ex) {
       if (ex?.response?.status === 401) {
         setNeedLogin(true);
-        setErr("Bạn cần đăng nhập để dùng chat.");
+        setErr(t.chatNeedLogin || "Bạn cần đăng nhập để dùng chat.");
       } else {
-        setErr(getErrorMessage(ex, "Không thể mở hộp chat"));
+        setErr(
+          getErrorMessage(ex, t.chatOpenFailed || "Không thể mở hộp chat", t)
+        );
       }
     } finally {
       setLoading(false);
     }
-  };
+  }, [loadMessages, t]);
 
   useEffect(() => {
     const handler = (event) => {
@@ -114,17 +141,22 @@ export default function CustomerChatWidget() {
       if (!product) return;
 
       const content = buildProductChatMessage(product);
+
+      setChatMode("shop");
       setPendingProductMessage(content);
       setOpen(true);
     };
 
     window.addEventListener("souvn:chat-share-product", handler);
-    return () =>
+
+    return () => {
       window.removeEventListener("souvn:chat-share-product", handler);
+    };
   }, []);
 
   useEffect(() => {
     if (!open || isAdminPage) return;
+    if (chatMode !== "shop") return;
 
     if (!conversationId) {
       initConversation();
@@ -138,15 +170,24 @@ export default function CustomerChatWidget() {
     }, 4000);
 
     return () => clearInterval(timer);
-  }, [open, conversationId, isAdminPage]);
+  }, [
+    open,
+    chatMode,
+    conversationId,
+    isAdminPage,
+    initConversation,
+    loadMessages,
+  ]);
 
   useEffect(() => {
+    if (chatMode !== "shop") return;
     scrollToBottom();
-  }, [messages]);
+  }, [messages, chatMode, scrollToBottom]);
 
   useEffect(() => {
     const sendPendingProduct = async () => {
-      if (!open || !conversationId || !pendingProductMessage) return;
+      if (!open || chatMode !== "shop" || !conversationId || !pendingProductMessage)
+        return;
 
       try {
         await chatService.sendMyMessage(conversationId, {
@@ -156,12 +197,25 @@ export default function CustomerChatWidget() {
         setPendingProductMessage("");
         await loadMessages(conversationId);
       } catch (ex) {
-        setErr(getErrorMessage(ex, "Không thể gửi sản phẩm vào chat"));
+        setErr(
+          getErrorMessage(
+            ex,
+            t.chatSendProductFailed || "Không thể gửi sản phẩm vào chat",
+            t
+          )
+        );
       }
     };
 
     sendPendingProduct();
-  }, [open, conversationId, pendingProductMessage]);
+  }, [
+    open,
+    chatMode,
+    conversationId,
+    pendingProductMessage,
+    loadMessages,
+    t,
+  ]);
 
   const sendMessage = async () => {
     if (!conversationId || !text.trim()) return;
@@ -177,7 +231,9 @@ export default function CustomerChatWidget() {
       setText("");
       await loadMessages(conversationId);
     } catch (ex) {
-      setErr(getErrorMessage(ex, "Gửi tin nhắn thất bại"));
+      setErr(
+        getErrorMessage(ex, t.chatSendFailed || "Gửi tin nhắn thất bại", t)
+      );
     } finally {
       setSending(false);
     }
@@ -188,205 +244,121 @@ export default function CustomerChatWidget() {
   return (
     <>
       {open && (
-        <div
-          style={{
-            position: "fixed",
-            right: 20,
-            bottom: 72,
-            width: "min(360px, calc(100vw - 20px))",
-            height: "min(520px, calc(100vh - 165px))",
-            background: "#fff",
-            borderRadius: 22,
-            boxShadow: "0 24px 60px rgba(15, 23, 42, 0.18)",
-            border: "1px solid #eceff3",
-            overflow: "hidden",
-            zIndex: 99999,
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          <div
-            style={{
-              background: "linear-gradient(135deg, #ee4d2d 0%, #fb6a4d 100%)",
-              color: "#fff",
-              padding: "14px 16px",
-              display: "flex",
-              alignItems: "flex-start",
-              justifyContent: "space-between",
-              gap: 12,
-              flexShrink: 0,
-            }}
-          >
-            <div style={{ minWidth: 0 }}>
-              <div
-                style={{
-                  fontSize: 17,
-                  fontWeight: 800,
-                  lineHeight: 1.2,
-                  marginBottom: 4,
-                }}
-              >
-                Chat hỗ trợ
+        <div className="customer-chat-widget">
+          <div className="customer-chat-header">
+            <div className="customer-chat-header-info">
+              <div className="customer-chat-title">
+                {t.chatSupportTitle || "Chat hỗ trợ"}
               </div>
-              <div
-                style={{
-                  fontSize: 13,
-                  opacity: 0.95,
-                  lineHeight: 1.35,
-                }}
-              >
-                SouVN Shop đang sẵn sàng hỗ trợ bạn
+
+              <div className="customer-chat-subtitle">
+                {chatMode === "ai"
+                  ? "AI gợi ý sản phẩm phù hợp với nhu cầu của bạn"
+                  : t.chatSupportSubtitle ||
+                    "SouVN Shop đang sẵn sàng hỗ trợ bạn"}
               </div>
             </div>
 
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="btn btn-light btn-sm"
-              style={{
-                borderRadius: 999,
-                fontWeight: 700,
-                minWidth: 72,
-                height: 40,
-                flexShrink: 0,
-              }}
+              className="btn btn-light btn-sm customer-chat-close-button"
             >
-              Đóng
+              {t.close || "Đóng"}
             </button>
           </div>
 
-          {loading ? (
-            <div
-              className="d-flex align-items-center justify-content-center"
-              style={{ flex: 1 }}
+          <div className="customer-chat-tabs">
+            <button
+              type="button"
+              className={chatMode === "shop" ? "active" : ""}
+              onClick={() => setChatMode("shop")}
             >
+              <i className="bi bi-shop"></i>
+              Cửa hàng
+            </button>
+
+            <button
+              type="button"
+              className={chatMode === "ai" ? "active" : ""}
+              onClick={() => setChatMode("ai")}
+            >
+              <i className="bi bi-stars"></i>
+              AI tư vấn
+            </button>
+          </div>
+
+          {chatMode === "ai" ? (
+            <AiChatBox />
+          ) : loading ? (
+            <div className="customer-chat-loading">
               <div className="text-center">
                 <div className="spinner-border text-danger" role="status"></div>
-                <div className="mt-3">Đang mở cuộc trò chuyện...</div>
+
+                <div className="customer-chat-loading-text">
+                  {t.chatOpeningConversation ||
+                    "Đang mở cuộc trò chuyện..."}
+                </div>
               </div>
             </div>
           ) : needLogin ? (
-            <div style={{ padding: 16, flex: 1 }}>
-              <div
-                style={{
-                  background: "#fff7ed",
-                  color: "#9a3412",
-                  border: "1px solid #fed7aa",
-                  borderRadius: 14,
-                  padding: 14,
-                  marginBottom: 14,
-                }}
-              >
-                Bạn cần đăng nhập để chat với cửa hàng.
+            <div className="customer-chat-login-box">
+              <div className="customer-chat-login-alert">
+                {t.chatNeedLogin || "Bạn cần đăng nhập để chat với cửa hàng."}
               </div>
 
               <Link
                 to="/login"
-                className="btn btn-primary"
-                style={{
-                  background: "#ee4d2d",
-                  borderColor: "#ee4d2d",
-                  borderRadius: 12,
-                  fontWeight: 700,
-                }}
+                className="btn btn-primary customer-chat-login-button"
               >
-                Đi tới đăng nhập
+                {t.goToLogin || "Đi tới đăng nhập"}
               </Link>
             </div>
           ) : (
             <>
               {err && (
                 <div
-                  className="alert alert-danger m-3 mb-0"
+                  className="alert alert-danger m-3 mb-0 customer-chat-error"
                   role="alert"
-                  style={{
-                    borderRadius: 14,
-                    flexShrink: 0,
-                  }}
                 >
                   {err}
                 </div>
               )}
 
-              <div
-                ref={listRef}
-                style={{
-                  flex: 1,
-                  minHeight: 0,
-                  overflowY: "auto",
-                  padding: 14,
-                  background: "#f8fafc",
-                }}
-              >
+              <div ref={listRef} className="customer-chat-list">
                 {messages.length === 0 ? (
-                  <div
-                    style={{
-                      textAlign: "center",
-                      color: "#64748b",
-                      paddingTop: 56,
-                      lineHeight: 1.6,
-                    }}
-                  >
-                    Hãy gửi tin nhắn đầu tiên cho cửa hàng.
+                  <div className="customer-chat-empty">
+                    {t.chatEmptyMessage ||
+                      "Hãy gửi tin nhắn đầu tiên cho cửa hàng."}
                   </div>
                 ) : (
-                  <div className="d-grid gap-3">
-                    {messages.map((m) => {
+                  <div className="customer-chat-message-list">
+                    {messages.map((message) => {
                       const isMine =
-                        String(m.senderRole || "").toLowerCase() === "customer";
+                        String(message.senderRole || "").toLowerCase() ===
+                        "customer";
+
+                      const mineClass = isMine ? "mine" : "other";
 
                       return (
                         <div
-                          key={m.id}
-                          style={{
-                            display: "flex",
-                            justifyContent: isMine ? "flex-end" : "flex-start",
-                          }}
+                          key={message.id}
+                          className={`customer-chat-message-row ${mineClass}`}
                         >
-                          <div
-                            style={{
-                              maxWidth: "78%",
-                              padding: "12px 14px 10px",
-                              borderRadius: isMine
-                                ? "18px 18px 6px 18px"
-                                : "18px 18px 18px 6px",
-                              background: isMine ? "#ee4d2d" : "#ffffff",
-                              color: isMine ? "#ffffff" : "#0f172a",
-                              border: isMine
-                                ? "1px solid #ee4d2d"
-                                : "1px solid #e2e8f0",
-                              boxShadow: "0 6px 18px rgba(15, 23, 42, 0.06)",
-                              wordBreak: "break-word",
-                              overflowWrap: "anywhere",
-                            }}
-                          >
+                          <div className={`customer-chat-bubble ${mineClass}`}>
                             {!isMine && (
-                              <div
-                                style={{
-                                  fontSize: 12,
-                                  fontWeight: 700,
-                                  color: "#ee4d2d",
-                                  marginBottom: 5,
-                                }}
-                              >
-                                Cửa hàng
+                              <div className="customer-chat-shop-label">
+                                {t.shopLabel || "Cửa hàng"}
                               </div>
                             )}
 
                             <ChatMessageContent
-                              content={m.content}
+                              content={message.content}
                               isMine={isMine}
                             />
 
-                            <div
-                              style={{
-                                marginTop: 6,
-                                fontSize: 11,
-                                opacity: isMine ? 0.9 : 0.65,
-                                textAlign: "right",
-                              }}
-                            >
-                              {formatTime(m.createdAt)}
+                            <div className={`customer-chat-time ${mineClass}`}>
+                              {formatTime(message.createdAt)}
                             </div>
                           </div>
                         </div>
@@ -396,29 +368,17 @@ export default function CustomerChatWidget() {
                 )}
               </div>
 
-              <div
-                style={{
-                  padding: 12,
-                  borderTop: "1px solid #e2e8f0",
-                  background: "#fff",
-                  flexShrink: 0,
-                }}
-              >
-                <div className="d-flex gap-2 align-items-end">
+              <div className="customer-chat-footer">
+                <div className="customer-chat-input-row">
                   <textarea
-                    className="form-control"
+                    className="form-control customer-chat-textarea"
                     rows={1}
                     value={text}
                     onChange={(e) => setText(e.target.value)}
-                    placeholder="Nhập nội dung cần hỗ trợ..."
-                    style={{
-                      borderRadius: 16,
-                      resize: "none",
-                      minHeight: 52,
-                      maxHeight: 100,
-                      paddingTop: 14,
-                      paddingBottom: 12,
-                    }}
+                    placeholder={
+                      t.chatInputPlaceholder ||
+                      "Nhập nội dung cần hỗ trợ..."
+                    }
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault();
@@ -430,20 +390,10 @@ export default function CustomerChatWidget() {
                   <button
                     type="button"
                     onClick={sendMessage}
-                    disabled={sending || !text.trim()}
-                    className="btn"
-                    style={{
-                      minWidth: 86,
-                      height: 52,
-                      borderRadius: 16,
-                      fontWeight: 800,
-                      background: "#ee4d2d",
-                      color: "#fff",
-                      flexShrink: 0,
-                      boxShadow: "0 10px 20px rgba(238, 77, 45, 0.2)",
-                    }}
+                    disabled={sending || !text.trim() || !conversationId}
+                    className="btn customer-chat-send-button"
                   >
-                    {sending ? "Gửi..." : "Gửi"}
+                    {sending ? t.sending || "Gửi..." : t.send || "Gửi"}
                   </button>
                 </div>
               </div>
@@ -456,20 +406,7 @@ export default function CustomerChatWidget() {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          style={{
-            position: "fixed",
-            right: 20,
-            bottom: 20,
-            width: 60,
-            height: 60,
-            borderRadius: "50%",
-            border: "none",
-            background: "linear-gradient(135deg, #ee4d2d 0%, #fb6a4d 100%)",
-            color: "#fff",
-            boxShadow: "0 16px 32px rgba(238, 77, 45, 0.32)",
-            zIndex: 100000,
-            fontSize: 24,
-          }}
+          className="customer-chat-floating-button"
         >
           <i className="bi bi-chat-dots-fill"></i>
         </button>

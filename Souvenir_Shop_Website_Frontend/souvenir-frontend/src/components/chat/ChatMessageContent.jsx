@@ -1,12 +1,13 @@
-import React from "react";
 import { Link } from "react-router-dom";
 import { parseProductChatMessage } from "./chatProductMessage";
+import { useLanguage } from "../../contexts/LanguageContext.jsx";
+import { commonTranslations } from "../../i18n/common";
 
 const API_ORIGIN = "https://localhost:7020";
 
 const formatPrice = (value) => {
   if (value === null || value === undefined || value === "") return "0 ₫";
-  return Number(value).toLocaleString("vi-VN") + " ₫";
+  return `${Number(value).toLocaleString("vi-VN")} ₫`;
 };
 
 const getImageSrc = (url) => {
@@ -16,114 +17,59 @@ const getImageSrc = (url) => {
 };
 
 export default function ChatMessageContent({ content, isMine = false }) {
+  const { language } = useLanguage();
+  const t = commonTranslations?.[language] || commonTranslations?.vi || {};
+
   const parsed = parseProductChatMessage(content);
 
   if (!parsed) {
-    return (
-      <div
-        style={{
-          lineHeight: 1.55,
-          fontSize: 15,
-          wordBreak: "break-word",
-          overflowWrap: "anywhere",
-        }}
-      >
-        {content}
-      </div>
-    );
+    return <div className="chat-message-text">{content}</div>;
   }
 
-  const p = parsed.product || {};
+  const product = parsed.product || {};
+  const mineClass = isMine ? "mine" : "other";
+
+  const productUrl = product.url || `/products/${product.productId || ""}`;
+  const productName = product.name || t.chatProductDefaultName || "Sản phẩm";
+  const productImage = getImageSrc(product.imageUrl || "");
 
   return (
-    <div>
-      <div
-        style={{
-          fontSize: 12,
-          fontWeight: 700,
-          opacity: isMine ? 0.92 : 1,
-          marginBottom: 8,
-        }}
-      >
-        Đã gửi sản phẩm để tư vấn
+    <div className="chat-product-wrapper">
+      <div className={`chat-product-title-small ${mineClass}`}>
+        {t.chatProductSent || "Đã gửi sản phẩm để tư vấn"}
       </div>
 
-      <Link
-        to={p.url || `/products/${p.productId}`}
-        style={{
-          display: "block",
-          textDecoration: "none",
-          color: "inherit",
-        }}
-      >
-        <div
-          style={{
-            background: isMine ? "rgba(255,255,255,0.12)" : "#fff7f5",
-            border: isMine
-              ? "1px solid rgba(255,255,255,0.18)"
-              : "1px solid #ffd7cc",
-            borderRadius: 14,
-            padding: 10,
-          }}
-        >
-          <div className="d-flex gap-2 align-items-start">
-            <div
-              style={{
-                width: 64,
-                height: 64,
-                borderRadius: 12,
-                overflow: "hidden",
-                background: isMine ? "rgba(255,255,255,0.12)" : "#fff",
-                border: isMine
-                  ? "1px solid rgba(255,255,255,0.14)"
-                  : "1px solid #f1f5f9",
-                flexShrink: 0,
-              }}
-            >
-              {p.imageUrl ? (
+      <Link to={productUrl} className="chat-product-link">
+        <div className={`chat-product-card ${mineClass}`}>
+          <div className="chat-product-layout">
+            <div className={`chat-product-image-box ${mineClass}`}>
+              {productImage ? (
                 <img
-                  src={getImageSrc(p.imageUrl)}
-                  alt={p.name}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
+                  src={productImage}
+                  alt={productName}
+                  className="chat-product-image"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
                   }}
                 />
-              ) : null}
+              ) : (
+                <div className={`chat-product-image-empty ${mineClass}`}>
+                  <i className="bi bi-image"></i>
+                </div>
+              )}
             </div>
 
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <div
-                style={{
-                  fontWeight: 700,
-                  lineHeight: 1.45,
-                  marginBottom: 4,
-                }}
-              >
-                {p.name || "Sản phẩm"}
-              </div>
+            <div className="chat-product-info">
+              <div className="chat-product-name">{productName}</div>
 
-              {!!p.variantName && (
-                <div
-                  style={{
-                    fontSize: 13,
-                    opacity: isMine ? 0.9 : 0.7,
-                    marginBottom: 4,
-                  }}
-                >
-                  Phân loại: {p.variantName}
+              {!!product.variantName && (
+                <div className={`chat-product-variant ${mineClass}`}>
+                  {t.variantType || "Phân loại:"} {product.variantName}
                 </div>
               )}
 
-              <div
-                style={{
-                  fontSize: 14,
-                  fontWeight: 800,
-                  color: isMine ? "#fff" : "#ee4d2d",
-                }}
-              >
-                {formatPrice(p.price)}
+              <div className={`chat-product-price ${mineClass}`}>
+                {formatPrice(product.price)}
               </div>
             </div>
           </div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import { paymentService } from "../services/paymentService";
@@ -7,18 +7,21 @@ import { commonTranslations } from "../i18n/common";
 
 const formatPrice = (value) => {
   if (value === null || value === undefined) return "0 ₫";
-  return Number(value).toLocaleString("vi-VN") + " ₫";
+  return `${Number(value).toLocaleString("vi-VN")} ₫`;
 };
 
 const getErrorMessage = (ex, fallback) => {
   const data = ex?.response?.data;
+
   if (typeof data === "string") return data;
   if (data?.message) return data.message;
   if (data?.title) return data.title;
+
   if (data?.errors) {
     const firstError = Object.values(data.errors)?.flat?.()[0];
     if (firstError) return firstError;
   }
+
   return fallback;
 };
 
@@ -28,39 +31,34 @@ const getStatusBadge = (status, t) => {
   if (s === "pending" || s === "cho_thanh_toan") {
     return {
       text: t.paymentStatusPending || "Chờ thanh toán",
-      bg: "#fef3c7",
-      color: "#92400e",
+      className: "payment-status-pending",
     };
   }
 
   if (s === "paid" || s === "success" || s === "da_thanh_toan") {
     return {
       text: t.paymentStatusPaid || "Đã thanh toán",
-      bg: "#dcfce7",
-      color: "#166534",
+      className: "payment-status-paid",
     };
   }
 
   if (s === "failed" || s === "that_bai") {
     return {
       text: t.paymentStatusFailed || "Thất bại",
-      bg: "#fee2e2",
-      color: "#991b1b",
+      className: "payment-status-failed",
     };
   }
 
   if (s === "cancelled" || s === "canceled" || s === "da_huy") {
     return {
       text: t.paymentStatusCancelled || "Đã hủy",
-      bg: "#e5e7eb",
-      color: "#374151",
+      className: "payment-status-cancelled",
     };
   }
 
   return {
     text: t.paymentStatusUnknown || "Không xác định",
-    bg: "#e5e7eb",
-    color: "#374151",
+    className: "payment-status-unknown",
   };
 };
 
@@ -75,13 +73,7 @@ const getMethodText = (method, t) => {
     return t.paymentMethodBankTransfer || "Chuyển khoản ngân hàng";
   }
 
-  return method || (t.orderUnknown || "Không xác định");
-};
-
-const pageCard = {
-  background: "#ffffff",
-  borderRadius: 20,
-  boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
+  return method || t.orderUnknown || "Không xác định";
 };
 
 const getInlineQrImage = (payment) => {
@@ -97,16 +89,16 @@ const getInlineQrImage = (payment) => {
 const isImageLikeUrl = (url) => {
   if (!url) return false;
 
-  const u = String(url).toLowerCase();
+  const value = String(url).toLowerCase();
 
   return (
-    u.includes("img.vietqr.io") ||
-    u.endsWith(".png") ||
-    u.endsWith(".jpg") ||
-    u.endsWith(".jpeg") ||
-    u.endsWith(".webp") ||
-    u.endsWith(".gif") ||
-    u.endsWith(".svg")
+    value.includes("img.vietqr.io") ||
+    value.endsWith(".png") ||
+    value.endsWith(".jpg") ||
+    value.endsWith(".jpeg") ||
+    value.endsWith(".webp") ||
+    value.endsWith(".gif") ||
+    value.endsWith(".svg")
   );
 };
 
@@ -126,7 +118,29 @@ export default function PaymentPage() {
   const [err, setErr] = useState("");
   const [msg, setMsg] = useState("");
 
-  const loadLatest = async () => {
+  const paymentMethods = useMemo(
+    () => [
+      {
+        value: "cod",
+        title: t.paymentMethodCod || "Thanh toán khi nhận hàng (COD)",
+        desc:
+          t.paymentMethodCodDesc ||
+          "Thanh toán trực tiếp khi nhận sản phẩm.",
+        icon: "bi bi-cash-stack",
+      },
+      {
+        value: "bank_transfer",
+        title: t.paymentMethodBankTransfer || "Chuyển khoản ngân hàng",
+        desc:
+          t.paymentMethodBankTransferDesc ||
+          "Bấm vào đây để tạo và hiển thị QR ngay trên trang.",
+        icon: "bi bi-bank",
+      },
+    ],
+    [t]
+  );
+
+  const loadLatest = useCallback(async () => {
     try {
       const res = await paymentService.byOrderCode(orderCode);
       setPayment(res.data);
@@ -135,7 +149,7 @@ export default function PaymentPage() {
       setPayment(null);
       return null;
     }
-  };
+  }, [orderCode]);
 
   useEffect(() => {
     const init = async () => {
@@ -144,6 +158,7 @@ export default function PaymentPage() {
 
       try {
         const latest = await loadLatest();
+
         if (latest?.paymentMethod) {
           setMethod(String(latest.paymentMethod).toLowerCase());
         }
@@ -160,7 +175,7 @@ export default function PaymentPage() {
     };
 
     init();
-  }, [orderCode, t.paymentLoadFailed]);
+  }, [loadLatest, t.paymentLoadFailed]);
 
   const goToOrdersSuccess = () => {
     navigate("/orders", {
@@ -172,7 +187,7 @@ export default function PaymentPage() {
   };
 
   const create = async (forceMethod) => {
-    const methodToUse = (forceMethod || method || "cod").toLowerCase();
+    const methodToUse = String(forceMethod || method || "cod").toLowerCase();
 
     setErr("");
     setMsg("");
@@ -186,6 +201,7 @@ export default function PaymentPage() {
       });
 
       const newPayment = res.data;
+
       setPayment(newPayment);
       setMethod(methodToUse);
 
@@ -200,10 +216,7 @@ export default function PaymentPage() {
       );
     } catch (ex) {
       setErr(
-        getErrorMessage(
-          ex,
-          t.paymentCreateFailed || "Tạo thanh toán thất bại"
-        )
+        getErrorMessage(ex, t.paymentCreateFailed || "Tạo thanh toán thất bại")
       );
     } finally {
       setCreating(false);
@@ -241,8 +254,10 @@ export default function PaymentPage() {
 
     try {
       setConfirming(true);
+
       await paymentService.confirm({ orderCode });
       await loadLatest();
+
       goToOrdersSuccess();
     } catch (ex) {
       setErr(
@@ -257,6 +272,7 @@ export default function PaymentPage() {
   };
 
   const badge = getStatusBadge(payment?.status, t);
+
   const selectedMethod = String(method || "").toLowerCase();
   const paymentMethod = String(payment?.paymentMethod || "").toLowerCase();
 
@@ -279,179 +295,89 @@ export default function PaymentPage() {
 
   return (
     <MainLayout>
-      <section
-        className="section"
-        style={{
-          background: "#f5f5f5",
-          minHeight: "100vh",
-          paddingTop: 32,
-          paddingBottom: 48,
-        }}
-      >
+      <section className="section payment-page-section">
         <div className="container">
-          <div
-            style={{
-              ...pageCard,
-              padding: 24,
-              marginBottom: 20,
-              borderLeft: "5px solid #ee4d2d",
-            }}
-          >
-            <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
+          <div className="payment-card payment-header-card">
+            <div className="payment-header-top">
               <div>
-                <div
-                  style={{
-                    fontSize: 14,
-                    color: "#6b7280",
-                    marginBottom: 8,
-                    fontWeight: 600,
-                  }}
-                >
+                <div className="payment-kicker">
                   {t.paymentHeaderSmall || "Thanh toán đơn hàng"}
                 </div>
 
-                <h2
-                  style={{
-                    margin: 0,
-                    fontWeight: 700,
-                    color: "#111827",
-                    fontSize: "clamp(24px, 4vw, 34px)",
-                    lineHeight: 1.3,
-                  }}
-                >
+                <h2 className="payment-title">
                   {t.paymentHeaderTitle || "Thanh toán cho đơn hàng"}
                 </h2>
 
-                <div
-                  style={{
-                    marginTop: 10,
-                    color: "#ee4d2d",
-                    fontWeight: 700,
-                    wordBreak: "break-word",
-                  }}
-                >
-                  {orderCode}
-                </div>
+                <div className="payment-order-code">{orderCode}</div>
               </div>
 
-              <Link
-                to="/orders"
-                style={{
-                  color: "#ee4d2d",
-                  textDecoration: "none",
-                  fontWeight: 700,
-                }}
-              >
+              <Link to="/orders" className="payment-back-link">
                 {t.backToOrders || "← Quay lại đơn hàng"}
               </Link>
             </div>
           </div>
 
           {err && (
-            <div
-              className="alert mb-4"
-              role="alert"
-              style={{
-                background: "#fef2f2",
-                color: "#b91c1c",
-                border: "1px solid #fecaca",
-                borderRadius: 12,
-              }}
-            >
+            <div className="payment-alert payment-alert-error" role="alert">
               {err}
             </div>
           )}
 
           {msg && (
-            <div
-              className="alert mb-4"
-              role="alert"
-              style={{
-                background: "#ecfdf5",
-                color: "#047857",
-                border: "1px solid #a7f3d0",
-                borderRadius: 12,
-              }}
-            >
+            <div className="payment-alert payment-alert-success" role="alert">
               {msg}
             </div>
           )}
 
           {loading ? (
-            <div style={{ ...pageCard, padding: 40 }} className="text-center">
+            <div className="payment-card payment-loading-card">
               <div className="spinner-border text-danger" role="status"></div>
-              <p className="mt-3 mb-0" style={{ color: "#6b7280" }}>
+              <p className="payment-loading-text">
                 {t.paymentLoading || "Đang tải thông tin thanh toán..."}
               </p>
             </div>
           ) : (
             <div className="row g-4 align-items-start">
               <div className="col-lg-5">
-                <div style={{ ...pageCard, padding: 24 }}>
-                  <h3
-                    style={{
-                      color: "#111827",
-                      fontWeight: 700,
-                      marginBottom: 18,
-                      fontSize: 28,
-                    }}
-                  >
+                <div className="payment-card payment-info-card">
+                  <h3 className="payment-section-title">
                     {t.paymentInfoTitle || "Thông tin thanh toán"}
                   </h3>
 
-                  <div
-                    style={{
-                      background: "#fafafa",
-                      borderRadius: 14,
-                      padding: 16,
-                      color: "#4b5563",
-                      lineHeight: 1.9,
-                      marginBottom: 20,
-                      border: "1px solid #e5e7eb",
-                    }}
-                  >
+                  <div className="payment-summary-box">
                     <div>
-                      <strong style={{ color: "#111827" }}>
-                        {t.orderCodeLabel || "Mã đơn hàng:"}
-                      </strong>{" "}
+                      <strong>{t.orderCodeLabel || "Mã đơn hàng:"}</strong>{" "}
                       {orderCode}
                     </div>
 
                     {payment && (
                       <>
                         <div>
-                          <strong style={{ color: "#111827" }}>
+                          <strong>
                             {t.paymentMethodLabel || "Phương thức:"}
                           </strong>{" "}
                           {getMethodText(payment.paymentMethod, t)}
                         </div>
+
                         <div>
-                          <strong style={{ color: "#111827" }}>
-                            {t.paymentAmountLabel || "Số tiền:"}
-                          </strong>{" "}
+                          <strong>{t.paymentAmountLabel || "Số tiền:"}</strong>{" "}
                           {formatPrice(payment.amount)}
                         </div>
+
                         <div>
-                          <strong style={{ color: "#111827" }}>
+                          <strong>
                             {t.paymentStatusLabel || "Trạng thái:"}
                           </strong>{" "}
                           <span
-                            style={{
-                              background: badge.bg,
-                              color: badge.color,
-                              padding: "4px 10px",
-                              borderRadius: 999,
-                              fontSize: 13,
-                              fontWeight: 700,
-                              marginLeft: 6,
-                            }}
+                            className={`payment-status-badge ${badge.className}`}
                           >
                             {badge.text}
                           </span>
                         </div>
+
                         {payment.transactionCode && (
                           <div>
-                            <strong style={{ color: "#111827" }}>
+                            <strong>
                               {t.transactionCodeLabel || "Mã giao dịch:"}
                             </strong>{" "}
                             {payment.transactionCode}
@@ -462,36 +388,12 @@ export default function PaymentPage() {
                   </div>
 
                   <div className="mb-3">
-                    <label
-                      className="form-label"
-                      style={{ color: "#111827", fontWeight: 700 }}
-                    >
+                    <label className="form-label payment-form-label">
                       {t.choosePaymentMethod || "Chọn phương thức thanh toán"}
                     </label>
 
-                    <div className="d-grid gap-2">
-                      {[
-                        {
-                          value: "cod",
-                          title:
-                            t.paymentMethodCod ||
-                            "Thanh toán khi nhận hàng (COD)",
-                          desc:
-                            t.paymentMethodCodDesc ||
-                            "Thanh toán trực tiếp khi nhận sản phẩm.",
-                          icon: "bi bi-cash-stack",
-                        },
-                        {
-                          value: "bank_transfer",
-                          title:
-                            t.paymentMethodBankTransfer ||
-                            "Chuyển khoản ngân hàng",
-                          desc:
-                            t.paymentMethodBankTransferDesc ||
-                            "Bấm vào đây để tạo và hiển thị QR ngay trên trang.",
-                          icon: "bi bi-bank",
-                        },
-                      ].map((item) => {
+                    <div className="payment-method-list">
+                      {paymentMethods.map((item) => {
                         const isActive = method === item.value;
 
                         return (
@@ -500,60 +402,20 @@ export default function PaymentPage() {
                             type="button"
                             onClick={() => handleSelectMethod(item.value)}
                             disabled={creating}
-                            style={{
-                              border: "none",
-                              outline: "none",
-                              background: isActive ? "#fff1ee" : "#fff",
-                              color: "#111827",
-                              borderRadius: 14,
-                              padding: "14px 16px",
-                              textAlign: "left",
-                              display: "flex",
-                              alignItems: "flex-start",
-                              gap: 12,
-                              boxShadow: isActive
-                                ? "inset 0 0 0 2px #ee4d2d"
-                                : "inset 0 0 0 1px #e5e7eb",
-                              opacity:
-                                creating && item.value === "bank_transfer"
-                                  ? 0.8
-                                  : 1,
-                            }}
+                            className={`payment-method-button ${
+                              isActive ? "active" : ""
+                            }`}
                           >
-                            <div
-                              style={{
-                                width: 42,
-                                height: 42,
-                                borderRadius: "50%",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                background: isActive ? "#ee4d2d" : "#fff7ed",
-                                color: isActive ? "#fff" : "#ee4d2d",
-                                fontSize: 18,
-                                flexShrink: 0,
-                              }}
-                            >
+                            <div className="payment-method-icon">
                               <i className={item.icon}></i>
                             </div>
 
                             <div>
-                              <div
-                                style={{
-                                  fontWeight: 700,
-                                  color: "#111827",
-                                  marginBottom: 4,
-                                }}
-                              >
+                              <div className="payment-method-title">
                                 {item.title}
                               </div>
-                              <div
-                                style={{
-                                  color: "#6b7280",
-                                  fontSize: 14,
-                                  lineHeight: 1.6,
-                                }}
-                              >
+
+                              <div className="payment-method-desc">
                                 {item.desc}
                               </div>
                             </div>
@@ -563,19 +425,13 @@ export default function PaymentPage() {
                     </div>
                   </div>
 
-                  <div className="d-grid gap-3 mt-4">
+                  <div className="payment-action-list">
                     {isCod && (
                       <button
+                        type="button"
                         onClick={() => create("cod")}
                         disabled={creating}
-                        style={{
-                          height: 46,
-                          borderRadius: 10,
-                          fontWeight: 700,
-                          background: "#ee4d2d",
-                          color: "#fff",
-                          border: "none",
-                        }}
+                        className="payment-button payment-button-primary"
                       >
                         {creating
                           ? t.processing || "Đang xử lý..."
@@ -585,16 +441,10 @@ export default function PaymentPage() {
 
                     {isBankTransfer && (
                       <button
+                        type="button"
                         onClick={() => create("bank_transfer")}
                         disabled={creating}
-                        style={{
-                          height: 46,
-                          borderRadius: 10,
-                          fontWeight: 700,
-                          background: "#fff",
-                          color: "#ee4d2d",
-                          border: "1px solid #ee4d2d",
-                        }}
+                        className="payment-button payment-button-outline-primary"
                       >
                         {creating
                           ? t.creatingQr || "Đang tạo QR..."
@@ -604,16 +454,10 @@ export default function PaymentPage() {
 
                     {isBankTransfer && paymentMethod === "bank_transfer" && (
                       <button
+                        type="button"
                         onClick={confirm}
                         disabled={confirming}
-                        style={{
-                          height: 46,
-                          borderRadius: 10,
-                          fontWeight: 700,
-                          background: "#fff",
-                          color: "#166534",
-                          border: "1px solid #86efac",
-                        }}
+                        className="payment-button payment-button-success"
                       >
                         {confirming
                           ? t.confirmingPayment || "Đang xác nhận..."
@@ -625,121 +469,63 @@ export default function PaymentPage() {
               </div>
 
               <div className="col-lg-7">
-                <div style={{ ...pageCard, padding: 24 }}>
-                  <h3
-                    style={{
-                      color: "#111827",
-                      fontWeight: 700,
-                      marginBottom: 18,
-                      fontSize: 28,
-                    }}
-                  >
+                <div className="payment-card payment-detail-card">
+                  <h3 className="payment-section-title">
                     {t.paymentDetailTitle || "Chi tiết thanh toán"}
                   </h3>
 
                   {!payment && !isBankTransfer ? (
-                    <div
-                      style={{
-                        background: "#fafafa",
-                        borderRadius: 14,
-                        padding: 20,
-                        color: "#4b5563",
-                        border: "1px solid #e5e7eb",
-                        lineHeight: 1.8,
-                      }}
-                    >
+                    <div className="payment-empty-box">
                       {t.paymentNoInfo ||
                         "Chưa có thông tin thanh toán cho đơn hàng này. Hãy chọn phương thức thanh toán phù hợp."}
                     </div>
                   ) : (
-                    <div className="d-grid gap-3">
-                      <div
-                        style={{
-                          border: "1px solid #e5e7eb",
-                          borderRadius: 16,
-                          padding: 18,
-                          background: "#fff",
-                        }}
-                      >
-                        <div style={{ color: "#6b7280", marginBottom: 8 }}>
+                    <div className="payment-detail-list">
+                      <div className="payment-detail-item">
+                        <div className="payment-detail-label">
                           {t.paymentMethodDisplay || "Phương thức thanh toán"}
                         </div>
-                        <div style={{ color: "#111827", fontWeight: 700 }}>
+
+                        <div className="payment-detail-value">
                           {getMethodText(payment?.paymentMethod || method, t)}
                         </div>
                       </div>
 
                       {payment && (
                         <>
-                          <div
-                            style={{
-                              border: "1px solid #e5e7eb",
-                              borderRadius: 16,
-                              padding: 18,
-                              background: "#fff",
-                            }}
-                          >
-                            <div style={{ color: "#6b7280", marginBottom: 8 }}>
-                              {t.paymentStatusDisplay || "Trạng thái thanh toán"}
+                          <div className="payment-detail-item">
+                            <div className="payment-detail-label">
+                              {t.paymentStatusDisplay ||
+                                "Trạng thái thanh toán"}
                             </div>
+
                             <div>
                               <span
-                                style={{
-                                  background: badge.bg,
-                                  color: badge.color,
-                                  padding: "6px 12px",
-                                  borderRadius: 999,
-                                  fontSize: 14,
-                                  fontWeight: 700,
-                                }}
+                                className={`payment-status-badge large ${badge.className}`}
                               >
                                 {badge.text}
                               </span>
                             </div>
                           </div>
 
-                          <div
-                            style={{
-                              border: "1px solid #e5e7eb",
-                              borderRadius: 16,
-                              padding: 18,
-                              background: "#fff",
-                            }}
-                          >
-                            <div style={{ color: "#6b7280", marginBottom: 8 }}>
+                          <div className="payment-detail-item">
+                            <div className="payment-detail-label">
                               {t.paymentAmountDisplay || "Số tiền thanh toán"}
                             </div>
-                            <div
-                              style={{
-                                color: "#ee4d2d",
-                                fontWeight: 700,
-                                fontSize: 28,
-                              }}
-                            >
+
+                            <div className="payment-amount-value">
                               {formatPrice(payment.amount)}
                             </div>
                           </div>
 
                           {payment.transactionCode && (
-                            <div
-                              style={{
-                                border: "1px solid #e5e7eb",
-                                borderRadius: 16,
-                                padding: 18,
-                                background: "#fff",
-                              }}
-                            >
-                              <div style={{ color: "#6b7280", marginBottom: 8 }}>
+                            <div className="payment-detail-item">
+                              <div className="payment-detail-label">
                                 {t.paymentTransactionInfo ||
                                   "Mã giao dịch / nội dung chuyển khoản"}
                               </div>
-                              <div
-                                style={{
-                                  color: "#111827",
-                                  fontWeight: 700,
-                                  wordBreak: "break-word",
-                                }}
-                              >
+
+                              <div className="payment-detail-value">
                                 {payment.transactionCode}
                               </div>
                             </div>
@@ -748,35 +534,21 @@ export default function PaymentPage() {
                       )}
 
                       {isBankTransfer && (
-                        <div
-                          style={{
-                            border: "1px solid #fed7aa",
-                            borderRadius: 16,
-                            padding: 18,
-                            background: "#fff7ed",
-                          }}
-                        >
-                          <div
-                            style={{
-                              color: "#c2410c",
-                              fontWeight: 700,
-                              marginBottom: 12,
-                              fontSize: 16,
-                            }}
-                          >
+                        <div className="payment-transfer-box">
+                          <div className="payment-transfer-title">
                             {t.paymentQrSectionTitle ||
                               "QR / thông tin chuyển khoản ngay trên trang"}
                           </div>
 
                           {payment?.bankName && (
-                            <div style={{ color: "#7c2d12", marginBottom: 6 }}>
+                            <div className="payment-transfer-line">
                               <strong>{t.bankNameLabel || "Ngân hàng:"}</strong>{" "}
                               {payment.bankName}
                             </div>
                           )}
 
                           {payment?.accountName && (
-                            <div style={{ color: "#7c2d12", marginBottom: 6 }}>
+                            <div className="payment-transfer-line">
                               <strong>
                                 {t.accountNameLabel || "Chủ tài khoản:"}
                               </strong>{" "}
@@ -785,7 +557,7 @@ export default function PaymentPage() {
                           )}
 
                           {payment?.accountNo && (
-                            <div style={{ color: "#7c2d12", marginBottom: 6 }}>
+                            <div className="payment-transfer-line">
                               <strong>
                                 {t.accountNumberLabel || "Số tài khoản:"}
                               </strong>{" "}
@@ -795,79 +567,38 @@ export default function PaymentPage() {
 
                           {payment?.amount !== null &&
                             payment?.amount !== undefined && (
-                              <div style={{ color: "#7c2d12", marginBottom: 10 }}>
+                              <div className="payment-transfer-line last">
                                 <strong>{t.paymentAmountLabel || "Số tiền:"}</strong>{" "}
                                 {formatPrice(payment.amount)}
                               </div>
                             )}
 
                           {inlineQrImage ? (
-                            <div
-                              style={{
-                                marginTop: 12,
-                                background: "#fff",
-                                borderRadius: 14,
-                                padding: 16,
-                                border: "1px solid #fed7aa",
-                                textAlign: "center",
-                              }}
-                            >
+                            <div className="payment-qr-box">
                               <img
                                 src={inlineQrImage}
                                 alt={t.paymentQrAlt || "QR thanh toán"}
-                                style={{
-                                  width: "100%",
-                                  maxWidth: 320,
-                                  borderRadius: 12,
-                                  border: "1px solid #e5e7eb",
-                                }}
+                                className="payment-qr-image"
                               />
                             </div>
                           ) : canEmbedIframe ? (
-                            <div
-                              style={{
-                                marginTop: 12,
-                                background: "#fff",
-                                borderRadius: 14,
-                                padding: 12,
-                                border: "1px solid #fed7aa",
-                              }}
-                            >
+                            <div className="payment-iframe-box">
                               <iframe
                                 src={payment.paymentUrl}
-                                title={t.paymentInfoIframeTitle || "Thông tin thanh toán"}
-                                style={{
-                                  width: "100%",
-                                  minHeight: 420,
-                                  border: "1px solid #e5e7eb",
-                                  borderRadius: 12,
-                                  background: "#fff",
-                                }}
+                                title={
+                                  t.paymentInfoIframeTitle ||
+                                  "Thông tin thanh toán"
+                                }
+                                className="payment-iframe"
                               />
-                              <div
-                                style={{
-                                  marginTop: 10,
-                                  color: "#7c2d12",
-                                  fontSize: 13,
-                                  lineHeight: 1.6,
-                                }}
-                              >
+
+                              <div className="payment-iframe-hint">
                                 {t.paymentIframeHint ||
                                   "Nếu khung không hiển thị được do giới hạn từ phía cổng thanh toán, bạn hãy dùng nút “Tạo lại QR thanh toán”."}
                               </div>
                             </div>
                           ) : (
-                            <div
-                              style={{
-                                marginTop: 12,
-                                background: "#fff",
-                                borderRadius: 14,
-                                padding: 16,
-                                border: "1px solid #fed7aa",
-                                color: "#7c2d12",
-                                lineHeight: 1.8,
-                              }}
-                            >
+                            <div className="payment-hint-box">
                               {paymentMethod === "bank_transfer"
                                 ? t.paymentQrMissingHint ||
                                   "Đã tạo thanh toán chuyển khoản. Nếu backend của bạn chưa trả về ảnh QR, hãy hiển thị thêm qrCodeUrl hoặc qrUrl từ API để QR hiện trực tiếp tại đây."
@@ -879,16 +610,7 @@ export default function PaymentPage() {
                       )}
 
                       {isCod && (
-                        <div
-                          style={{
-                            border: "1px solid #fed7aa",
-                            borderRadius: 16,
-                            padding: 18,
-                            background: "#fff7ed",
-                            color: "#92400e",
-                            lineHeight: 1.8,
-                          }}
-                        >
+                        <div className="payment-cod-box">
                           {t.paymentCodHint ||
                             "Đơn hàng này sử dụng hình thức thanh toán khi nhận hàng (COD), nên không cần xác nhận thanh toán trước."}
                         </div>

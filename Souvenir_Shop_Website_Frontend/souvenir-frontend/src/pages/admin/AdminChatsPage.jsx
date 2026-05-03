@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { chatService } from "../../services/chatService";
 import ChatMessageContent from "../../components/chat/ChatMessageContent";
 
@@ -6,16 +6,20 @@ const PRODUCT_PREFIX = "[[PRODUCT]]";
 
 const getErrorMessage = (ex, fallback) => {
   const data = ex?.response?.data;
+
   if (typeof data === "string") return data;
   if (data?.message) return data.message;
   if (data?.title) return data.title;
+
   return fallback;
 };
 
 const formatTime = (value) => {
   if (!value) return "";
-  const d = new Date(value);
-  return d.toLocaleString("vi-VN", {
+
+  const date = new Date(value);
+
+  return date.toLocaleString("vi-VN", {
     hour: "2-digit",
     minute: "2-digit",
     day: "2-digit",
@@ -39,6 +43,7 @@ export default function AdminChatsPage() {
   const [selected, setSelected] = useState(null);
   const [messages, setMessages] = useState([]);
   const [reply, setReply] = useState("");
+
   const [loadingList, setLoadingList] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
@@ -48,60 +53,72 @@ export default function AdminChatsPage() {
 
   const filteredKeyword = useMemo(() => keyword.trim(), [keyword]);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     requestAnimationFrame(() => {
-      if (listRef.current) {
-        listRef.current.scrollTop = listRef.current.scrollHeight;
-      }
-    });
-  };
+      if (!listRef.current) return;
 
-  const loadConversations = async () => {
+      listRef.current.scrollTop = listRef.current.scrollHeight;
+    });
+  }, []);
+
+  const loadConversations = useCallback(async () => {
     setLoadingList(true);
     setErr("");
 
     try {
       const res = await chatService.getAdminConversations(filteredKeyword);
       const data = res.data || [];
+
       setConversations(data);
 
-      if (!selected && data.length > 0) {
-        setSelected(data[0]);
-      }
+      setSelected((prevSelected) => {
+        if (!prevSelected && data.length > 0) return data[0];
 
-      if (selected) {
-        const latestSelected = data.find(
-          (x) => String(x.conversationId) === String(selected.conversationId)
-        );
-        if (latestSelected) setSelected(latestSelected);
-      }
+        if (prevSelected) {
+          const latestSelected = data.find(
+            (item) =>
+              String(item.conversationId) ===
+              String(prevSelected.conversationId)
+          );
+
+          return latestSelected || prevSelected;
+        }
+
+        return prevSelected;
+      });
     } catch (ex) {
       setErr(getErrorMessage(ex, "Không thể tải danh sách cuộc trò chuyện"));
     } finally {
       setLoadingList(false);
     }
-  };
+  }, [filteredKeyword]);
 
-  const loadMessages = async (conversationId) => {
-    if (!conversationId) return;
+  const loadMessages = useCallback(
+    async (conversationId) => {
+      if (!conversationId) return;
 
-    setLoadingMessages(true);
+      setLoadingMessages(true);
 
-    try {
-      const res = await chatService.getAdminMessages(conversationId);
-      setMessages(res.data || []);
-      await chatService.markAdminRead(conversationId);
-      scrollToBottom();
-    } catch (ex) {
-      setErr(getErrorMessage(ex, "Không thể tải nội dung trò chuyện"));
-    } finally {
-      setLoadingMessages(false);
-    }
-  };
+      try {
+        const res = await chatService.getAdminMessages(conversationId);
+
+        setMessages(res.data || []);
+
+        await chatService.markAdminRead(conversationId);
+
+        scrollToBottom();
+      } catch (ex) {
+        setErr(getErrorMessage(ex, "Không thể tải nội dung trò chuyện"));
+      } finally {
+        setLoadingMessages(false);
+      }
+    },
+    [scrollToBottom]
+  );
 
   useEffect(() => {
     loadConversations();
-  }, []);
+  }, [loadConversations]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -109,7 +126,7 @@ export default function AdminChatsPage() {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [filteredKeyword]);
+  }, [filteredKeyword, loadConversations]);
 
   useEffect(() => {
     if (!selected?.conversationId) return;
@@ -122,15 +139,14 @@ export default function AdminChatsPage() {
     }, 4000);
 
     return () => clearInterval(timer);
-  }, [selected?.conversationId]);
+  }, [selected?.conversationId, loadMessages, loadConversations]);
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, scrollToBottom]);
 
   const sendReply = async () => {
-    if (!selected?.conversationId) return;
-    if (!reply.trim()) return;
+    if (!selected?.conversationId || !reply.trim()) return;
 
     setSending(true);
     setErr("");
@@ -141,6 +157,7 @@ export default function AdminChatsPage() {
       });
 
       setReply("");
+
       await loadMessages(selected.conversationId);
       await loadConversations();
     } catch (ex) {
@@ -151,12 +168,11 @@ export default function AdminChatsPage() {
   };
 
   return (
-    <div>
-      <div className="mb-4">
-        <h2 style={{ marginBottom: 6, color: "#0f172a", fontWeight: 800 }}>
-          Chat với khách hàng
-        </h2>
-        <p style={{ marginBottom: 0, color: "#64748b" }}>
+    <div className="admin-chat-page">
+      <div className="admin-chat-header">
+        <h2 className="admin-chat-title">Chat với khách hàng</h2>
+
+        <p className="admin-chat-desc">
           Theo dõi và phản hồi tin nhắn của khách hàng ngay trong trang quản trị.
         </p>
       </div>
@@ -169,136 +185,66 @@ export default function AdminChatsPage() {
 
       <div className="row g-4">
         <div className="col-lg-4">
-          <div
-            style={{
-              background: "#fff",
-              borderRadius: 22,
-              boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
-              overflow: "hidden",
-              border: "1px solid #eef2f7",
-            }}
-          >
-            <div style={{ padding: 16, borderBottom: "1px solid #e5e7eb" }}>
-              <div
-                style={{
-                  fontSize: 24,
-                  fontWeight: 800,
-                  color: "#2563eb",
-                  marginBottom: 12,
-                }}
-              >
-                Chat
-              </div>
+          <div className="admin-chat-card">
+            <div className="admin-chat-sidebar-head">
+              <div className="admin-chat-sidebar-title">Chat</div>
 
               <input
-                className="form-control"
+                className="form-control admin-chat-search"
                 placeholder="Tìm theo tên khách hàng..."
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
-                style={{
-                  height: 44,
-                  borderRadius: 12,
-                  borderColor: "#dbeafe",
-                }}
               />
             </div>
 
-            <div
-              style={{
-                height: 620,
-                overflowY: "auto",
-                background: "#fff",
-              }}
-            >
+            <div className="admin-chat-conversation-list">
               {loadingList ? (
-                <div className="text-center py-5">Đang tải hội thoại...</div>
+                <div className="admin-chat-loading">
+                  Đang tải hội thoại...
+                </div>
               ) : conversations.length === 0 ? (
-                <div style={{ padding: 18, color: "#64748b" }}>
+                <div className="admin-chat-empty">
                   Chưa có cuộc trò chuyện nào.
                 </div>
               ) : (
-                conversations.map((c) => {
+                conversations.map((conversation) => {
                   const isActive =
                     String(selected?.conversationId) ===
-                    String(c.conversationId);
+                    String(conversation.conversationId);
 
                   return (
                     <button
-                      key={c.conversationId}
+                      key={conversation.conversationId}
                       type="button"
-                      onClick={() => setSelected(c)}
-                      style={{
-                        width: "100%",
-                        textAlign: "left",
-                        border: "none",
-                        background: isActive ? "#eff6ff" : "#fff",
-                        padding: 16,
-                        borderBottom: "1px solid #f1f5f9",
-                      }}
+                      onClick={() => setSelected(conversation)}
+                      className={`admin-chat-conversation-button ${
+                        isActive ? "active" : ""
+                      }`}
                     >
-                      <div className="d-flex justify-content-between gap-2">
-                        <div style={{ minWidth: 0 }}>
-                          <div
-                            style={{
-                              fontWeight: 700,
-                              color: "#0f172a",
-                              marginBottom: 4,
-                            }}
-                          >
-                            {c.customerName || `Khách hàng #${c.customerId}`}
+                      <div className="admin-chat-conversation-row">
+                        <div className="admin-chat-conversation-main">
+                          <div className="admin-chat-customer-name">
+                            {conversation.customerName ||
+                              `Khách hàng #${conversation.customerId}`}
                           </div>
 
-                          <div
-                            style={{
-                              color: "#64748b",
-                              fontSize: 13,
-                              marginBottom: 6,
-                            }}
-                          >
-                            {c.customerEmail || ""}
+                          <div className="admin-chat-customer-email">
+                            {conversation.customerEmail || ""}
                           </div>
 
-                          <div
-                            style={{
-                              color: "#475569",
-                              fontSize: 14,
-                              whiteSpace: "nowrap",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                            }}
-                          >
-                            {getLastMessagePreview(c.lastMessage)}
+                          <div className="admin-chat-last-message">
+                            {getLastMessagePreview(conversation.lastMessage)}
                           </div>
                         </div>
 
-                        <div style={{ textAlign: "right", flexShrink: 0 }}>
-                          <div
-                            style={{
-                              color: "#94a3b8",
-                              fontSize: 12,
-                              marginBottom: 6,
-                            }}
-                          >
-                            {formatTime(c.lastMessageAt)}
+                        <div className="admin-chat-conversation-meta">
+                          <div className="admin-chat-time-small">
+                            {formatTime(conversation.lastMessageAt)}
                           </div>
 
-                          {!!c.unreadCount && (
-                            <span
-                              style={{
-                                display: "inline-flex",
-                                minWidth: 24,
-                                height: 24,
-                                alignItems: "center",
-                                justifyContent: "center",
-                                borderRadius: 999,
-                                background: "#2563eb",
-                                color: "#fff",
-                                fontSize: 12,
-                                fontWeight: 700,
-                                padding: "0 8px",
-                              }}
-                            >
-                              {c.unreadCount}
+                          {!!conversation.unreadCount && (
+                            <span className="admin-chat-unread">
+                              {conversation.unreadCount}
                             </span>
                           )}
                         </div>
@@ -312,45 +258,21 @@ export default function AdminChatsPage() {
         </div>
 
         <div className="col-lg-8">
-          <div
-            style={{
-              background: "#fff",
-              borderRadius: 22,
-              boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
-              overflow: "hidden",
-              border: "1px solid #eef2f7",
-            }}
-          >
+          <div className="admin-chat-card">
             {!selected ? (
-              <div className="text-center py-5" style={{ color: "#64748b" }}>
+              <div className="admin-chat-panel-empty">
                 Hãy chọn một cuộc trò chuyện để bắt đầu phản hồi.
               </div>
             ) : (
               <>
-                <div
-                  style={{
-                    padding: 18,
-                    borderBottom: "1px solid #e5e7eb",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    gap: 12,
-                    flexWrap: "wrap",
-                  }}
-                >
+                <div className="admin-chat-panel-head">
                   <div>
-                    <div
-                      style={{
-                        fontSize: 22,
-                        fontWeight: 800,
-                        color: "#0f172a",
-                      }}
-                    >
+                    <div className="admin-chat-panel-name">
                       {selected.customerName ||
                         `Khách hàng #${selected.customerId}`}
                     </div>
 
-                    <div style={{ color: "#64748b", marginTop: 4 }}>
+                    <div className="admin-chat-panel-email">
                       {selected.customerEmail || ""}
                     </div>
                   </div>
@@ -358,91 +280,53 @@ export default function AdminChatsPage() {
                   <button
                     type="button"
                     onClick={() => loadMessages(selected.conversationId)}
-                    className="btn btn-outline-primary"
-                    style={{ borderRadius: 12, fontWeight: 700 }}
+                    className="btn btn-outline-primary admin-chat-reload-button"
                   >
                     Tải lại
                   </button>
                 </div>
 
-                <div
-                  ref={listRef}
-                  style={{
-                    height: 500,
-                    overflowY: "auto",
-                    padding: 16,
-                    background: "#f8fafc",
-                  }}
-                >
+                <div ref={listRef} className="admin-chat-message-list-wrap">
                   {loadingMessages ? (
-                    <div className="text-center py-5">Đang tải tin nhắn...</div>
+                    <div className="admin-chat-message-empty">
+                      Đang tải tin nhắn...
+                    </div>
                   ) : messages.length === 0 ? (
-                    <div
-                      className="text-center py-5"
-                      style={{ color: "#64748b" }}
-                    >
+                    <div className="admin-chat-message-empty">
                       Chưa có tin nhắn nào trong cuộc trò chuyện này.
                     </div>
                   ) : (
-                    <div className="d-grid gap-3">
-                      {messages.map((m) => {
+                    <div className="admin-chat-message-list">
+                      {messages.map((message) => {
                         const isAdmin =
-                          String(m.senderRole || "").toLowerCase() === "admin";
+                          String(message.senderRole || "").toLowerCase() ===
+                          "admin";
+
+                        const roleClass = isAdmin ? "admin" : "customer";
 
                         return (
                           <div
-                            key={m.id}
-                            style={{
-                              display: "flex",
-                              justifyContent: isAdmin
-                                ? "flex-end"
-                                : "flex-start",
-                            }}
+                            key={message.id}
+                            className={`admin-chat-message-row ${roleClass}`}
                           >
                             <div
-                              style={{
-                                maxWidth: "78%",
-                                background: isAdmin ? "#2563eb" : "#fff",
-                                color: isAdmin ? "#fff" : "#0f172a",
-                                border: isAdmin
-                                  ? "1px solid #2563eb"
-                                  : "1px solid #dbeafe",
-                                borderRadius: isAdmin
-                                  ? "18px 18px 6px 18px"
-                                  : "18px 18px 18px 6px",
-                                padding: "10px 12px",
-                                boxShadow: "0 6px 18px rgba(15, 23, 42, 0.06)",
-                                wordBreak: "break-word",
-                                overflowWrap: "anywhere",
-                              }}
+                              className={`admin-chat-bubble ${roleClass}`}
                             >
                               <div
-                                style={{
-                                  fontSize: 12,
-                                  fontWeight: 700,
-                                  marginBottom: 6,
-                                  color: isAdmin
-                                    ? "rgba(255,255,255,0.92)"
-                                    : "#2563eb",
-                                }}
+                                className={`admin-chat-sender ${roleClass}`}
                               >
-                                {isAdmin ? "Bạn" : m.senderName || "Khách hàng"}
+                                {isAdmin
+                                  ? "Bạn"
+                                  : message.senderName || "Khách hàng"}
                               </div>
 
                               <ChatMessageContent
-                                content={m.content}
+                                content={message.content}
                                 isMine={isAdmin}
                               />
 
-                              <div
-                                style={{
-                                  marginTop: 6,
-                                  fontSize: 11,
-                                  opacity: 0.8,
-                                  textAlign: "right",
-                                }}
-                              >
-                                {formatTime(m.createdAt)}
+                              <div className="admin-chat-message-time">
+                                {formatTime(message.createdAt)}
                               </div>
                             </div>
                           </div>
@@ -452,25 +336,14 @@ export default function AdminChatsPage() {
                   )}
                 </div>
 
-                <div
-                  style={{
-                    padding: 16,
-                    borderTop: "1px solid #e5e7eb",
-                    background: "#fff",
-                  }}
-                >
-                  <div className="d-flex gap-2 align-items-end">
+                <div className="admin-chat-reply-footer">
+                  <div className="admin-chat-reply-row">
                     <textarea
-                      className="form-control"
+                      className="form-control admin-chat-reply-input"
                       rows={3}
                       placeholder="Nhập nội dung phản hồi cho khách hàng..."
                       value={reply}
                       onChange={(e) => setReply(e.target.value)}
-                      style={{
-                        borderRadius: 14,
-                        resize: "none",
-                        borderColor: "#dbeafe",
-                      }}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && !e.shiftKey) {
                           e.preventDefault();
@@ -483,12 +356,7 @@ export default function AdminChatsPage() {
                       type="button"
                       onClick={sendReply}
                       disabled={sending || !reply.trim()}
-                      className="btn btn-primary"
-                      style={{
-                        minWidth: 110,
-                        borderRadius: 14,
-                        fontWeight: 700,
-                      }}
+                      className="btn btn-primary admin-chat-send-button"
                     >
                       {sending ? "Đang gửi" : "Gửi"}
                     </button>

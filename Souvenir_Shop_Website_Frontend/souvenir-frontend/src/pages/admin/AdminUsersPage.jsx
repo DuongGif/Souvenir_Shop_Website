@@ -1,41 +1,67 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { adminUsersService } from "../../services/admin/adminUsersService";
 
 const PAGE_SIZE = 5;
 
 const getErrorMessage = (ex, fallback) => {
   const data = ex?.response?.data;
+
   if (typeof data === "string") return data;
   if (data?.message) return data.message;
   if (data?.title) return data.title;
+
   if (data?.errors) {
     const firstError = Object.values(data.errors)?.flat?.()[0];
     if (firstError) return firstError;
   }
+
   return fallback;
 };
 
 const getStatusBadge = (status) => {
-  const s = String(status || "").toLowerCase();
+  const value = String(status || "").toLowerCase();
 
-  if (s === "active") {
-    return { text: "Đang hoạt động", bg: "#dcfce7", color: "#166534" };
+  if (value === "active") {
+    return {
+      text: "Đang hoạt động",
+      className: "active",
+    };
   }
 
-  if (s === "blocked" || s === "locked") {
-    return { text: "Đã khóa", bg: "#fee2e2", color: "#991b1b" };
+  if (value === "blocked" || value === "locked") {
+    return {
+      text: "Đã khóa",
+      className: "blocked",
+    };
   }
 
-  return { text: "Không xác định", bg: "#e5e7eb", color: "#374151" };
+  return {
+    text: "Không xác định",
+    className: "unknown",
+  };
 };
 
-const getRoleText = (role) => {
-  const r = String(role || "").toLowerCase();
+const getRoleBadge = (role) => {
+  const value = String(role || "").toLowerCase();
 
-  if (r === "admin") return "Quản trị viên";
-  if (r === "customer") return "Khách hàng";
+  if (value === "admin") {
+    return {
+      text: "Quản trị viên",
+      className: "admin",
+    };
+  }
 
-  return role || "Không xác định";
+  if (value === "customer") {
+    return {
+      text: "Khách hàng",
+      className: "customer",
+    };
+  }
+
+  return {
+    text: role || "Không xác định",
+    className: "unknown",
+  };
 };
 
 export default function AdminUsersPage() {
@@ -45,27 +71,31 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     setErr("");
 
     try {
       const res = await adminUsersService.getAll();
       const data = res.data || [];
+
       setUsers(data);
 
-      const totalPages = Math.max(1, Math.ceil(data.length / PAGE_SIZE));
-      setCurrentPage((prev) => (prev > totalPages ? totalPages : prev));
+      const nextTotalPages = Math.max(1, Math.ceil(data.length / PAGE_SIZE));
+
+      setCurrentPage((prev) => {
+        return prev > nextTotalPages ? nextTotalPages : prev;
+      });
     } catch (ex) {
       setErr(getErrorMessage(ex, "Không thể tải danh sách người dùng"));
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   const lock = async (id) => {
     setErr("");
@@ -73,7 +103,9 @@ export default function AdminUsersPage() {
 
     try {
       await adminUsersService.lock(id);
-      setMsg("Đã khóa người dùng #" + id);
+
+      setMsg(`Đã khóa người dùng #${id}`);
+
       await load();
     } catch (ex) {
       setErr(getErrorMessage(ex, "Khóa người dùng thất bại"));
@@ -86,7 +118,9 @@ export default function AdminUsersPage() {
 
     try {
       await adminUsersService.unlock(id);
-      setMsg("Đã mở khóa người dùng #" + id);
+
+      setMsg(`Đã mở khóa người dùng #${id}`);
+
       await load();
     } catch (ex) {
       setErr(getErrorMessage(ex, "Mở khóa người dùng thất bại"));
@@ -94,36 +128,42 @@ export default function AdminUsersPage() {
   };
 
   const totalPages = Math.max(1, Math.ceil(users.length / PAGE_SIZE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
 
   const pagedUsers = useMemo(() => {
-    const start = (currentPage - 1) * PAGE_SIZE;
-    const end = start + PAGE_SIZE;
-    return users.slice(start, end);
-  }, [users, currentPage]);
+    const start = (safeCurrentPage - 1) * PAGE_SIZE;
+    return users.slice(start, start + PAGE_SIZE);
+  }, [users, safeCurrentPage]);
 
   const goToPage = (page) => {
     if (page < 1 || page > totalPages) return;
+
     setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   };
 
   return (
-    <div>
-      <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <div className="admin-users-page">
+      <div className="admin-users-header">
         <div>
-          <h2
-            style={{
-              marginBottom: 6,
-              color: "#0f172a",
-              fontWeight: 700,
-            }}
-          >
-            Quản lý người dùng
-          </h2>
-          <p style={{ marginBottom: 0, color: "#64748b" }}>
+          <h2 className="admin-users-title">Quản lý người dùng</h2>
+
+          <p className="admin-users-desc">
             Xem danh sách tài khoản và thực hiện khóa / mở khóa người dùng.
           </p>
         </div>
+
+        <button
+          type="button"
+          onClick={load}
+          className="btn btn-outline-primary admin-users-reload-btn"
+        >
+          Tải lại
+        </button>
       </div>
 
       {err && (
@@ -139,176 +179,71 @@ export default function AdminUsersPage() {
       )}
 
       {loading ? (
-        <div className="text-center py-5">
+        <div className="admin-users-loading">
           <div className="spinner-border text-info" role="status"></div>
-          <p className="mt-3 mb-0">Đang tải danh sách người dùng...</p>
+
+          <p className="admin-users-loading-text">
+            Đang tải danh sách người dùng...
+          </p>
         </div>
       ) : users.length === 0 ? (
-        <div
-          style={{
-            background: "#fff",
-            borderRadius: 20,
-            padding: 28,
-            boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
-            color: "#475569",
-          }}
-        >
-          Không có người dùng nào.
-        </div>
+        <div className="admin-users-empty">Không có người dùng nào.</div>
       ) : (
         <>
-          <div
-            style={{
-              background: "#fff",
-              borderRadius: 20,
-              overflow: "hidden",
-              boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
-            }}
-          >
+          <div className="admin-users-table-card">
             <div className="table-responsive">
-              <table
-                style={{
-                  width: "100%",
-                  borderCollapse: "collapse",
-                  color: "#1f2937",
-                }}
-              >
+              <table className="admin-users-table">
                 <thead>
-                  <tr style={{ background: "#f8fafc" }}>
-                    <th
-                      style={{
-                        padding: "16px 14px",
-                        textAlign: "left",
-                        color: "#0f172a",
-                        fontWeight: 700,
-                        borderBottom: "1px solid #e5e7eb",
-                      }}
-                    >
-                      Mã
-                    </th>
-                    <th
-                      style={{
-                        padding: "16px 14px",
-                        textAlign: "left",
-                        color: "#0f172a",
-                        fontWeight: 700,
-                        borderBottom: "1px solid #e5e7eb",
-                      }}
-                    >
-                      Email
-                    </th>
-                    <th
-                      style={{
-                        padding: "16px 14px",
-                        textAlign: "left",
-                        color: "#0f172a",
-                        fontWeight: 700,
-                        borderBottom: "1px solid #e5e7eb",
-                      }}
-                    >
-                      Vai trò
-                    </th>
-                    <th
-                      style={{
-                        padding: "16px 14px",
-                        textAlign: "left",
-                        color: "#0f172a",
-                        fontWeight: 700,
-                        borderBottom: "1px solid #e5e7eb",
-                      }}
-                    >
-                      Trạng thái
-                    </th>
-                    <th
-                      style={{
-                        padding: "16px 14px",
-                        textAlign: "left",
-                        color: "#0f172a",
-                        fontWeight: 700,
-                        borderBottom: "1px solid #e5e7eb",
-                      }}
-                    >
-                      Thao tác
-                    </th>
+                  <tr>
+                    <th>Mã</th>
+                    <th>Email</th>
+                    <th>Vai trò</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
                   </tr>
                 </thead>
 
                 <tbody>
-                  {pagedUsers.map((u) => {
-                    const badge = getStatusBadge(u.status);
+                  {pagedUsers.map((user) => {
+                    const statusBadge = getStatusBadge(user.status);
+                    const roleBadge = getRoleBadge(user.role);
 
                     return (
-                      <tr key={u.id}>
-                        <td
-                          style={{
-                            padding: "14px",
-                            color: "#334155",
-                            borderBottom: "1px solid #e5e7eb",
-                          }}
-                        >
-                          {u.id}
-                        </td>
+                      <tr key={user.id}>
+                        <td>{user.id}</td>
 
-                        <td
-                          style={{
-                            padding: "14px",
-                            color: "#334155",
-                            borderBottom: "1px solid #e5e7eb",
-                            fontWeight: 500,
-                          }}
-                        >
-                          {u.email}
-                        </td>
+                        <td className="admin-users-email">{user.email}</td>
 
-                        <td
-                          style={{
-                            padding: "14px",
-                            color: "#334155",
-                            borderBottom: "1px solid #e5e7eb",
-                          }}
-                        >
-                          {getRoleText(u.role)}
-                        </td>
-
-                        <td
-                          style={{
-                            padding: "14px",
-                            borderBottom: "1px solid #e5e7eb",
-                          }}
-                        >
+                        <td>
                           <span
-                            style={{
-                              background: badge.bg,
-                              color: badge.color,
-                              padding: "6px 12px",
-                              borderRadius: 999,
-                              fontSize: 13,
-                              fontWeight: 600,
-                            }}
+                            className={`admin-users-role ${roleBadge.className}`}
                           >
-                            {badge.text}
+                            {roleBadge.text}
                           </span>
                         </td>
 
-                        <td
-                          style={{
-                            padding: "14px",
-                            borderBottom: "1px solid #e5e7eb",
-                          }}
-                        >
-                          <div className="d-flex gap-2 flex-wrap">
+                        <td>
+                          <span
+                            className={`admin-users-status ${statusBadge.className}`}
+                          >
+                            {statusBadge.text}
+                          </span>
+                        </td>
+
+                        <td>
+                          <div className="admin-users-action-list">
                             <button
-                              onClick={() => lock(u.id)}
-                              className="btn btn-outline-danger btn-sm"
-                              style={{ borderRadius: 10, fontWeight: 600 }}
+                              type="button"
+                              onClick={() => lock(user.id)}
+                              className="btn btn-outline-danger btn-sm admin-users-action-btn"
                             >
                               Khóa
                             </button>
 
                             <button
-                              onClick={() => unlock(u.id)}
-                              className="btn btn-outline-success btn-sm"
-                              style={{ borderRadius: 10, fontWeight: 600 }}
+                              type="button"
+                              onClick={() => unlock(user.id)}
+                              className="btn btn-outline-success btn-sm admin-users-action-btn"
                             >
                               Mở khóa
                             </button>
@@ -322,40 +257,44 @@ export default function AdminUsersPage() {
             </div>
           </div>
 
-          <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mt-4">
-            <div style={{ color: "#64748b", fontWeight: 500 }}>
-              Trang {currentPage} / {totalPages} — Hiển thị tối đa {PAGE_SIZE} tài
-              khoản mỗi trang
+          <div className="admin-users-pagination-wrap">
+            <div className="admin-users-limit-text">
+              Trang {safeCurrentPage} / {totalPages} — Hiển thị tối đa{" "}
+              {PAGE_SIZE} tài khoản mỗi trang
             </div>
 
-            <div className="d-flex align-items-center gap-2 flex-wrap">
+            <div className="admin-users-pagination">
               <button
-                className="btn btn-outline-secondary btn-sm"
-                onClick={() => goToPage(currentPage - 1)}
-                disabled={currentPage === 1}
-                style={{ borderRadius: 10, fontWeight: 600 }}
+                type="button"
+                className="btn btn-outline-secondary btn-sm admin-users-page-btn"
+                onClick={() => goToPage(safeCurrentPage - 1)}
+                disabled={safeCurrentPage === 1}
               >
                 Trang trước
               </button>
 
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  className={`btn btn-sm ${
-                    currentPage === page ? "btn-primary" : "btn-outline-primary"
-                  }`}
-                  onClick={() => goToPage(page)}
-                  style={{ minWidth: 40, borderRadius: 10, fontWeight: 600 }}
-                >
-                  {page}
-                </button>
-              ))}
+              {Array.from({ length: totalPages }, (_, index) => index + 1).map(
+                (page) => (
+                  <button
+                    key={page}
+                    type="button"
+                    onClick={() => goToPage(page)}
+                    className={`btn btn-sm admin-users-page-btn ${
+                      safeCurrentPage === page
+                        ? "active"
+                        : "btn-outline-primary"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                )
+              )}
 
               <button
-                className="btn btn-outline-secondary btn-sm"
-                onClick={() => goToPage(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                style={{ borderRadius: 10, fontWeight: 600 }}
+                type="button"
+                className="btn btn-outline-secondary btn-sm admin-users-page-btn"
+                onClick={() => goToPage(safeCurrentPage + 1)}
+                disabled={safeCurrentPage === totalPages}
               >
                 Trang sau
               </button>

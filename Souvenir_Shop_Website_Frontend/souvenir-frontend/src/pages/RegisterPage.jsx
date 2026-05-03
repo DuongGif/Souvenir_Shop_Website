@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import { authService } from "../services/authService";
@@ -20,26 +20,12 @@ const getErrorMessage = (ex, fallback) => {
   return fallback;
 };
 
-const pageCard = {
-  background: "#ffffff",
-  borderRadius: 20,
-  boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
-};
-
-const labelStyle = {
-  color: "#111827",
-  fontWeight: 700,
-  marginBottom: 8,
-  fontSize: 14,
-};
-
-const inputStyle = {
-  height: 44,
-  borderRadius: 10,
-  border: "1px solid #e5e7eb",
-  background: "#fff",
-  color: "#111827",
-  boxShadow: "none",
+const initialForm = {
+  email: "",
+  otp: "",
+  fullName: "",
+  phone: "",
+  password: "",
 };
 
 export default function RegisterPage() {
@@ -49,21 +35,29 @@ export default function RegisterPage() {
 
   const [step, setStep] = useState(1);
   const [otpEmail, setOtpEmail] = useState("");
-  const [form, setForm] = useState({
-    email: "",
-    otp: "",
-    fullName: "",
-    phone: "",
-    password: "",
-  });
+  const [form, setForm] = useState(initialForm);
 
   const [err, setErr] = useState("");
   const [success, setSuccess] = useState("");
   const [loadingSendOtp, setLoadingSendOtp] = useState(false);
   const [loadingVerify, setLoadingVerify] = useState(false);
 
+  const registerFeatures = useMemo(
+    () => [
+      t.registerFeature1 || "Đăng ký nhanh chóng",
+      t.registerFeature2 || "Xác thực email an toàn",
+      t.registerFeature3 || "Bắt đầu mua sắm ngay",
+    ],
+    [t]
+  );
+
   const change = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const sendOtp = async (e) => {
@@ -87,7 +81,9 @@ export default function RegisterPage() {
       setSuccess(t.registerOtpSent || "Mã OTP đã được gửi về email của bạn.");
       setStep(2);
     } catch (ex) {
-      setErr(getErrorMessage(ex, t.registerOtpSendFailed || "Không thể gửi OTP."));
+      setErr(
+        getErrorMessage(ex, t.registerOtpSendFailed || "Không thể gửi OTP.")
+      );
     } finally {
       setLoadingSendOtp(false);
     }
@@ -133,7 +129,12 @@ export default function RegisterPage() {
         nav("/login");
       }, 1200);
     } catch (ex) {
-      setErr(getErrorMessage(ex, t.registerVerifyFailed || "Xác thực OTP thất bại."));
+      setErr(
+        getErrorMessage(
+          ex,
+          t.registerVerifyFailed || "Xác thực OTP thất bại."
+        )
+      );
     } finally {
       setLoadingVerify(false);
     }
@@ -144,7 +145,9 @@ export default function RegisterPage() {
     setSuccess("");
 
     if (!otpEmail.trim()) {
-      setErr(t.registerResendMissingEmail || "Không tìm thấy email để gửi lại OTP.");
+      setErr(
+        t.registerResendMissingEmail || "Không tìm thấy email để gửi lại OTP."
+      );
       return;
     }
 
@@ -155,9 +158,13 @@ export default function RegisterPage() {
         email: otpEmail,
       });
 
-      setSuccess(t.registerOtpResent || "Mã OTP mới đã được gửi lại về email của bạn.");
+      setSuccess(
+        t.registerOtpResent || "Mã OTP mới đã được gửi lại về email của bạn."
+      );
     } catch (ex) {
-      setErr(getErrorMessage(ex, t.registerResendFailed || "Không thể gửi lại OTP."));
+      setErr(
+        getErrorMessage(ex, t.registerResendFailed || "Không thể gửi lại OTP.")
+      );
     } finally {
       setLoadingSendOtp(false);
     }
@@ -168,6 +175,7 @@ export default function RegisterPage() {
     setErr("");
     setSuccess("");
     setOtpEmail("");
+
     setForm((prev) => ({
       ...prev,
       otp: "",
@@ -177,119 +185,70 @@ export default function RegisterPage() {
 
   return (
     <MainLayout>
-      <section
-        className="section"
-        style={{
-          background: "#f5f5f5",
-          minHeight: "100vh",
-          paddingTop: 32,
-          paddingBottom: 48,
-        }}
-      >
+      <section className="section register-page-section">
         <div className="container">
-          <div
-            style={{
-              ...pageCard,
-              padding: 24,
-              marginBottom: 20,
-              borderLeft: "5px solid #ee4d2d",
-            }}
-          >
-            <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <div className="register-card register-header-card">
+            <div className="register-header-top">
               <div>
-                <div style={{ color: "#6b7280", fontSize: 14, fontWeight: 600 }}>
+                <div className="register-kicker">
                   {t.shopName || "SouVN Shop"}
                 </div>
-                <h2
-                  style={{
-                    margin: 0,
-                    fontWeight: 800,
-                    color: "#111827",
-                  }}
-                >
+
+                <h2 className="register-title">
                   {t.registerPageTitle || "Đăng ký tài khoản"}
                 </h2>
               </div>
 
-              <div
-                style={{
-                  color: "#6b7280",
-                  fontSize: 14,
-                  fontWeight: 700,
-                }}
-              >
-                {(t.registerStepLabel || "Bước")} {step}/2
+              <div className="register-step-count">
+                {t.registerStepLabel || "Bước"} {step}/2
               </div>
             </div>
           </div>
 
           <div className="row justify-content-center g-4">
             <div className="col-lg-5">
-              <div style={{ ...pageCard, padding: 24, height: "100%" }}>
-                <h3
-                  style={{
-                    fontWeight: 800,
-                    color: "#111827",
-                    marginBottom: 16,
-                  }}
-                >
+              <div className="register-card register-info-card">
+                <h3 className="register-block-title">
                   {t.registerCreateSouvn || "Tạo tài khoản SouVN"}
                 </h3>
 
-                <p style={{ color: "#6b7280", lineHeight: 1.8 }}>
+                <p className="register-desc">
                   {t.registerIntroDesc ||
                     "Đăng ký nhanh bằng email và mã OTP để bắt đầu mua sắm, theo dõi đơn hàng và quản lý tài khoản dễ dàng."}
                 </p>
 
-                <div className="d-grid gap-3 mt-4">
+                <div className="register-info-list">
                   <div
-                    style={{
-                      background: step === 1 ? "#fff7ed" : "#fafafa",
-                      border: step === 1 ? "1px solid #fed7aa" : "1px solid #e5e7eb",
-                      borderRadius: 12,
-                      padding: 14,
-                    }}
+                    className={`register-step-box ${
+                      step === 1 ? "active" : ""
+                    }`}
                   >
-                    <div style={{ color: "#111827", fontWeight: 800, marginBottom: 4 }}>
-                      {(t.registerStepLabel || "Bước")} 1
+                    <div className="register-step-title">
+                      {t.registerStepLabel || "Bước"} 1
                     </div>
-                    <div style={{ color: "#6b7280" }}>
+
+                    <div className="register-step-desc">
                       {t.registerStep1Desc || "Nhập email để nhận mã OTP"}
                     </div>
                   </div>
 
                   <div
-                    style={{
-                      background: step === 2 ? "#fff7ed" : "#fafafa",
-                      border: step === 2 ? "1px solid #fed7aa" : "1px solid #e5e7eb",
-                      borderRadius: 12,
-                      padding: 14,
-                    }}
+                    className={`register-step-box ${
+                      step === 2 ? "active" : ""
+                    }`}
                   >
-                    <div style={{ color: "#111827", fontWeight: 800, marginBottom: 4 }}>
-                      {(t.registerStepLabel || "Bước")} 2
+                    <div className="register-step-title">
+                      {t.registerStepLabel || "Bước"} 2
                     </div>
-                    <div style={{ color: "#6b7280" }}>
-                      {t.registerStep2Desc || "Xác thực OTP và hoàn tất đăng ký"}
+
+                    <div className="register-step-desc">
+                      {t.registerStep2Desc ||
+                        "Xác thực OTP và hoàn tất đăng ký"}
                     </div>
                   </div>
 
-                  {[
-                    t.registerFeature1 || "Đăng ký nhanh chóng",
-                    t.registerFeature2 || "Xác thực email an toàn",
-                    t.registerFeature3 || "Bắt đầu mua sắm ngay",
-                  ].map((text, i) => (
-                    <div
-                      key={i}
-                      style={{
-                        background: "#fff7ed",
-                        border: "1px solid #fed7aa",
-                        borderRadius: 12,
-                        padding: 12,
-                        color: "#9a3412",
-                        fontWeight: 600,
-                      }}
-                    >
+                  {registerFeatures.map((text, index) => (
+                    <div key={index} className="register-feature-item">
                       <i className="bi bi-check-circle me-2"></i>
                       {text}
                     </div>
@@ -299,49 +258,28 @@ export default function RegisterPage() {
             </div>
 
             <div className="col-lg-5">
-              <div style={{ ...pageCard, padding: 24 }}>
-                <h3
-                  style={{
-                    fontWeight: 800,
-                    color: "#111827",
-                    marginBottom: 8,
-                  }}
-                >
+              <div className="register-card register-form-card">
+                <h3 className="register-form-title">
                   {step === 1
-                    ? (t.registerGetOtpTitle || "Nhận mã OTP")
-                    : (t.registerCompleteTitle || "Hoàn tất đăng ký")}
+                    ? t.registerGetOtpTitle || "Nhận mã OTP"
+                    : t.registerCompleteTitle || "Hoàn tất đăng ký"}
                 </h3>
 
-                <p style={{ color: "#6b7280", marginBottom: 20 }}>
+                <p className="register-form-desc">
                   {step === 1
-                    ? (t.registerGetOtpDesc || "Nhập email để nhận mã xác thực.")
-                    : (t.registerCompleteDesc || "Nhập OTP và thông tin tài khoản của bạn.")}
+                    ? t.registerGetOtpDesc || "Nhập email để nhận mã xác thực."
+                    : t.registerCompleteDesc ||
+                      "Nhập OTP và thông tin tài khoản của bạn."}
                 </p>
 
                 {err && (
-                  <div
-                    className="alert mb-3"
-                    style={{
-                      background: "#fef2f2",
-                      color: "#b91c1c",
-                      border: "1px solid #fecaca",
-                      borderRadius: 12,
-                    }}
-                  >
+                  <div className="register-alert register-alert-error">
                     {String(err)}
                   </div>
                 )}
 
                 {success && (
-                  <div
-                    className="alert mb-3"
-                    style={{
-                      background: "#ecfdf5",
-                      color: "#047857",
-                      border: "1px solid #a7f3d0",
-                      borderRadius: 12,
-                    }}
-                  >
+                  <div className="register-alert register-alert-success">
                     {success}
                   </div>
                 )}
@@ -349,112 +287,103 @@ export default function RegisterPage() {
                 {step === 1 ? (
                   <form onSubmit={sendOtp}>
                     <div className="mb-4">
-                      <label className="form-label" style={labelStyle}>
+                      <label className="form-label register-form-label">
                         {t.emailLabel || "Email"}
                       </label>
+
                       <input
                         name="email"
                         type="email"
-                        className="form-control"
-                        placeholder={t.registerEmailPlaceholder || "Nhập email của bạn"}
+                        className="form-control register-input"
+                        placeholder={
+                          t.registerEmailPlaceholder || "Nhập email của bạn"
+                        }
                         value={form.email}
                         onChange={change}
-                        style={inputStyle}
                       />
                     </div>
 
                     <button
                       type="submit"
                       disabled={loadingSendOtp}
-                      style={{
-                        width: "100%",
-                        height: 46,
-                        borderRadius: 10,
-                        border: "none",
-                        background: "#ee4d2d",
-                        color: "#fff",
-                        fontWeight: 700,
-                      }}
+                      className="register-button register-button-primary"
                     >
                       {loadingSendOtp
-                        ? (t.registerSendingOtp || "Đang gửi OTP...")
-                        : (t.registerSendOtp || "Gửi mã OTP")}
+                        ? t.registerSendingOtp || "Đang gửi OTP..."
+                        : t.registerSendOtp || "Gửi mã OTP"}
                     </button>
                   </form>
                 ) : (
                   <form onSubmit={verifyOtpAndRegister}>
                     <div className="mb-3">
-                      <label className="form-label" style={labelStyle}>
+                      <label className="form-label register-form-label">
                         {t.registerOtpEmailLabel || "Email đã nhận OTP"}
                       </label>
+
                       <input
                         type="email"
-                        className="form-control"
+                        className="form-control register-input register-input-readonly"
                         value={otpEmail}
                         readOnly
-                        style={{
-                          ...inputStyle,
-                          background: "#f9fafb",
-                          color: "#6b7280",
-                          cursor: "not-allowed",
-                        }}
                       />
                     </div>
 
                     <div className="mb-3">
-                      <label className="form-label" style={labelStyle}>
+                      <label className="form-label register-form-label">
                         {t.registerOtpLabel || "Mã OTP"}
                       </label>
+
                       <input
                         name="otp"
-                        className="form-control"
-                        placeholder={t.registerOtpPlaceholder || "Nhập mã OTP gồm 6 số"}
+                        className="form-control register-input"
+                        placeholder={
+                          t.registerOtpPlaceholder || "Nhập mã OTP gồm 6 số"
+                        }
                         value={form.otp}
                         onChange={change}
-                        style={inputStyle}
                       />
                     </div>
 
                     <div className="mb-3">
-                      <label className="form-label" style={labelStyle}>
+                      <label className="form-label register-form-label">
                         {t.fullNameLabel || "Họ và tên"}
                       </label>
+
                       <input
                         name="fullName"
-                        className="form-control"
+                        className="form-control register-input"
                         placeholder={t.fullNamePlaceholder || "Nhập họ và tên"}
                         value={form.fullName}
                         onChange={change}
-                        style={inputStyle}
                       />
                     </div>
 
                     <div className="mb-3">
-                      <label className="form-label" style={labelStyle}>
+                      <label className="form-label register-form-label">
                         {t.phoneLabel || "Số điện thoại"}
                       </label>
+
                       <input
                         name="phone"
-                        className="form-control"
+                        className="form-control register-input"
                         placeholder={t.phonePlaceholder || "Nhập số điện thoại"}
                         value={form.phone}
                         onChange={change}
-                        style={inputStyle}
                       />
                     </div>
 
                     <div className="mb-3">
-                      <label className="form-label" style={labelStyle}>
+                      <label className="form-label register-form-label">
                         {t.passwordLabel || "Mật khẩu"}
                       </label>
+
                       <input
                         name="password"
                         type="password"
-                        className="form-control"
+                        className="form-control register-input"
                         placeholder={t.passwordPlaceholder || "Nhập mật khẩu"}
                         value={form.password}
                         onChange={change}
-                        style={inputStyle}
                       />
                     </div>
 
@@ -462,52 +391,29 @@ export default function RegisterPage() {
                       <button
                         type="submit"
                         disabled={loadingVerify}
-                        style={{
-                          width: "100%",
-                          height: 46,
-                          borderRadius: 10,
-                          border: "none",
-                          background: "#ee4d2d",
-                          color: "#fff",
-                          fontWeight: 700,
-                        }}
+                        className="register-button register-button-primary"
                       >
                         {loadingVerify
-                          ? (t.registerVerifying || "Đang xác thực...")
-                          : (t.registerVerifyAndCreate || "Xác thực OTP và đăng ký")}
+                          ? t.registerVerifying || "Đang xác thực..."
+                          : t.registerVerifyAndCreate ||
+                            "Xác thực OTP và đăng ký"}
                       </button>
 
                       <button
                         type="button"
                         onClick={resendOtp}
                         disabled={loadingSendOtp}
-                        style={{
-                          width: "100%",
-                          height: 46,
-                          borderRadius: 10,
-                          border: "1px solid #ee4d2d",
-                          background: "#fff",
-                          color: "#ee4d2d",
-                          fontWeight: 700,
-                        }}
+                        className="register-button register-button-outline-primary"
                       >
                         {loadingSendOtp
-                          ? (t.registerResendingOtp || "Đang gửi lại...")
-                          : (t.registerResendOtp || "Gửi lại OTP")}
+                          ? t.registerResendingOtp || "Đang gửi lại..."
+                          : t.registerResendOtp || "Gửi lại OTP"}
                       </button>
 
                       <button
                         type="button"
                         onClick={changeEmail}
-                        style={{
-                          width: "100%",
-                          height: 44,
-                          borderRadius: 10,
-                          border: "1px solid #d1d5db",
-                          background: "#fff",
-                          color: "#374151",
-                          fontWeight: 700,
-                        }}
+                        className="register-button register-button-secondary"
                       >
                         {t.registerChangeEmail || "Đổi email khác"}
                       </button>
@@ -515,9 +421,9 @@ export default function RegisterPage() {
                   </form>
                 )}
 
-                <p className="text-center mt-4 mb-0" style={{ color: "#6b7280" }}>
+                <p className="register-login-text">
                   {t.registerHasAccount || "Đã có tài khoản?"}{" "}
-                  <Link to="/login" style={{ color: "#ee4d2d", fontWeight: 700 }}>
+                  <Link to="/login" className="register-login-link">
                     {t.loginPageTitle || "Đăng nhập"}
                   </Link>
                 </p>

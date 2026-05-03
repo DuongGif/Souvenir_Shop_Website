@@ -1,62 +1,27 @@
-import React from "react";
-
 export default function Pagination({ page, totalPages, onPrev, onNext }) {
+  const currentPage = Number(page || 1);
+  const pages = Math.max(1, Number(totalPages || 1));
+
   return (
-    <div
-      style={{
-        marginTop: 20,
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        gap: 12,
-        flexWrap: "wrap",
-      }}
-    >
-      {/* Nút Trước */}
+    <div className="pagination-wrap">
       <button
-        disabled={page <= 1}
+        type="button"
+        disabled={currentPage <= 1}
         onClick={onPrev}
-        style={{
-          minWidth: 90,
-          height: 42,
-          borderRadius: 10,
-          border: "1px solid #d1d5db",
-          background: page <= 1 ? "#f3f4f6" : "#fff",
-          color: page <= 1 ? "#9ca3af" : "#374151",
-          fontWeight: 700,
-          cursor: page <= 1 ? "not-allowed" : "pointer",
-        }}
+        className="pagination-button pagination-prev"
       >
         Trước
       </button>
 
-      {/* Số trang */}
-      <span
-        style={{
-          color: "#111827", // 🔥 FIX CHÍNH (không còn bị mờ)
-          fontWeight: 800,
-          fontSize: 16,
-          minWidth: 120,
-          textAlign: "center",
-        }}
-      >
-        Trang {page} / {totalPages}
+      <span className="pagination-info">
+        Trang {currentPage} / {pages}
       </span>
 
-      {/* Nút Tiếp */}
       <button
-        disabled={page >= totalPages}
+        type="button"
+        disabled={currentPage >= pages}
         onClick={onNext}
-        style={{
-          minWidth: 90,
-          height: 42,
-          borderRadius: 10,
-          border: "none",
-          background: page >= totalPages ? "#f3f4f6" : "#ee4d2d",
-          color: page >= totalPages ? "#9ca3af" : "#fff",
-          fontWeight: 700,
-          cursor: page >= totalPages ? "not-allowed" : "pointer",
-        }}
+        className="pagination-button pagination-next"
       >
         Tiếp
       </button>

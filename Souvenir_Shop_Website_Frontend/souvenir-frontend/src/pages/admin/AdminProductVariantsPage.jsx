@@ -1,35 +1,39 @@
-import React, { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { adminVariantsService } from "../../services/admin/adminVariantsService";
 
-const emptyForm = {
+const createEmptyForm = () => ({
   sku: "",
   variantName: "",
   price: "",
   isActive: true,
-};
+});
 
 const getErrorMessage = (ex, fallback) => {
   const data = ex?.response?.data;
+
   if (typeof data === "string") return data;
   if (data?.message) return data.message;
   if (data?.title) return data.title;
+
   if (data?.errors) {
     const firstError = Object.values(data.errors)?.flat?.()[0];
     if (firstError) return firstError;
   }
+
   return fallback;
 };
 
 const formatPrice = (value) => {
   if (value === null || value === undefined || value === "") return "0 ₫";
-  return Number(value).toLocaleString("vi-VN") + " ₫";
+  return `${Number(value).toLocaleString("vi-VN")} ₫`;
 };
 
 export default function AdminProductVariantsPage() {
   const { productId } = useParams();
+
   const [list, setList] = useState([]);
-  const [form, setForm] = useState(emptyForm);
+  const [form, setForm] = useState(createEmptyForm);
   const [editingId, setEditingId] = useState(null);
 
   const [loading, setLoading] = useState(true);
@@ -38,7 +42,7 @@ export default function AdminProductVariantsPage() {
   const [err, setErr] = useState("");
   const [msg, setMsg] = useState("");
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     setErr("");
 
@@ -50,26 +54,38 @@ export default function AdminProductVariantsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [productId]);
 
   useEffect(() => {
     load();
-  }, [productId]);
+  }, [load]);
+
+  const updateForm = (field, value) => {
+    setForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
 
   const resetForm = () => {
-    setForm(emptyForm);
+    setForm(createEmptyForm());
     setEditingId(null);
   };
 
-  const startEdit = (v) => {
-    setEditingId(v.id);
+  const startEdit = (variant) => {
+    setEditingId(variant.id);
+
     setForm({
-      sku: v.sku || "",
-      variantName: v.variantName || "",
-      price: v.price ?? "",
-      isActive: !!v.isActive,
+      sku: variant.sku || "",
+      variantName: variant.variantName || "",
+      price: variant.price ?? "",
+      isActive: !!variant.isActive,
     });
-    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   };
 
   const save = async () => {
@@ -110,6 +126,7 @@ export default function AdminProductVariantsPage() {
       }
 
       resetForm();
+
       await load();
     } catch (ex) {
       setErr(
@@ -129,11 +146,14 @@ export default function AdminProductVariantsPage() {
     setErr("");
     setMsg("");
 
-    if (!window.confirm(`Bạn có chắc muốn xóa biến thể #${id}?`)) return;
+    const ok = window.confirm(`Bạn có chắc muốn xóa biến thể #${id}?`);
+    if (!ok) return;
 
     try {
       await adminVariantsService.remove(productId, id);
+
       setMsg(`Đã xóa biến thể #${id}`);
+
       await load();
     } catch (ex) {
       setErr(getErrorMessage(ex, "Xóa biến thể thất bại"));
@@ -141,19 +161,21 @@ export default function AdminProductVariantsPage() {
   };
 
   return (
-    <div>
-      <div className="mb-4">
-        <Link to="/admin/products" style={{ textDecoration: "none" }}>
+    <div className="admin-variants-page">
+      <div className="admin-variants-back-wrap">
+        <Link to="/admin/products" className="admin-variants-back-link">
           ← Quay lại sản phẩm
         </Link>
       </div>
 
-      <div className="mb-4">
-        <h2 style={{ color: "#0f172a", fontWeight: 700, marginBottom: 6 }}>
+      <div className="admin-variants-header">
+        <h2 className="admin-variants-title">
           Quản lý biến thể của sản phẩm {productId}
         </h2>
-        <p style={{ color: "#64748b", marginBottom: 0 }}>
-          Quản lý SKU, tên biến thể, giá và trạng thái hoạt động của từng biến thể.
+
+        <p className="admin-variants-desc">
+          Quản lý SKU, tên biến thể, giá và trạng thái hoạt động của từng biến
+          thể.
         </p>
       </div>
 
@@ -162,58 +184,47 @@ export default function AdminProductVariantsPage() {
 
       <div className="row g-4">
         <div className="col-lg-4">
-          <div
-            style={{
-              background: "#fff",
-              borderRadius: 20,
-              padding: 24,
-              boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
-            }}
-          >
-            <h4 style={{ color: "#0f172a", fontWeight: 700, marginBottom: 18 }}>
+          <div className="admin-variants-card admin-variants-form-card">
+            <h4 className="admin-variants-form-title">
               {editingId ? "Chỉnh sửa biến thể" : "Tạo biến thể mới"}
             </h4>
 
-            <div className="d-grid gap-3">
+            <div className="admin-variants-form-grid">
               <div>
-                <label className="form-label" style={labelStyle}>
+                <label className="form-label admin-variants-label">
                   Mã Định Danh (SKU)
                 </label>
+
                 <input
-                  className="form-control"
+                  className="form-control admin-variants-input"
                   placeholder="Ví dụ: KEYCHAIN-RED-M"
                   value={form.sku}
-                  onChange={(e) => setForm({ ...form, sku: e.target.value })}
-                  style={inputStyle}
+                  onChange={(e) => updateForm("sku", e.target.value)}
                 />
               </div>
 
               <div>
-                <label className="form-label" style={labelStyle}>
+                <label className="form-label admin-variants-label">
                   Tên biến thể
                 </label>
+
                 <input
-                  className="form-control"
+                  className="form-control admin-variants-input"
                   placeholder="Ví dụ: Đỏ - Cỡ M"
                   value={form.variantName}
-                  onChange={(e) =>
-                    setForm({ ...form, variantName: e.target.value })
-                  }
-                  style={inputStyle}
+                  onChange={(e) => updateForm("variantName", e.target.value)}
                 />
               </div>
 
               <div>
-                <label className="form-label" style={labelStyle}>
-                  Giá
-                </label>
+                <label className="form-label admin-variants-label">Giá</label>
+
                 <input
                   type="number"
-                  className="form-control"
+                  className="form-control admin-variants-input"
                   placeholder="Nhập giá biến thể"
                   value={form.price}
-                  onChange={(e) => setForm({ ...form, price: e.target.value })}
-                  style={inputStyle}
+                  onChange={(e) => updateForm("price", e.target.value)}
                 />
               </div>
 
@@ -223,34 +234,32 @@ export default function AdminProductVariantsPage() {
                   type="checkbox"
                   className="form-check-input"
                   checked={form.isActive}
-                  onChange={(e) =>
-                    setForm({ ...form, isActive: e.target.checked })
-                  }
+                  onChange={(e) => updateForm("isActive", e.target.checked)}
                 />
+
                 <label
                   htmlFor="variantIsActive"
-                  className="form-check-label"
-                  style={labelStyle}
+                  className="form-check-label admin-variants-check-label"
                 >
                   Biến thể đang hoạt động
                 </label>
               </div>
 
-              <div className="d-flex gap-2">
+              <div className="admin-variants-actions">
                 <button
+                  type="button"
                   onClick={save}
-                  className="btn btn-primary"
+                  className="btn btn-primary admin-variants-main-btn"
                   disabled={saving}
-                  style={{ height: 46, borderRadius: 12, fontWeight: 600 }}
                 >
                   {saving ? "Đang lưu..." : editingId ? "Cập nhật" : "Tạo mới"}
                 </button>
 
                 {editingId && (
                   <button
+                    type="button"
                     onClick={resetForm}
-                    className="btn btn-outline-secondary"
-                    style={{ height: 46, borderRadius: 12, fontWeight: 600 }}
+                    className="btn btn-outline-secondary admin-variants-main-btn"
                   >
                     Hủy
                   </button>
@@ -261,77 +270,78 @@ export default function AdminProductVariantsPage() {
         </div>
 
         <div className="col-lg-8">
-          <div
-            style={{
-              background: "#fff",
-              borderRadius: 20,
-              overflow: "hidden",
-              boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
-            }}
-          >
-            <div style={{ padding: 20, borderBottom: "1px solid #e5e7eb" }}>
-              <h4 style={{ marginBottom: 0, color: "#0f172a", fontWeight: 700 }}>
+          <div className="admin-variants-card admin-variants-list-card">
+            <div className="admin-variants-list-head">
+              <h4 className="admin-variants-list-title">
                 Danh sách biến thể
               </h4>
             </div>
 
             {loading ? (
-              <div className="text-center py-5">
+              <div className="admin-variants-loading">
                 <div className="spinner-border text-info" role="status"></div>
-                <p className="mt-3 mb-0">Đang tải biến thể...</p>
+
+                <p className="admin-variants-loading-text">
+                  Đang tải biến thể...
+                </p>
               </div>
             ) : list.length === 0 ? (
-              <div style={{ padding: 24, color: "#64748b" }}>
+              <div className="admin-variants-empty">
                 Chưa có biến thể nào cho sản phẩm này.
               </div>
             ) : (
               <div className="table-responsive">
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <table className="admin-variants-table">
                   <thead>
-                    <tr style={{ background: "#f8fafc" }}>
-                      <th style={thStyle}>Mã</th>
-                      <th style={thStyle}>Mã Định Danh (SKU)</th>
-                      <th style={thStyle}>Tên biến thể</th>
-                      <th style={thStyle}>Giá</th>
-                      <th style={thStyle}>Trạng thái</th>
-                      <th style={thStyle}>Thao tác</th>
+                    <tr>
+                      <th>Mã</th>
+                      <th>Mã Định Danh (SKU)</th>
+                      <th>Tên biến thể</th>
+                      <th>Giá</th>
+                      <th>Trạng thái</th>
+                      <th>Thao tác</th>
                     </tr>
                   </thead>
+
                   <tbody>
-                    {list.map((v) => (
-                      <tr key={v.id}>
-                        <td style={tdStyle}>{v.id}</td>
-                        <td style={{ ...tdStyle, fontWeight: 600 }}>{v.sku}</td>
-                        <td style={tdStyle}>{v.variantName}</td>
-                        <td style={tdStyle}>{formatPrice(v.price)}</td>
-                        <td style={tdStyle}>
+                    {list.map((variant) => (
+                      <tr key={variant.id}>
+                        <td>{variant.id}</td>
+
+                        <td className="admin-variants-sku">{variant.sku}</td>
+
+                        <td>{variant.variantName}</td>
+
+                        <td className="admin-variants-price">
+                          {formatPrice(variant.price)}
+                        </td>
+
+                        <td>
                           <span
-                            style={{
-                              background: v.isActive ? "#dcfce7" : "#fee2e2",
-                              color: v.isActive ? "#166534" : "#991b1b",
-                              padding: "6px 12px",
-                              borderRadius: 999,
-                              fontSize: 13,
-                              fontWeight: 600,
-                            }}
+                            className={`admin-variants-status ${
+                              variant.isActive ? "active" : "inactive"
+                            }`}
                           >
-                            {v.isActive ? "Đang hoạt động" : "Ngừng hoạt động"}
+                            {variant.isActive
+                              ? "Đang hoạt động"
+                              : "Ngừng hoạt động"}
                           </span>
                         </td>
-                        <td style={tdStyle}>
-                          <div className="d-flex gap-2 flex-wrap">
+
+                        <td>
+                          <div className="admin-variants-action-list">
                             <button
-                              onClick={() => startEdit(v)}
-                              className="btn btn-outline-primary btn-sm"
-                              style={{ borderRadius: 10 }}
+                              type="button"
+                              onClick={() => startEdit(variant)}
+                              className="btn btn-outline-primary btn-sm admin-variants-action-btn"
                             >
                               Sửa
                             </button>
 
                             <button
-                              onClick={() => remove(v.id)}
-                              className="btn btn-outline-danger btn-sm"
-                              style={{ borderRadius: 10 }}
+                              type="button"
+                              onClick={() => remove(variant.id)}
+                              className="btn btn-outline-danger btn-sm admin-variants-action-btn"
                             >
                               Xóa
                             </button>
@@ -349,28 +359,3 @@ export default function AdminProductVariantsPage() {
     </div>
   );
 }
-
-const labelStyle = {
-  color: "#111827",
-  fontWeight: 600,
-};
-
-const inputStyle = {
-  height: 46,
-  borderRadius: 12,
-  color: "#111827",
-};
-
-const thStyle = {
-  padding: "14px",
-  textAlign: "left",
-  color: "#0f172a",
-  fontWeight: 700,
-  borderBottom: "1px solid #e5e7eb",
-};
-
-const tdStyle = {
-  padding: "14px",
-  color: "#334155",
-  borderBottom: "1px solid #e5e7eb",
-};

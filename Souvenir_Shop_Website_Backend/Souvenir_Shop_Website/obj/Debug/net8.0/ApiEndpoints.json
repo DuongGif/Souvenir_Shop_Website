@@ -720,6 +720,32 @@
   },
   {
     "ContainingType": "Souvenir_Shop_Website.Controllers.API.User.AiController",
+    "Method": "ChatRecommend",
+    "RelativePath": "api/ai/chat-recommend",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "req",
+        "Type": "Souvenir_Shop_Website.DTOs.Ai.AiChatRecommendRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "Souvenir_Shop_Website.DTOs.Ai.AiChatRecommendResponse",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Souvenir_Shop_Website.Controllers.API.User.AiController",
     "Method": "Translate",
     "RelativePath": "api/ai/translate",
     "HttpMethod": "POST",

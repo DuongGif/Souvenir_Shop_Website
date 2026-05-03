@@ -7,35 +7,18 @@ import ProductCard from "../components/ProductCard";
 import { useLanguage } from "../contexts/LanguageContext.jsx";
 import { commonTranslations } from "../i18n/common";
 
-const pageCard = {
-  background: "#ffffff",
-  borderRadius: 24,
-  boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
-};
-
-const sectionTitle = {
-  fontSize: "clamp(22px, 4vw, 32px)",
-  fontWeight: 700,
-  color: "#111827",
-  margin: 0,
-};
-
-const sectionSubTitle = {
-  fontSize: 14,
-  color: "#6b7280",
-  fontWeight: 600,
-  marginBottom: 8,
-};
-
 const getErrorMessage = (ex, fallback) => {
   const data = ex?.response?.data;
+
   if (typeof data === "string") return data;
   if (data?.message) return data.message;
   if (data?.title) return data.title;
+
   if (data?.errors) {
     const firstError = Object.values(data.errors)?.flat?.()[0];
     if (firstError) return firstError;
   }
+
   return fallback;
 };
 
@@ -141,6 +124,7 @@ export default function HomePage() {
         });
 
         const items = Array.isArray(res?.data?.items) ? res.data.items : [];
+
         setFeaturedProducts(items.slice(0, 6));
         setNewProducts(items.slice(6, 12));
       } catch (ex) {
@@ -160,129 +144,44 @@ export default function HomePage() {
 
   return (
     <MainLayout>
-      <main
-        className="main"
-        style={{
-          background: "#f5f5f5",
-          paddingTop: 32,
-          paddingBottom: 48,
-        }}
-      >
+      <main className="main page-main">
         <div className="container">
-          <section style={{ marginBottom: 28 }}>
-            <div
-              style={{
-                ...pageCard,
-                overflow: "hidden",
-              }}
-            >
+          {/* HERO */}
+          <section className="home-section">
+            <div className="home-card">
               <div className="row g-0 align-items-center">
                 <div className="col-lg-6">
-                  <div style={{ padding: "42px 34px" }}>
-                    <div style={sectionSubTitle}>
+                  <div className="home-hero-content">
+                    <div className="section-subtitle">
                       {t.homeWelcome || "Chào mừng đến với SouVN Shop"}
                     </div>
 
-                    <h1
-                      style={{
-                        fontSize: "clamp(30px, 5vw, 50px)",
-                        fontWeight: 700,
-                        lineHeight: 1.2,
-                        color: "#111827",
-                        marginBottom: 16,
-                      }}
-                    >
+                    <h1 className="home-hero-title">
                       {t.homeHeroPrefix || "Website bán"}{" "}
-                      <span style={{ color: "#ee4d2d" }}>
-                        {t.homeHeroHighlight || "đồ lưu niệm"}
-                      </span>{" "}
+                      <span>{t.homeHeroHighlight || "đồ lưu niệm"}</span>{" "}
                       {t.homeHeroSuffix || "cho khách tham quan"}
                     </h1>
 
-                    <p
-                      style={{
-                        color: "#4b5563",
-                        fontSize: 16,
-                        lineHeight: 1.8,
-                        marginBottom: 24,
-                        maxWidth: 560,
-                      }}
-                    >
+                    <p className="home-hero-desc">
                       {t.homeHeroDesc ||
                         "Khám phá hàng ngàn sản phẩm lưu niệm độc đáo dành cho khách du lịch và khách tham quan. Tìm kiếm, chọn mua và đặt hàng nhanh chóng trên SouVN với giao diện hiện đại, dễ sử dụng."}
                     </p>
 
-                    <div
-                      style={{
-                        display: "flex",
-                        flexWrap: "wrap",
-                        gap: 12,
-                        marginBottom: 24,
-                      }}
-                    >
-                      <Link
-                        to="/products"
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: 8,
-                          padding: "12px 20px",
-                          borderRadius: 12,
-                          background: "#ee4d2d",
-                          color: "#ffffff",
-                          textDecoration: "none",
-                          fontWeight: 700,
-                          boxShadow: "0 8px 18px rgba(238,77,45,0.2)",
-                        }}
-                      >
+                    <div className="home-hero-actions">
+                      <Link to="/products" className="btn-main">
                         <i className="bi bi-bag-heart"></i>
                         {t.buyNow || "Mua ngay"}
                       </Link>
 
-                      <Link
-                        to="/contact"
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: 8,
-                          padding: "12px 20px",
-                          borderRadius: 12,
-                          background: "#ffffff",
-                          color: "#ee4d2d",
-                          textDecoration: "none",
-                          fontWeight: 700,
-                          border: "1px solid #ee4d2d",
-                        }}
-                      >
+                      <Link to="/contact" className="btn-outline-main">
                         <i className="bi bi-telephone"></i>
                         {t.contact || "Liên hệ"}
                       </Link>
                     </div>
 
-                    <div
-                      style={{
-                        display: "flex",
-                        flexWrap: "wrap",
-                        gap: 10,
-                      }}
-                    >
+                    <div className="home-hero-tags">
                       {heroTags.map((text, index) => (
-                        <div
-                          key={index}
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 8,
-                            padding: "10px 14px",
-                            borderRadius: 999,
-                            background: "#fff7ed",
-                            color: "#c2410c",
-                            fontWeight: 600,
-                            fontSize: 14,
-                          }}
-                        >
+                        <div key={index} className="home-hero-tag">
                           <i className="bi bi-check-circle"></i>
                           <span>{text}</span>
                         </div>
@@ -292,97 +191,26 @@ export default function HomePage() {
                 </div>
 
                 <div className="col-lg-6">
-                  <div
-                    style={{
-                      position: "relative",
-                      background:
-                        "linear-gradient(135deg, #fff7ed 0%, #ffffff 45%, #fef2f2 100%)",
-                      minHeight: 520,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      padding: 24,
-                    }}
-                  >
-                    <div
-                      style={{
-                        position: "relative",
-                        width: "100%",
-                        maxWidth: 430,
-                      }}
-                    >
+                  <div className="home-hero-image-area">
+                    <div className="home-hero-image-box">
                       <img
                         src={heroImg}
                         alt="SouVN Shop"
-                        className="img-fluid"
-                        style={{
-                          width: "100%",
-                          borderRadius: 24,
-                          objectFit: "cover",
-                          boxShadow: "0 12px 32px rgba(0,0,0,0.12)",
-                        }}
+                        className="img-fluid home-hero-img"
                       />
 
-                      <div
-                        style={{
-                          position: "absolute",
-                          top: 16,
-                          left: -10,
-                          background: "#ffffff",
-                          borderRadius: 16,
-                          padding: "10px 14px",
-                          boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
-                          fontWeight: 700,
-                          color: "#111827",
-                        }}
-                      >
-                        <i className="bi bi-gift" style={{ color: "#ee4d2d" }}></i>
+                      <div className="home-floating-badge badge-top-left">
+                        <i className="bi bi-gift"></i>
                         <span>{t.heroBadgeSouvenir || "Lưu niệm"}</span>
                       </div>
 
-                      <div
-                        style={{
-                          position: "absolute",
-                          top: "42%",
-                          right: -14,
-                          background: "#ffffff",
-                          borderRadius: 16,
-                          padding: "10px 14px",
-                          boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
-                          fontWeight: 700,
-                          color: "#111827",
-                        }}
-                      >
-                        <i
-                          className="bi bi-cart-check"
-                          style={{ color: "#ee4d2d" }}
-                        ></i>
+                      <div className="home-floating-badge badge-middle-right">
+                        <i className="bi bi-cart-check"></i>
                         <span>{t.heroBadgeShopping || "Mua sắm"}</span>
                       </div>
 
-                      <div
-                        style={{
-                          position: "absolute",
-                          bottom: 16,
-                          left: 20,
-                          background: "#ffffff",
-                          borderRadius: 16,
-                          padding: "10px 14px",
-                          boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
-                          fontWeight: 700,
-                          color: "#111827",
-                        }}
-                      >
-                        <i className="bi bi-globe" style={{ color: "#ee4d2d" }}></i>
+                      <div className="home-floating-badge badge-bottom-left">
+                        <i className="bi bi-globe"></i>
                         <span>{t.heroBadgeVisitor || "Khách tham quan"}</span>
                       </div>
                     </div>
@@ -392,13 +220,14 @@ export default function HomePage() {
             </div>
           </section>
 
-          <section style={{ marginBottom: 28 }}>
-            <div style={{ ...pageCard, padding: 24 }}>
-              <div style={{ marginBottom: 20 }}>
-                <div style={sectionSubTitle}>
+          {/* DANH MỤC */}
+          <section className="home-section">
+            <div className="home-card-inner">
+              <div className="home-section-header">
+                <div className="section-subtitle">
                   {t.shopByGroup || "Mua sắm theo nhóm"}
                 </div>
-                <h2 style={sectionTitle}>
+                <h2 className="section-title">
                   {t.featuredCategories || "Danh mục nổi bật"}
                 </h2>
               </div>
@@ -408,55 +237,13 @@ export default function HomePage() {
                   <div key={index} className="col-6 col-md-4 col-lg-2">
                     <Link
                       to={`/products?categoryIds=${item.categoryIds}`}
-                      style={{
-                        background: "#fff7ed",
-                        borderRadius: 16,
-                        padding: "18px 14px",
-                        textAlign: "center",
-                        border: "1px solid #fed7aa",
-                        height: "100%",
-                        display: "block",
-                        textDecoration: "none",
-                        transition: "0.2s ease",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = "translateY(-4px)";
-                        e.currentTarget.style.boxShadow =
-                          "0 10px 20px rgba(238,77,45,0.12)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = "translateY(0)";
-                        e.currentTarget.style.boxShadow = "none";
-                      }}
+                      className="home-category-card"
                     >
-                      <div
-                        style={{
-                          width: 48,
-                          height: 48,
-                          margin: "0 auto 12px",
-                          borderRadius: "50%",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          background: "#ffffff",
-                          color: "#ee4d2d",
-                          fontSize: 20,
-                          border: "1px solid #fed7aa",
-                        }}
-                      >
+                      <div className="home-category-icon">
                         <i className={item.icon}></i>
                       </div>
 
-                      <div
-                        style={{
-                          color: "#c2410c",
-                          fontWeight: 700,
-                          fontSize: 15,
-                          lineHeight: 1.5,
-                        }}
-                      >
-                        {item.text}
-                      </div>
+                      <div className="home-category-name">{item.text}</div>
                     </Link>
                   </div>
                 ))}
@@ -464,69 +251,40 @@ export default function HomePage() {
             </div>
           </section>
 
-          <section style={{ marginBottom: 28 }}>
-            <div style={{ ...pageCard, padding: 24 }}>
-              <div
-                className="d-flex flex-wrap justify-content-between align-items-center gap-3"
-                style={{ marginBottom: 20 }}
-              >
+          {/* SẢN PHẨM NỔI BẬT */}
+          <section className="home-section">
+            <div className="home-card-inner">
+              <div className="home-section-header-flex">
                 <div>
-                  <div style={sectionSubTitle}>
+                  <div className="section-subtitle">
                     {t.suggestedForYou || "Gợi ý cho bạn"}
                   </div>
-                  <h2 style={sectionTitle}>
+                  <h2 className="section-title">
                     {t.featuredProducts || "Sản phẩm nổi bật"}
                   </h2>
                 </div>
 
-                <Link
-                  to="/products"
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 8,
-                    color: "#ee4d2d",
-                    textDecoration: "none",
-                    fontWeight: 700,
-                  }}
-                >
+                <Link to="/products" className="home-view-all">
                   {t.viewAll || "Xem tất cả"}
                   <i className="bi bi-arrow-right"></i>
                 </Link>
               </div>
 
               {productErr && (
-                <div
-                  className="alert mb-3"
-                  role="alert"
-                  style={{
-                    background: "#fef2f2",
-                    color: "#b91c1c",
-                    border: "1px solid #fecaca",
-                    borderRadius: 12,
-                  }}
-                >
+                <div className="home-alert-error" role="alert">
                   {productErr}
                 </div>
               )}
 
               {loadingProducts ? (
-                <div className="text-center py-4">
+                <div className="home-loading">
                   <div className="spinner-border text-danger" role="status"></div>
-                  <p className="mt-3 mb-0" style={{ color: "#6b7280" }}>
+                  <p className="home-loading-text">
                     {t.loadingProducts || "Đang tải sản phẩm..."}
                   </p>
                 </div>
               ) : featuredProducts.length === 0 ? (
-                <div
-                  style={{
-                    background: "#fafafa",
-                    borderRadius: 16,
-                    padding: 24,
-                    textAlign: "center",
-                    color: "#6b7280",
-                  }}
-                >
+                <div className="home-empty-state">
                   {t.noProductsToShow || "Hiện chưa có sản phẩm để hiển thị."}
                 </div>
               ) : (
@@ -541,54 +299,34 @@ export default function HomePage() {
             </div>
           </section>
 
-          <section style={{ marginBottom: 28 }}>
-            <div style={{ ...pageCard, padding: 24 }}>
-              <div
-                className="d-flex flex-wrap justify-content-between align-items-center gap-3"
-                style={{ marginBottom: 20 }}
-              >
+          {/* SẢN PHẨM MỚI */}
+          <section className="home-section">
+            <div className="home-card-inner">
+              <div className="home-section-header-flex">
                 <div>
-                  <div style={sectionSubTitle}>
+                  <div className="section-subtitle">
                     {t.recentUpdates || "Cập nhật gần đây"}
                   </div>
-                  <h2 style={sectionTitle}>
+                  <h2 className="section-title">
                     {t.newProducts || "Sản phẩm mới"}
                   </h2>
                 </div>
 
-                <Link
-                  to="/products"
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 8,
-                    color: "#ee4d2d",
-                    textDecoration: "none",
-                    fontWeight: 700,
-                  }}
-                >
+                <Link to="/products" className="home-view-all">
                   {t.viewAll || "Xem tất cả"}
                   <i className="bi bi-arrow-right"></i>
                 </Link>
               </div>
 
               {loadingProducts ? (
-                <div className="text-center py-4">
+                <div className="home-loading">
                   <div className="spinner-border text-danger" role="status"></div>
-                  <p className="mt-3 mb-0" style={{ color: "#6b7280" }}>
+                  <p className="home-loading-text">
                     {t.loadingNewProducts || "Đang tải sản phẩm mới..."}
                   </p>
                 </div>
               ) : newProducts.length === 0 ? (
-                <div
-                  style={{
-                    background: "#fafafa",
-                    borderRadius: 16,
-                    padding: 24,
-                    textAlign: "center",
-                    color: "#6b7280",
-                  }}
-                >
+                <div className="home-empty-state">
                   {t.noNewProducts || "Hiện chưa có sản phẩm mới để hiển thị."}
                 </div>
               ) : (
@@ -603,13 +341,14 @@ export default function HomePage() {
             </div>
           </section>
 
+          {/* LÝ DO CHỌN SOUVN */}
           <section>
-            <div style={{ ...pageCard, padding: 24 }}>
-              <div style={{ marginBottom: 20 }}>
-                <div style={sectionSubTitle}>
+            <div className="home-card-inner">
+              <div className="home-section-header">
+                <div className="section-subtitle">
                   {t.ourCommitment || "Cam kết của chúng tôi"}
                 </div>
-                <h2 style={sectionTitle}>
+                <h2 className="section-title">
                   {t.whyChooseSouVN || "Vì sao chọn SouVN?"}
                 </h2>
               </div>
@@ -617,53 +356,14 @@ export default function HomePage() {
               <div className="row g-3">
                 {reasons.map((item, index) => (
                   <div key={index} className="col-md-6 col-lg-3">
-                    <div
-                      style={{
-                        background: "#fff7ed",
-                        borderRadius: 16,
-                        padding: 20,
-                        height: "100%",
-                        border: "1px solid #fed7aa",
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: 52,
-                          height: 52,
-                          borderRadius: "50%",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          background: "#ffffff",
-                          color: "#ee4d2d",
-                          fontSize: 22,
-                          marginBottom: 14,
-                          border: "1px solid #fed7aa",
-                        }}
-                      >
+                    <div className="home-reason-card">
+                      <div className="home-reason-icon">
                         <i className={item.icon}></i>
                       </div>
 
-                      <div
-                        style={{
-                          color: "#111827",
-                          fontWeight: 700,
-                          fontSize: 18,
-                          marginBottom: 8,
-                        }}
-                      >
-                        {item.title}
-                      </div>
+                      <div className="home-reason-title">{item.title}</div>
 
-                      <div
-                        style={{
-                          color: "#6b7280",
-                          lineHeight: 1.7,
-                          fontSize: 14,
-                        }}
-                      >
-                        {item.desc}
-                      </div>
+                      <div className="home-reason-desc">{item.desc}</div>
                     </div>
                   </div>
                 ))}

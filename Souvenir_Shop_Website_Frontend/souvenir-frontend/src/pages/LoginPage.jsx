@@ -1,30 +1,23 @@
-import React, { useContext, useState } from "react";
-import { AuthContext } from "../contexts/AuthContext";
+import { useContext, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
+import { AuthContext } from "../contexts/AuthContext";
 import { useLanguage } from "../contexts/LanguageContext.jsx";
 import { commonTranslations } from "../i18n/common";
 
-const pageCard = {
-  background: "#ffffff",
-  borderRadius: 20,
-  boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
-};
+const getErrorMessage = (ex, fallback) => {
+  const data = ex?.response?.data;
 
-const labelStyle = {
-  color: "#111827",
-  fontWeight: 700,
-  marginBottom: 8,
-  fontSize: 14,
-};
+  if (typeof data === "string") return data;
+  if (data?.message) return data.message;
+  if (data?.title) return data.title;
 
-const inputStyle = {
-  height: 44,
-  borderRadius: 10,
-  border: "1px solid #e5e7eb",
-  background: "#fff",
-  color: "#111827",
-  boxShadow: "none",
+  if (data?.errors) {
+    const firstError = Object.values(data.errors)?.flat?.()[0];
+    if (firstError) return firstError;
+  }
+
+  return fallback;
 };
 
 export default function LoginPage() {
@@ -35,11 +28,22 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const loginFeatures = useMemo(
+    () => [
+      t.loginFeature1 || "Mua sắm nhanh chóng",
+      t.loginFeature2 || "Quản lý đơn hàng dễ dàng",
+      t.loginFeature3 || "Trải nghiệm hiện đại",
+    ],
+    [t]
+  );
+
   const submit = async (e) => {
     e.preventDefault();
+
     setErr("");
     setLoading(true);
 
@@ -47,17 +51,7 @@ export default function LoginPage() {
       await login(email, password);
       nav("/products");
     } catch (ex) {
-      const data = ex?.response?.data;
-
-      if (typeof data === "string") setErr(data);
-      else if (data?.message) setErr(data.message);
-      else if (data?.title) setErr(data.title);
-      else if (data?.errors) {
-        const firstError = Object.values(data.errors)?.flat?.()[0];
-        setErr(firstError || (t.loginFailed || "Đăng nhập thất bại"));
-      } else {
-        setErr(t.loginFailed || "Đăng nhập thất bại");
-      }
+      setErr(getErrorMessage(ex, t.loginFailed || "Đăng nhập thất bại"));
     } finally {
       setLoading(false);
     }
@@ -65,36 +59,16 @@ export default function LoginPage() {
 
   return (
     <MainLayout>
-      <section
-        className="section"
-        style={{
-          background: "#f5f5f5",
-          minHeight: "100vh",
-          paddingTop: 32,
-          paddingBottom: 48,
-        }}
-      >
+      <section className="section login-page-section">
         <div className="container">
-          <div
-            style={{
-              ...pageCard,
-              padding: 24,
-              marginBottom: 20,
-              borderLeft: "5px solid #ee4d2d",
-            }}
-          >
-            <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <div className="login-card login-header-card">
+            <div className="login-header-top">
               <div>
-                <div style={{ color: "#6b7280", fontSize: 14, fontWeight: 600 }}>
+                <div className="login-kicker">
                   {t.shopName || "SouVN Shop"}
                 </div>
-                <h2
-                  style={{
-                    margin: 0,
-                    fontWeight: 800,
-                    color: "#111827",
-                  }}
-                >
+
+                <h2 className="login-title">
                   {t.loginPageTitle || "Đăng nhập"}
                 </h2>
               </div>
@@ -103,39 +77,19 @@ export default function LoginPage() {
 
           <div className="row justify-content-center g-4">
             <div className="col-lg-5">
-              <div style={{ ...pageCard, padding: 24 }}>
-                <h3
-                  style={{
-                    fontWeight: 800,
-                    color: "#111827",
-                    marginBottom: 16,
-                  }}
-                >
+              <div className="login-card login-info-card">
+                <h3 className="login-block-title">
                   {t.loginWelcomeBack || "Chào mừng quay lại"}
                 </h3>
 
-                <p style={{ color: "#6b7280", lineHeight: 1.8 }}>
+                <p className="login-desc">
                   {t.loginWelcomeDesc ||
                     "Đăng nhập để tiếp tục mua sắm, quản lý giỏ hàng và đơn hàng của bạn một cách dễ dàng."}
                 </p>
 
-                <div className="d-grid gap-3 mt-4">
-                  {[
-                    t.loginFeature1 || "Mua sắm nhanh chóng",
-                    t.loginFeature2 || "Quản lý đơn hàng dễ dàng",
-                    t.loginFeature3 || "Trải nghiệm hiện đại",
-                  ].map((text, i) => (
-                    <div
-                      key={i}
-                      style={{
-                        background: "#fff7ed",
-                        border: "1px solid #fed7aa",
-                        borderRadius: 12,
-                        padding: 12,
-                        color: "#9a3412",
-                        fontWeight: 600,
-                      }}
-                    >
+                <div className="login-feature-list">
+                  {loginFeatures.map((text, index) => (
+                    <div key={index} className="login-feature-item">
                       <i className="bi bi-check-circle me-2"></i>
                       {text}
                     </div>
@@ -145,96 +99,65 @@ export default function LoginPage() {
             </div>
 
             <div className="col-lg-5">
-              <div style={{ ...pageCard, padding: 24 }}>
-                <h3
-                  style={{
-                    fontWeight: 800,
-                    color: "#111827",
-                    marginBottom: 16,
-                  }}
-                >
+              <div className="login-card login-form-card">
+                <h3 className="login-block-title">
                   {t.loginAccountTitle || "Đăng nhập tài khoản"}
                 </h3>
 
                 {err && (
-                  <div
-                    className="alert mb-3"
-                    style={{
-                      background: "#fef2f2",
-                      color: "#b91c1c",
-                      border: "1px solid #fecaca",
-                      borderRadius: 12,
-                    }}
-                  >
+                  <div className="login-alert-error" role="alert">
                     {err}
                   </div>
                 )}
 
                 <form onSubmit={submit}>
                   <div className="mb-3">
-                    <label className="form-label" style={labelStyle}>
+                    <label className="form-label login-form-label">
                       {t.emailLabel || "Email"}
                     </label>
+
                     <input
                       type="email"
-                      className="form-control"
+                      className="form-control login-input"
                       placeholder={t.emailPlaceholder || "Nhập email"}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      style={inputStyle}
                     />
                   </div>
 
                   <div className="mb-3">
-                    <label className="form-label" style={labelStyle}>
+                    <label className="form-label login-form-label">
                       {t.passwordLabel || "Mật khẩu"}
                     </label>
+
                     <input
                       type="password"
-                      className="form-control"
+                      className="form-control login-input"
                       placeholder={t.passwordPlaceholder || "Nhập mật khẩu"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      style={inputStyle}
                     />
                   </div>
 
                   <button
                     type="submit"
                     disabled={loading}
-                    style={{
-                      width: "100%",
-                      height: 46,
-                      borderRadius: 10,
-                      border: "none",
-                      background: "#ee4d2d",
-                      color: "#fff",
-                      fontWeight: 700,
-                    }}
+                    className="login-submit-button"
                   >
                     {loading
-                      ? (t.loggingIn || "Đang đăng nhập...")
-                      : (t.loginPageTitle || "Đăng nhập")}
+                      ? t.loggingIn || "Đang đăng nhập..."
+                      : t.loginPageTitle || "Đăng nhập"}
                   </button>
                 </form>
 
-                <div
-                  style={{
-                    marginTop: 16,
-                    background: "#fafafa",
-                    borderRadius: 12,
-                    padding: 12,
-                    fontSize: 14,
-                    color: "#6b7280",
-                  }}
-                >
+                <div className="login-demo-box">
                   {t.loginDemoAdmin || "Demo admin:"}{" "}
                   <strong>admin@souvenir.com</strong>
                 </div>
 
-                <p className="text-center mt-4 mb-0" style={{ color: "#6b7280" }}>
+                <p className="login-register-text">
                   {t.noAccountYet || "Chưa có tài khoản?"}{" "}
-                  <Link to="/register" style={{ color: "#ee4d2d", fontWeight: 700 }}>
+                  <Link to="/register" className="login-register-link">
                     {t.registerNow || "Đăng ký ngay"}
                   </Link>
                 </p>

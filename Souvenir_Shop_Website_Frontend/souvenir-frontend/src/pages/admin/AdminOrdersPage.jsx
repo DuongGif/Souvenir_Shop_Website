@@ -1,24 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { adminOrdersService } from "../../services/admin/adminOrdersService";
 
 const PAGE_SIZE = 5;
-
-const getErrorMessage = (ex, fallback) => {
-  const data = ex?.response?.data;
-  if (typeof data === "string") return data;
-  if (data?.message) return data.message;
-  if (data?.title) return data.title;
-  if (data?.errors) {
-    const firstError = Object.values(data.errors)?.flat?.()[0];
-    if (firstError) return firstError;
-  }
-  return fallback;
-};
-
-const formatPrice = (value) => {
-  if (value === null || value === undefined) return "0 ₫";
-  return Number(value).toLocaleString("vi-VN") + " ₫";
-};
 
 const STATUS_OPTIONS = [
   { value: "pending", label: "Chờ xử lý" },
@@ -32,71 +15,131 @@ const STATUS_OPTIONS = [
   { value: "cancelled", label: "Đã hủy" },
 ];
 
+const getErrorMessage = (ex, fallback) => {
+  const data = ex?.response?.data;
+
+  if (typeof data === "string") return data;
+  if (data?.message) return data.message;
+  if (data?.title) return data.title;
+
+  if (data?.errors) {
+    const firstError = Object.values(data.errors)?.flat?.()[0];
+    if (firstError) return firstError;
+  }
+
+  return fallback;
+};
+
+const formatPrice = (value) => {
+  if (value === null || value === undefined) return "0 ₫";
+  return `${Number(value).toLocaleString("vi-VN")} ₫`;
+};
+
 const normalizeStatus = (status) => {
-  const s = String(status || "").trim().toLowerCase();
+  const value = String(status || "").trim().toLowerCase();
 
   if (
-    s === "dang_giao" ||
-    s === "đang giao" ||
-    s === "da_giao_van" ||
-    s === "shipped"
+    value === "dang_giao" ||
+    value === "đang giao" ||
+    value === "da_giao_van" ||
+    value === "shipped"
   ) {
     return "shipping";
   }
 
-  if (s === "canceled") return "cancelled";
-  if (s === "pending_cancel") return "cancel_requested";
-  if (s === "cho_duyet_huy") return "cancel_requested";
-  if (s === "yeu_cau_huy") return "cancel_requested";
-  if (s === "yeu_cau_hoan_hang") return "return_requested";
-  if (s === "da_hoan_hang") return "returned";
+  if (value === "canceled") return "cancelled";
+  if (value === "pending_cancel") return "cancel_requested";
+  if (value === "cho_duyet_huy") return "cancel_requested";
+  if (value === "yeu_cau_huy") return "cancel_requested";
+  if (value === "yeu_cau_hoan_hang") return "return_requested";
+  if (value === "da_hoan_hang") return "returned";
 
-  return s || "pending";
+  return value || "pending";
 };
 
 const getStatusLabel = (status) => {
   const normalized = normalizeStatus(status);
-  const found = STATUS_OPTIONS.find((x) => x.value === normalized);
+  const found = STATUS_OPTIONS.find((item) => item.value === normalized);
+
   return found ? found.label : status || "Không xác định";
 };
 
 const getStatusBadge = (status) => {
-  const s = normalizeStatus(status);
+  const value = normalizeStatus(status);
 
-  if (s === "pending") {
-    return { text: "Chờ xử lý", bg: "#fef3c7", color: "#92400e" };
-  }
-  if (s === "confirmed") {
-    return { text: "Đã xác nhận", bg: "#e5e7eb", color: "#374151" };
-  }
-  if (s === "paid") {
-    return { text: "Đã thanh toán", bg: "#dcfce7", color: "#166534" };
-  }
-  if (s === "shipping") {
-    return { text: "Đang giao hàng", bg: "#dbeafe", color: "#1d4ed8" };
-  }
-  if (s === "completed") {
-    return { text: "Hoàn thành", bg: "#dcfce7", color: "#166534" };
-  }
-  if (s === "cancel_requested") {
-    return { text: "Chờ duyệt hủy", bg: "#fff7ed", color: "#9a3412" };
-  }
-  if (s === "return_requested") {
-    return { text: "Yêu cầu hoàn hàng", bg: "#f3e8ff", color: "#7e22ce" };
-  }
-  if (s === "returned") {
-    return { text: "Đã hoàn hàng", bg: "#ede9fe", color: "#5b21b6" };
-  }
-  if (s === "cancelled") {
-    return { text: "Đã hủy", bg: "#fee2e2", color: "#991b1b" };
+  if (value === "pending") {
+    return {
+      text: "Chờ xử lý",
+      className: "pending",
+    };
   }
 
-  return { text: getStatusLabel(status), bg: "#e5e7eb", color: "#374151" };
+  if (value === "confirmed") {
+    return {
+      text: "Đã xác nhận",
+      className: "confirmed",
+    };
+  }
+
+  if (value === "paid") {
+    return {
+      text: "Đã thanh toán",
+      className: "paid",
+    };
+  }
+
+  if (value === "shipping") {
+    return {
+      text: "Đang giao hàng",
+      className: "shipping",
+    };
+  }
+
+  if (value === "completed") {
+    return {
+      text: "Hoàn thành",
+      className: "completed",
+    };
+  }
+
+  if (value === "cancel_requested") {
+    return {
+      text: "Chờ duyệt hủy",
+      className: "cancel-requested",
+    };
+  }
+
+  if (value === "return_requested") {
+    return {
+      text: "Yêu cầu hoàn hàng",
+      className: "return-requested",
+    };
+  }
+
+  if (value === "returned") {
+    return {
+      text: "Đã hoàn hàng",
+      className: "returned",
+    };
+  }
+
+  if (value === "cancelled") {
+    return {
+      text: "Đã hủy",
+      className: "cancelled",
+    };
+  }
+
+  return {
+    text: getStatusLabel(status),
+    className: "unknown",
+  };
 };
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState([]);
   const [statusMap, setStatusMap] = useState({});
+
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState(null);
 
@@ -106,30 +149,33 @@ export default function AdminOrdersPage() {
   const [searchKeyword, setSearchKeyword] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     setErr("");
 
     try {
       const res = await adminOrdersService.getAll();
       const data = res.data || [];
+
       setOrders(data);
 
       const initialStatusMap = {};
-      data.forEach((o) => {
-        initialStatusMap[o.id] = normalizeStatus(o.status);
+
+      data.forEach((order) => {
+        initialStatusMap[order.id] = normalizeStatus(order.status);
       });
+
       setStatusMap(initialStatusMap);
     } catch (ex) {
       setErr(getErrorMessage(ex, "Không thể tải danh sách đơn hàng"));
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -145,7 +191,9 @@ export default function AdminOrdersPage() {
       const normalizedStatus = normalizeStatus(statusMap[id]);
 
       await adminOrdersService.updateStatus(id, normalizedStatus);
+
       setMsg(`Đã cập nhật trạng thái đơn hàng #${id}`);
+
       await load();
     } catch (ex) {
       setErr(getErrorMessage(ex, "Cập nhật trạng thái thất bại"));
@@ -159,10 +207,10 @@ export default function AdminOrdersPage() {
 
     if (!keyword) return orders;
 
-    return orders.filter((o) => {
-      const idText = String(o.id || "").toLowerCase();
-      const orderCodeText = String(o.orderCode || "").toLowerCase();
-      const statusText = String(getStatusLabel(o.status) || "").toLowerCase();
+    return orders.filter((order) => {
+      const idText = String(order.id || "").toLowerCase();
+      const orderCodeText = String(order.orderCode || "").toLowerCase();
+      const statusText = String(getStatusLabel(order.status) || "").toLowerCase();
 
       return (
         idText.includes(keyword) ||
@@ -182,68 +230,52 @@ export default function AdminOrdersPage() {
 
   const goToPage = (page) => {
     if (page < 1 || page > totalPages) return;
+
     setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   };
 
   return (
-    <div>
-      <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div className="admin-orders-page">
+      <div className="admin-orders-header">
         <div>
-          <h2
-            style={{
-              marginBottom: 6,
-              color: "#0f172a",
-              fontWeight: 700,
-            }}
-          >
-            Quản lý đơn hàng
-          </h2>
-          <p style={{ marginBottom: 0, color: "#64748b" }}>
+          <h2 className="admin-orders-title">Quản lý đơn hàng</h2>
+
+          <p className="admin-orders-desc">
             Theo dõi danh sách đơn hàng, tìm kiếm và cập nhật trạng thái xử lý.
           </p>
         </div>
 
         <button
+          type="button"
           onClick={load}
-          className="btn btn-outline-primary"
-          style={{ borderRadius: 12, height: 42 }}
+          className="btn btn-outline-primary admin-orders-reload-btn"
         >
           Tải lại
         </button>
       </div>
 
-      <div
-        className="mb-4"
-        style={{
-          background: "#fff",
-          borderRadius: 20,
-          padding: 18,
-          boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
-        }}
-      >
+      <div className="admin-orders-filter-card">
         <div className="row g-3 align-items-end">
           <div className="col-md-6 col-lg-5">
-            <label
-              className="form-label"
-              style={{ color: "#111827", fontWeight: 600 }}
-            >
+            <label className="form-label admin-orders-label">
               Tìm kiếm đơn hàng
             </label>
+
             <input
-              className="form-control"
+              className="form-control admin-orders-input"
               placeholder="Nhập mã đơn hàng hoặc trạng thái..."
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
-              style={{ height: 44, borderRadius: 12, color: "#111827" }}
             />
           </div>
 
           <div className="col-md-6 col-lg-7">
-            <div
-              className="d-flex flex-wrap gap-3"
-              style={{ color: "#64748b", fontWeight: 500 }}
-            >
+            <div className="admin-orders-stats">
               <span>Tổng đơn: {orders.length}</span>
               <span>Kết quả: {filteredOrders.length}</span>
               <span>
@@ -267,114 +299,81 @@ export default function AdminOrdersPage() {
       )}
 
       {loading ? (
-        <div className="text-center py-5">
+        <div className="admin-orders-loading">
           <div className="spinner-border text-info" role="status"></div>
-          <p className="mt-3 mb-0">Đang tải danh sách đơn hàng...</p>
+
+          <p className="admin-orders-loading-text">
+            Đang tải danh sách đơn hàng...
+          </p>
         </div>
       ) : filteredOrders.length === 0 ? (
-        <div
-          style={{
-            background: "#fff",
-            borderRadius: 20,
-            padding: 28,
-            boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
-            color: "#475569",
-          }}
-        >
+        <div className="admin-orders-empty">
           Không tìm thấy đơn hàng nào.
         </div>
       ) : (
         <>
-          <div
-            style={{
-              background: "#fff",
-              borderRadius: 20,
-              overflow: "hidden",
-              boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
-            }}
-          >
+          <div className="admin-orders-table-card">
             <div className="table-responsive">
-              <table
-                style={{
-                  width: "100%",
-                  borderCollapse: "collapse",
-                  color: "#1f2937",
-                }}
-              >
+              <table className="admin-orders-table">
                 <thead>
-                  <tr style={{ background: "#f8fafc" }}>
-                    <th style={thStyle}>Id</th>
-                    <th style={thStyle}>Mã đơn hàng</th>
-                    <th style={thStyle}>Tạm tính</th>
-                    <th style={thStyle}>Phí vận chuyển</th>
-                    <th style={thStyle}>Tổng tiền</th>
-                    <th style={thStyle}>Trạng thái</th>
-                    <th style={thStyle}>Cập nhật</th>
+                  <tr>
+                    <th>Id</th>
+                    <th>Mã đơn hàng</th>
+                    <th>Tạm tính</th>
+                    <th>Phí vận chuyển</th>
+                    <th>Tổng tiền</th>
+                    <th>Trạng thái</th>
+                    <th>Cập nhật</th>
                   </tr>
                 </thead>
 
                 <tbody>
-                  {pagedOrders.map((o) => {
-                    const badge = getStatusBadge(o.status);
+                  {pagedOrders.map((order) => {
+                    const badge = getStatusBadge(order.status);
 
                     return (
-                      <tr key={o.id}>
-                        <td style={tdStyle}>{o.id}</td>
+                      <tr key={order.id}>
+                        <td>{order.id}</td>
 
-                        <td style={{ ...tdStyle, fontWeight: 700 }}>
-                          {o.orderCode}
+                        <td className="admin-orders-code">
+                          {order.orderCode}
                         </td>
 
-                        <td style={tdStyle}>{formatPrice(o.subtotal)}</td>
-
-                        <td style={tdStyle}>{formatPrice(o.shippingFee)}</td>
-
-                        <td
-                          style={{
-                            ...tdStyle,
-                            fontWeight: 700,
-                            color: "#2563eb",
-                          }}
-                        >
-                          {formatPrice(o.totalAmount)}
+                        <td className="admin-orders-nowrap">
+                          {formatPrice(order.subtotal)}
                         </td>
 
-                        <td style={tdStyle}>
+                        <td className="admin-orders-nowrap">
+                          {formatPrice(order.shippingFee)}
+                        </td>
+
+                        <td className="admin-orders-total">
+                          {formatPrice(order.totalAmount)}
+                        </td>
+
+                        <td>
                           <span
-                            style={{
-                              background: badge.bg,
-                              color: badge.color,
-                              padding: "6px 12px",
-                              borderRadius: 999,
-                              fontSize: 13,
-                              fontWeight: 600,
-                              whiteSpace: "nowrap",
-                            }}
+                            className={`admin-orders-status-badge ${badge.className}`}
                           >
                             {badge.text}
                           </span>
                         </td>
 
-                        <td style={tdStyle}>
-                          <div className="d-flex gap-2 flex-wrap">
+                        <td>
+                          <div className="admin-orders-update-box">
                             <select
-                              className="form-select form-select-sm"
+                              className="form-select form-select-sm admin-orders-status-select"
                               value={
-                                statusMap[o.id] ||
-                                normalizeStatus(o.status) ||
+                                statusMap[order.id] ||
+                                normalizeStatus(order.status) ||
                                 "pending"
                               }
                               onChange={(e) =>
-                                setStatusMap({
-                                  ...statusMap,
-                                  [o.id]: e.target.value,
-                                })
+                                setStatusMap((prev) => ({
+                                  ...prev,
+                                  [order.id]: e.target.value,
+                                }))
                               }
-                              style={{
-                                width: 190,
-                                borderRadius: 10,
-                                color: "#111827",
-                              }}
                             >
                               {STATUS_OPTIONS.map((item) => (
                                 <option key={item.value} value={item.value}>
@@ -384,12 +383,12 @@ export default function AdminOrdersPage() {
                             </select>
 
                             <button
-                              onClick={() => updateStatus(o.id)}
-                              className="btn btn-outline-primary btn-sm"
-                              disabled={savingId === o.id}
-                              style={{ borderRadius: 10, fontWeight: 600 }}
+                              type="button"
+                              onClick={() => updateStatus(order.id)}
+                              className="btn btn-outline-primary btn-sm admin-orders-save-btn"
+                              disabled={savingId === order.id}
                             >
-                              {savingId === o.id ? "Đang lưu..." : "Lưu"}
+                              {savingId === order.id ? "Đang lưu..." : "Lưu"}
                             </button>
                           </div>
                         </td>
@@ -401,36 +400,32 @@ export default function AdminOrdersPage() {
             </div>
           </div>
 
-          <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mt-4">
-            <div style={{ color: "#64748b", fontWeight: 500 }}>
+          <div className="admin-orders-pagination-wrap">
+            <div className="admin-orders-limit-text">
               Hiển thị tối đa {PAGE_SIZE} đơn hàng mỗi trang
             </div>
 
-            <div className="d-flex align-items-center gap-2 flex-wrap">
+            <div className="admin-orders-pagination">
               <button
-                className="btn btn-outline-secondary btn-sm"
+                type="button"
+                className="btn btn-outline-secondary btn-sm admin-orders-page-btn"
                 onClick={() => goToPage(safeCurrentPage - 1)}
                 disabled={safeCurrentPage === 1}
-                style={{ borderRadius: 10, fontWeight: 600 }}
               >
                 Trang trước
               </button>
 
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+              {Array.from({ length: totalPages }, (_, index) => index + 1).map(
                 (page) => (
                   <button
                     key={page}
-                    className={`btn btn-sm ${
+                    type="button"
+                    onClick={() => goToPage(page)}
+                    className={`btn btn-sm admin-orders-page-btn ${
                       safeCurrentPage === page
-                        ? "btn-primary"
+                        ? "active"
                         : "btn-outline-primary"
                     }`}
-                    onClick={() => goToPage(page)}
-                    style={{
-                      minWidth: 40,
-                      borderRadius: 10,
-                      fontWeight: 600,
-                    }}
                   >
                     {page}
                   </button>
@@ -438,10 +433,10 @@ export default function AdminOrdersPage() {
               )}
 
               <button
-                className="btn btn-outline-secondary btn-sm"
+                type="button"
+                className="btn btn-outline-secondary btn-sm admin-orders-page-btn"
                 onClick={() => goToPage(safeCurrentPage + 1)}
                 disabled={safeCurrentPage === totalPages}
-                style={{ borderRadius: 10, fontWeight: 600 }}
               >
                 Trang sau
               </button>
@@ -452,17 +447,3 @@ export default function AdminOrdersPage() {
     </div>
   );
 }
-
-const thStyle = {
-  padding: "14px",
-  textAlign: "left",
-  color: "#0f172a",
-  fontWeight: 700,
-  borderBottom: "1px solid #e5e7eb",
-};
-
-const tdStyle = {
-  padding: "14px",
-  color: "#334155",
-  borderBottom: "1px solid #e5e7eb",
-};

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import { productService } from "../services/productService";
@@ -18,7 +18,7 @@ const getImageSrc = (url) => {
 
 const formatPrice = (price) => {
   if (price === null || price === undefined) return "Liên hệ";
-  return Number(price).toLocaleString("vi-VN") + " ₫";
+  return `${Number(price).toLocaleString("vi-VN")} ₫`;
 };
 
 const normalizeDisplayText = (value = "") => {
@@ -55,6 +55,7 @@ const getErrorMessage = (ex, fallback) => {
   if (typeof data === "string") return data;
   if (data?.message) return data.message;
   if (data?.title) return data.title;
+
   if (data?.errors) {
     const firstError = Object.values(data.errors)?.flat?.()[0];
     if (firstError) return firstError;
@@ -63,25 +64,17 @@ const getErrorMessage = (ex, fallback) => {
   return fallback;
 };
 
-const pageCard = {
-  background: "#ffffff",
-  borderRadius: 20,
-  boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
-};
-
-const inputStyle = {
-  height: 44,
-  borderRadius: 10,
-  border: "1px solid #e5e7eb",
-  background: "#fff",
-  color: "#111827",
-  boxShadow: "none",
+const initialReviewForm = {
+  rating: 5,
+  title: "",
+  content: "",
 };
 
 export default function DetailProductPage() {
   const { id } = useParams();
   const nav = useNavigate();
   const token = localStorage.getItem("token");
+
   const { language, currentLanguageName, isVietnamese } = useLanguage();
   const t = commonTranslations?.[language] || commonTranslations?.vi || {};
 
@@ -91,7 +84,7 @@ export default function DetailProductPage() {
   const [selectedImage, setSelectedImage] = useState("");
 
   const [reviews, setReviews] = useState([]);
-  const [rv, setRv] = useState({ rating: 5, title: "", content: "" });
+  const [rv, setRv] = useState(initialReviewForm);
 
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
@@ -106,55 +99,14 @@ export default function DetailProductPage() {
   const [translatedReviews, setTranslatedReviews] = useState([]);
   const [translatingPage, setTranslatingPage] = useState(false);
 
-  useEffect(() => {
-    const loadProduct = async () => {
-      setLoading(true);
-      setErr("");
-
-      try {
-        const res = await productService.detail(id);
-        setP(res.data);
-        setVariantId(res.data?.variants?.[0]?.id ?? null);
-      } catch (ex) {
-        setErr(getErrorMessage(ex, t.cannotLoadProductDetails || "Không thể tải chi tiết sản phẩm"));
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const loadReviews = async () => {
-      setReviewErr("");
-
-      try {
-        const rr = await reviewService.byProduct(id);
-        setReviews(rr.data || []);
-      } catch (ex) {
-        setReviews([]);
-        setReviewErr(getErrorMessage(ex, t.cannotLoadReviews || "Không thể tải đánh giá sản phẩm"));
-      }
-    };
-
-    loadProduct();
-    loadReviews();
-  }, [id, t.cannotLoadProductDetails, t.cannotLoadReviews]);
-
-  useEffect(() => {
-    if (!msg && !err) return;
-
-    const timer = setTimeout(() => {
-      setMsg("");
-      setErr("");
-    }, 2500);
-
-    return () => clearTimeout(timer);
-  }, [msg, err]);
+  const productTitle = useMemo(() => getProductTitle(p), [p]);
+  const categoryLabel = useMemo(() => getCategoryLabel(p?.categoryId), [p]);
 
   const currentVariant = useMemo(() => {
-    return (p?.variants || []).find((v) => v.id === Number(variantId)) || null;
+    return (p?.variants || []).find((item) => item.id === Number(variantId)) || null;
   }, [p, variantId]);
 
-  const productTitle = getProductTitle(p);
-  const categoryLabel = getCategoryLabel(p?.categoryId);
+  const displayPrice = currentVariant?.price ?? p?.basePrice ?? 0;
 
   const imageList = useMemo(() => {
     const rawImages = Array.isArray(p?.images) ? p.images : [];
@@ -174,11 +126,81 @@ export default function DetailProductPage() {
       .filter(Boolean);
 
     if (normalizedImages.length > 0) return normalizedImages;
-
     if (p?.imageUrl) return [getImageSrc(p.imageUrl)];
 
     return ["https://via.placeholder.com/800x600?text=Souvenir+Shop"];
   }, [p]);
+
+  const displayProductTitle = translatedProductTitle || productTitle;
+  const displayCategoryLabel = translatedCategoryLabel || categoryLabel;
+
+  const translateText = useCallback(
+    async (text) => {
+      if (!text || isVietnamese) return text;
+
+      try {
+        const res = await aiService.translate(text, currentLanguageName);
+        return res?.data?.translatedText?.trim() || text;
+      } catch {
+        return text;
+      }
+    },
+    [currentLanguageName, isVietnamese]
+  );
+
+  const loadReviews = useCallback(async () => {
+    setReviewErr("");
+
+    try {
+      const res = await reviewService.byProduct(id);
+      setReviews(res.data || []);
+    } catch (ex) {
+      setReviews([]);
+      setReviewErr(
+        getErrorMessage(
+          ex,
+          t.cannotLoadReviews || "Không thể tải đánh giá sản phẩm"
+        )
+      );
+    }
+  }, [id, t.cannotLoadReviews]);
+
+  useEffect(() => {
+    const loadProduct = async () => {
+      setLoading(true);
+      setErr("");
+
+      try {
+        const res = await productService.detail(id);
+
+        setP(res.data);
+        setVariantId(res.data?.variants?.[0]?.id ?? null);
+      } catch (ex) {
+        setErr(
+          getErrorMessage(
+            ex,
+            t.cannotLoadProductDetails || "Không thể tải chi tiết sản phẩm"
+          )
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProduct();
+    loadReviews();
+  }, [id, loadReviews, t.cannotLoadProductDetails]);
+
+  useEffect(() => {
+    if (!msg && !err) return;
+
+    const timer = setTimeout(() => {
+      setMsg("");
+      setErr("");
+    }, 2500);
+
+    return () => clearTimeout(timer);
+  }, [msg, err]);
 
   useEffect(() => {
     if (imageList.length > 0) {
@@ -189,28 +211,20 @@ export default function DetailProductPage() {
   useEffect(() => {
     let cancelled = false;
 
-    const translateText = async (text) => {
-      if (!text || isVietnamese) return text;
-
-      try {
-        const res = await aiService.translate(text, currentLanguageName);
-        return res?.data?.translatedText?.trim() || text;
-      } catch {
-        return text;
-      }
-    };
-
     const translatePageContent = async () => {
       if (!p) return;
 
       if (isVietnamese) {
+        const originalVariants = {};
+
+        (p?.variants || []).forEach((variant) => {
+          originalVariants[variant.id] = normalizeDisplayText(
+            variant.variantName
+          );
+        });
+
         setTranslatedProductTitle(productTitle);
         setTranslatedCategoryLabel(categoryLabel);
-
-        const originalVariants = {};
-        (p?.variants || []).forEach((v) => {
-          originalVariants[v.id] = normalizeDisplayText(v.variantName);
-        });
         setTranslatedVariants(originalVariants);
         setTranslatedReviews(reviews);
         return;
@@ -223,30 +237,31 @@ export default function DetailProductPage() {
         const nextCategoryLabel = await translateText(categoryLabel);
 
         const variantEntries = await Promise.all(
-          (p?.variants || []).map(async (v) => {
+          (p?.variants || []).map(async (variant) => {
             const translatedVariantName = await translateText(
-              normalizeDisplayText(v.variantName)
+              normalizeDisplayText(variant.variantName)
             );
-            return [v.id, translatedVariantName];
+
+            return [variant.id, translatedVariantName];
           })
         );
 
-        const nextVariants = Object.fromEntries(variantEntries);
-
         const nextReviews = await Promise.all(
-          (reviews || []).map(async (r) => {
+          (reviews || []).map(async (review) => {
             const translatedTitle = await translateText(
-              normalizeDisplayText(r.title)
+              normalizeDisplayText(review.title)
             );
+
             const translatedContent = await translateText(
-              normalizeDisplayText(r.content)
+              normalizeDisplayText(review.content)
             );
-            const translatedReplyContent = r.replyContent
-              ? await translateText(normalizeDisplayText(r.replyContent))
+
+            const translatedReplyContent = review.replyContent
+              ? await translateText(normalizeDisplayText(review.replyContent))
               : "";
 
             return {
-              ...r,
+              ...review,
               translatedTitle,
               translatedContent,
               translatedReplyContent,
@@ -257,11 +272,13 @@ export default function DetailProductPage() {
         if (!cancelled) {
           setTranslatedProductTitle(nextProductTitle);
           setTranslatedCategoryLabel(nextCategoryLabel);
-          setTranslatedVariants(nextVariants);
+          setTranslatedVariants(Object.fromEntries(variantEntries));
           setTranslatedReviews(nextReviews);
         }
       } finally {
-        if (!cancelled) setTranslatingPage(false);
+        if (!cancelled) {
+          setTranslatingPage(false);
+        }
       }
     };
 
@@ -270,9 +287,15 @@ export default function DetailProductPage() {
     return () => {
       cancelled = true;
     };
-  }, [p, reviews, language, currentLanguageName, isVietnamese, productTitle, categoryLabel]);
-
-  const displayPrice = currentVariant?.price ?? p?.basePrice ?? 0;
+  }, [
+    p,
+    reviews,
+    language,
+    isVietnamese,
+    productTitle,
+    categoryLabel,
+    translateText,
+  ]);
 
   const addToCart = async () => {
     setMsg("");
@@ -303,7 +326,13 @@ export default function DetailProductPage() {
       window.dispatchEvent(new Event("cart-updated"));
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (ex) {
-      setErr(getErrorMessage(ex, t.addToCartFailed || "Thêm vào giỏ hàng thất bại"));
+      setErr(
+        getErrorMessage(
+          ex,
+          t.addToCartFailed || "Thêm vào giỏ hàng thất bại"
+        )
+      );
+
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setAddingCart(false);
@@ -343,90 +372,46 @@ export default function DetailProductPage() {
 
     try {
       setSubmittingReview(true);
+
       await reviewService.create({
         productId: Number(id),
         ...rv,
       });
 
       setMsg(t.reviewSubmittedSuccess || "Đánh giá đã được gửi thành công");
-      setRv({ rating: 5, title: "", content: "" });
+      setRv(initialReviewForm);
 
-      try {
-        const rr = await reviewService.byProduct(id);
-        setReviews(rr.data || []);
-      } catch (ex) {
-        setReviews([]);
-        setReviewErr(getErrorMessage(ex, t.cannotReloadReviews || "Không thể tải lại danh sách đánh giá"));
-      }
+      await loadReviews();
 
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (ex) {
-      setErr(getErrorMessage(ex, t.submitReviewFailed || "Gửi đánh giá thất bại"));
+      setErr(
+        getErrorMessage(ex, t.submitReviewFailed || "Gửi đánh giá thất bại")
+      );
+
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setSubmittingReview(false);
     }
   };
 
-  const displayProductTitle = translatedProductTitle || productTitle;
-  const displayCategoryLabel = translatedCategoryLabel || categoryLabel;
-
   return (
     <MainLayout>
-      <section
-        className="section"
-        style={{
-          background: "#f5f5f5",
-          minHeight: "100vh",
-          paddingTop: 32,
-          paddingBottom: 48,
-        }}
-      >
+      <section className="section product-detail-page-section">
         <div className="container">
-          <div
-            style={{
-              ...pageCard,
-              padding: 20,
-              marginBottom: 20,
-              borderLeft: "5px solid #ee4d2d",
-            }}
-          >
-            <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
+          <div className="product-detail-card product-detail-header-card">
+            <div className="product-detail-header-top">
               <div>
-                <div
-                  style={{
-                    fontSize: 14,
-                    color: "#6b7280",
-                    marginBottom: 6,
-                    fontWeight: 600,
-                  }}
-                >
+                <div className="product-detail-kicker">
                   {t.productDetails || "Chi tiết sản phẩm"}
                 </div>
 
-                <h2
-                  style={{
-                    margin: 0,
-                    fontWeight: 800,
-                    color: "#111827",
-                    fontSize: "clamp(24px, 4vw, 34px)",
-                    textTransform: "none",
-                    letterSpacing: 0,
-                    wordBreak: "break-word",
-                  }}
-                >
+                <h2 className="product-detail-header-title">
                   {displayProductTitle}
                 </h2>
               </div>
 
-              <Link
-                to="/products"
-                style={{
-                  color: "#ee4d2d",
-                  textDecoration: "none",
-                  fontWeight: 700,
-                }}
-              >
+              <Link to="/products" className="product-detail-back-link">
                 {t.backToProducts || "← Quay lại danh sách sản phẩm"}
               </Link>
             </div>
@@ -434,14 +419,8 @@ export default function DetailProductPage() {
 
           {translatingPage && !loading && (
             <div
-              className="alert mb-4"
+              className="product-detail-alert product-detail-alert-info"
               role="alert"
-              style={{
-                background: "#eff6ff",
-                color: "#1d4ed8",
-                border: "1px solid #bfdbfe",
-                borderRadius: 12,
-              }}
             >
               {t.translating || "Đang dịch nội dung sang ngôn ngữ đã chọn..."}
             </div>
@@ -449,14 +428,8 @@ export default function DetailProductPage() {
 
           {err && (
             <div
-              className="alert mb-4"
+              className="product-detail-alert product-detail-alert-error"
               role="alert"
-              style={{
-                background: "#fef2f2",
-                color: "#b91c1c",
-                border: "1px solid #fecaca",
-                borderRadius: 12,
-              }}
             >
               {err}
             </div>
@@ -464,61 +437,34 @@ export default function DetailProductPage() {
 
           {msg && (
             <div
-              className="alert mb-4"
+              className="product-detail-alert product-detail-alert-success"
               role="alert"
-              style={{
-                background: "#ecfdf5",
-                color: "#047857",
-                border: "1px solid #a7f3d0",
-                borderRadius: 12,
-              }}
             >
               {msg}
             </div>
           )}
 
           {loading ? (
-            <div style={{ ...pageCard, padding: 40 }} className="text-center">
+            <div className="product-detail-card product-detail-loading-card">
               <div className="spinner-border text-danger" role="status"></div>
-              <p className="mt-3 mb-0" style={{ color: "#6b7280" }}>
+              <p className="product-detail-loading-text">
                 {t.loadingProduct || "Đang tải chi tiết sản phẩm..."}
               </p>
             </div>
           ) : !p ? (
-            <div
-              className="alert"
-              style={{
-                background: "#fff7ed",
-                color: "#9a3412",
-                border: "1px solid #fed7aa",
-                borderRadius: 12,
-              }}
-            >
+            <div className="product-detail-alert product-detail-alert-warning">
               {t.productNotFound || "Không tìm thấy sản phẩm."}
             </div>
           ) : (
             <>
               <div className="row g-4 align-items-start">
                 <div className="col-lg-5">
-                  <div style={{ ...pageCard, padding: 16 }}>
-                    <div
-                      style={{
-                        borderRadius: 16,
-                        overflow: "hidden",
-                        marginBottom: 14,
-                        border: "1px solid #f1f5f9",
-                        background: "#fff",
-                      }}
-                    >
+                  <div className="product-detail-card product-detail-gallery-card">
+                    <div className="product-detail-main-image-box">
                       <img
                         src={selectedImage || imageList[0]}
                         alt={displayProductTitle}
-                        style={{
-                          width: "100%",
-                          height: 480,
-                          objectFit: "cover",
-                          display: "block",
-                        }}
+                        className="product-detail-main-image"
                         onError={(e) => {
                           e.currentTarget.src =
                             "https://via.placeholder.com/800x600?text=No+Image";
@@ -527,202 +473,99 @@ export default function DetailProductPage() {
                     </div>
 
                     {imageList.length > 1 && (
-                      <div
-                        style={{
-                          display: "grid",
-                          gridTemplateColumns: "repeat(auto-fill, minmax(84px, 1fr))",
-                          gap: 10,
-                        }}
-                      >
-                        {imageList.map((img, index) => (
-                          <button
-                            key={`${img}-${index}`}
-                            type="button"
-                            onClick={() => setSelectedImage(img)}
-                            style={{
-                              border:
-                                selectedImage === img
-                                  ? "2px solid #ee4d2d"
-                                  : "1px solid #e5e7eb",
-                              borderRadius: 12,
-                              padding: 4,
-                              background: "#fff",
-                              cursor: "pointer",
-                            }}
-                          >
-                            <img
-                              src={img}
-                              alt={`${displayProductTitle}-${index + 1}`}
-                              style={{
-                                width: "100%",
-                                height: 74,
-                                objectFit: "cover",
-                                borderRadius: 8,
-                                display: "block",
-                              }}
-                              onError={(e) => {
-                                e.currentTarget.src =
-                                  "https://via.placeholder.com/200x150?text=No+Image";
-                              }}
-                            />
-                          </button>
-                        ))}
+                      <div className="product-detail-thumb-grid">
+                        {imageList.map((img, index) => {
+                          const isActive = selectedImage === img;
+
+                          return (
+                            <button
+                              key={`${img}-${index}`}
+                              type="button"
+                              onClick={() => setSelectedImage(img)}
+                              className={`product-detail-thumb-button ${
+                                isActive ? "active" : ""
+                              }`}
+                            >
+                              <img
+                                src={img}
+                                alt={`${displayProductTitle}-${index + 1}`}
+                                className="product-detail-thumb-image"
+                                onError={(e) => {
+                                  e.currentTarget.src =
+                                    "https://via.placeholder.com/200x150?text=No+Image";
+                                }}
+                              />
+                            </button>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
                 </div>
 
                 <div className="col-lg-7">
-                  <div style={{ ...pageCard, padding: 24 }}>
-                    <div
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 8,
-                        background: "#fff7ed",
-                        color: "#c2410c",
-                        padding: "6px 12px",
-                        borderRadius: 999,
-                        fontSize: 14,
-                        fontWeight: 700,
-                        marginBottom: 14,
-                      }}
-                    >
+                  <div className="product-detail-card product-detail-info-card">
+                    <div className="product-detail-category-pill">
                       <i className="bi bi-bag-heart"></i>
                       {displayCategoryLabel}
                     </div>
 
-                    <h1
-                      style={{
-                        color: "#111827",
-                        fontWeight: 800,
-                        marginBottom: 16,
-                        fontSize: "clamp(24px, 4vw, 32px)",
-                        lineHeight: 1.4,
-                        textTransform: "none",
-                        letterSpacing: 0,
-                        wordBreak: "break-word",
-                      }}
-                    >
+                    <h1 className="product-detail-name">
                       {displayProductTitle}
                     </h1>
 
-                    <div
-                      style={{
-                        background: "#fafafa",
-                        borderRadius: 14,
-                        padding: "18px 20px",
-                        marginBottom: 20,
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize: 32,
-                          fontWeight: 800,
-                          color: "#ee4d2d",
-                          lineHeight: 1.2,
-                        }}
-                      >
+                    <div className="product-detail-price-box">
+                      <div className="product-detail-price">
                         {formatPrice(displayPrice)}
                       </div>
 
                       {p.basePrice !== null && p.basePrice !== undefined && (
-                        <div
-                          style={{
-                            color: "#6b7280",
-                            fontSize: 14,
-                            marginTop: 8,
-                          }}
-                        >
+                        <div className="product-detail-base-price">
                           {t.basePrice || "Giá gốc:"} {formatPrice(p.basePrice)}
                         </div>
                       )}
                     </div>
 
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "160px 1fr",
-                        gap: 14,
-                        alignItems: "center",
-                        marginBottom: 18,
-                      }}
-                    >
-                      <div
-                        style={{
-                          color: "#6b7280",
-                          fontWeight: 700,
-                        }}
-                      >
+                    <div className="product-detail-option-row">
+                      <div className="product-detail-option-label">
                         {t.variant || "Biến thể"}
                       </div>
 
-                      <div>
-                        <select
-                          className="form-select"
-                          value={variantId ?? ""}
-                          onChange={(e) => setVariantId(Number(e.target.value))}
-                          style={inputStyle}
-                          disabled={(p.variants || []).length === 0}
-                        >
-                          {(p.variants || []).length > 0 ? (
-                            (p.variants || []).map((v) => (
-                              <option key={v.id} value={v.id}>
-                                {(translatedVariants[v.id] ||
-                                  normalizeDisplayText(v.variantName)) +
-                                  " - " +
-                                  formatPrice(v.price ?? p.basePrice)}
-                              </option>
-                            ))
-                          ) : (
-                            <option value="">
-                              {t.noVariant || "Không có biến thể"}
+                      <select
+                        className="form-select product-detail-input"
+                        value={variantId ?? ""}
+                        onChange={(e) => setVariantId(Number(e.target.value))}
+                        disabled={(p.variants || []).length === 0}
+                      >
+                        {(p.variants || []).length > 0 ? (
+                          (p.variants || []).map((variant) => (
+                            <option key={variant.id} value={variant.id}>
+                              {(translatedVariants[variant.id] ||
+                                normalizeDisplayText(variant.variantName)) +
+                                " - " +
+                                formatPrice(variant.price ?? p.basePrice)}
                             </option>
-                          )}
-                        </select>
-                      </div>
+                          ))
+                        ) : (
+                          <option value="">
+                            {t.noVariant || "Không có biến thể"}
+                          </option>
+                        )}
+                      </select>
                     </div>
 
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "160px 1fr",
-                        gap: 14,
-                        alignItems: "center",
-                        marginBottom: 24,
-                      }}
-                    >
-                      <div
-                        style={{
-                          color: "#6b7280",
-                          fontWeight: 700,
-                        }}
-                      >
+                    <div className="product-detail-option-row quantity-row">
+                      <div className="product-detail-option-label">
                         {t.quantity || "Số lượng"}
                       </div>
 
-                      <div
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          border: "1px solid #e5e7eb",
-                          borderRadius: 10,
-                          overflow: "hidden",
-                          background: "#fff",
-                          width: "fit-content",
-                        }}
-                      >
+                      <div className="product-detail-qty-box">
                         <button
                           type="button"
-                          onClick={() => setQty((prev) => Math.max(1, Number(prev) - 1))}
-                          style={{
-                            width: 38,
-                            height: 38,
-                            border: "none",
-                            background: "#fff",
-                            color: "#374151",
-                            fontWeight: 700,
-                          }}
+                          onClick={() =>
+                            setQty((prev) => Math.max(1, Number(prev) - 1))
+                          }
+                          className="product-detail-qty-button"
                         >
                           -
                         </button>
@@ -734,67 +577,36 @@ export default function DetailProductPage() {
                           onChange={(e) =>
                             setQty(Math.max(1, Number(e.target.value || 1)))
                           }
-                          style={{
-                            width: 60,
-                            height: 38,
-                            border: "none",
-                            borderLeft: "1px solid #e5e7eb",
-                            borderRight: "1px solid #e5e7eb",
-                            textAlign: "center",
-                            outline: "none",
-                            color: "#111827",
-                          }}
+                          className="product-detail-qty-input"
                         />
 
                         <button
                           type="button"
                           onClick={() => setQty((prev) => Number(prev) + 1)}
-                          style={{
-                            width: 38,
-                            height: 38,
-                            border: "none",
-                            background: "#fff",
-                            color: "#374151",
-                            fontWeight: 700,
-                          }}
+                          className="product-detail-qty-button"
                         >
                           +
                         </button>
                       </div>
                     </div>
 
-                    <div className="d-flex gap-3 flex-wrap">
+                    <div className="product-detail-actions">
                       <button
+                        type="button"
                         onClick={addToCart}
                         disabled={addingCart || !variantId}
-                        style={{
-                          minWidth: 220,
-                          height: 48,
-                          borderRadius: 10,
-                          border: "1px solid #ee4d2d",
-                          background: "#fff1ee",
-                          color: "#ee4d2d",
-                          fontWeight: 800,
-                        }}
+                        className="product-detail-action-button product-detail-add-cart"
                       >
                         <i className="bi bi-cart-plus me-2"></i>
                         {addingCart
-                          ? (t.adding || "Đang thêm...")
-                          : (t.addToCart || "Thêm vào giỏ hàng")}
+                          ? t.adding || "Đang thêm..."
+                          : t.addToCart || "Thêm vào giỏ hàng"}
                       </button>
 
                       <button
                         type="button"
                         onClick={handleChatProduct}
-                        style={{
-                          minWidth: 220,
-                          height: 48,
-                          borderRadius: 10,
-                          border: "1px solid #ee4d2d",
-                          background: "#ffffff",
-                          color: "#ee4d2d",
-                          fontWeight: 800,
-                        }}
+                        className="product-detail-action-button product-detail-chat"
                       >
                         <i className="bi bi-chat-dots me-2"></i>
                         {t.chatAdvice || "Chat tư vấn sản phẩm"}
@@ -802,47 +614,21 @@ export default function DetailProductPage() {
 
                       <Link
                         to="/cart"
-                        style={{
-                          minWidth: 180,
-                          height: 48,
-                          borderRadius: 10,
-                          border: "none",
-                          background: "#ee4d2d",
-                          color: "#fff",
-                          fontWeight: 800,
-                          display: "inline-flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          textDecoration: "none",
-                        }}
+                        className="product-detail-action-button product-detail-view-cart"
                       >
                         <i className="bi bi-bag-check me-2"></i>
                         {t.viewCart || "Xem giỏ hàng"}
                       </Link>
                     </div>
 
-                    <div
-                      style={{
-                        marginTop: 24,
-                        paddingTop: 20,
-                        borderTop: "1px solid #f1f5f9",
-                        display: "grid",
-                        gap: 8,
-                        color: "#4b5563",
-                        lineHeight: 1.8,
-                        fontSize: 14,
-                      }}
-                    >
+                    <div className="product-detail-meta">
                       <div>
-                        <strong style={{ color: "#111827" }}>
-                          {t.numberOfVariants || "Số biến thể:"}
-                        </strong>{" "}
+                        <strong>{t.numberOfVariants || "Số biến thể:"}</strong>{" "}
                         {p.variants?.length || 0}
                       </div>
+
                       <div>
-                        <strong style={{ color: "#111827" }}>
-                          {t.numberOfImages || "Số ảnh:"}
-                        </strong>{" "}
+                        <strong>{t.numberOfImages || "Số ảnh:"}</strong>{" "}
                         {imageList.length}
                       </div>
                     </div>
@@ -852,98 +638,53 @@ export default function DetailProductPage() {
 
               <div className="row g-4 mt-2">
                 <div className="col-lg-7">
-                  <div style={{ ...pageCard, padding: 24 }}>
-                    <h3
-                      style={{
-                        color: "#111827",
-                        fontWeight: 800,
-                        marginBottom: 20,
-                        fontSize: 24,
-                      }}
-                    >
+                  <div className="product-detail-card product-detail-review-card">
+                    <h3 className="product-detail-section-title">
                       {t.productReviews || "Đánh giá sản phẩm"}
                     </h3>
 
                     {reviewErr && (
                       <div
-                        className="alert mb-3"
+                        className="product-detail-alert product-detail-alert-warning"
                         role="alert"
-                        style={{
-                          background: "#fff7ed",
-                          color: "#9a3412",
-                          border: "1px solid #fed7aa",
-                          borderRadius: 12,
-                        }}
                       >
                         {reviewErr}
                       </div>
                     )}
 
                     {(translatedReviews || []).length === 0 ? (
-                      <div
-                        style={{
-                          background: "#fafafa",
-                          borderRadius: 14,
-                          padding: 20,
-                          color: "#6b7280",
-                        }}
-                      >
+                      <div className="product-detail-empty-box">
                         {t.noReviews || "Chưa có đánh giá nào cho sản phẩm này."}
                       </div>
                     ) : (
-                      <div className="d-grid gap-3">
-                        {(translatedReviews || []).map((r) => (
+                      <div className="product-detail-review-list">
+                        {(translatedReviews || []).map((review) => (
                           <div
-                            key={r.id}
-                            style={{
-                              border: "1px solid #e5e7eb",
-                              borderRadius: 16,
-                              padding: 18,
-                              background: "#fff",
-                            }}
+                            key={review.id}
+                            className="product-detail-review-item"
                           >
-                            <div
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                gap: 12,
-                                flexWrap: "wrap",
-                                marginBottom: 8,
-                              }}
-                            >
-                              <div
-                                style={{
-                                  fontWeight: 800,
-                                  color: "#111827",
-                                }}
-                              >
-                                <span style={{ color: "#f59e0b" }}>
-                                  {"★".repeat(Number(r.rating || 0))}
+                            <div className="product-detail-review-head">
+                              <div className="product-detail-review-title">
+                                <span className="product-detail-stars">
+                                  {"★".repeat(Number(review.rating || 0))}
                                 </span>{" "}
-                                {r.translatedTitle || normalizeDisplayText(r.title)}
+                                {review.translatedTitle ||
+                                  normalizeDisplayText(review.title)}
                               </div>
                             </div>
 
-                            <div style={{ color: "#4b5563", lineHeight: 1.7 }}>
-                              {r.translatedContent || normalizeDisplayText(r.content)}
+                            <div className="product-detail-review-content">
+                              {review.translatedContent ||
+                                normalizeDisplayText(review.content)}
                             </div>
 
-                            {r.replyContent && (
-                              <div
-                                style={{
-                                  marginTop: 12,
-                                  padding: 12,
-                                  background: "#fff7ed",
-                                  borderRadius: 12,
-                                  color: "#9a3412",
-                                  border: "1px solid #fed7aa",
-                                }}
-                              >
+                            {review.replyContent && (
+                              <div className="product-detail-shop-reply">
                                 <strong>
                                   {t.shopReply || "Phản hồi từ shop:"}
                                 </strong>{" "}
-                                {r.translatedReplyContent ||
-                                  normalizeDisplayText(r.replyContent)}
+                                {review.translatedReplyContent ||
+                                  normalizeDisplayText(review.replyContent)}
                               </div>
                             )}
                           </div>
@@ -954,90 +695,67 @@ export default function DetailProductPage() {
                 </div>
 
                 <div className="col-lg-5">
-                  <div style={{ ...pageCard, padding: 24 }}>
-                    <h3
-                      style={{
-                        color: "#111827",
-                        fontWeight: 800,
-                        marginBottom: 20,
-                        fontSize: 24,
-                      }}
-                    >
+                  <div className="product-detail-card product-detail-review-card">
+                    <h3 className="product-detail-section-title">
                       {t.writeReview || "Viết đánh giá"}
                     </h3>
 
                     {!token ? (
-                      <div
-                        style={{
-                          background: "#fafafa",
-                          borderRadius: 14,
-                          padding: 16,
-                          color: "#4b5563",
-                          lineHeight: 1.7,
-                        }}
-                      >
+                      <div className="product-detail-login-box">
                         {t.loginRequiredPrefix || "Bạn cần "}
-                        <Link
-                          to="/login"
-                          style={{
-                            fontWeight: 700,
-                            color: "#ee4d2d",
-                            textDecoration: "none",
-                          }}
-                        >
-                          {t.login || "đăng nhập"}
-                        </Link>
+                        <Link to="/login">{t.login || "đăng nhập"}</Link>
                         {t.loginRequiredSuffix || " để gửi đánh giá."}
                       </div>
                     ) : (
                       <div className="d-grid gap-3">
                         <div>
-                          <label
-                            className="form-label"
-                            style={{ color: "#111827", fontWeight: 700 }}
-                          >
+                          <label className="form-label product-detail-form-label">
                             {t.rating || "Số sao"}
                           </label>
+
                           <input
                             type="number"
                             min={1}
                             max={5}
-                            className="form-control"
+                            className="form-control product-detail-input"
                             value={rv.rating}
                             onChange={(e) =>
-                              setRv({ ...rv, rating: Number(e.target.value) })
+                              setRv({
+                                ...rv,
+                                rating: Number(e.target.value),
+                              })
                             }
-                            style={inputStyle}
                           />
                         </div>
 
                         <div>
-                          <label
-                            className="form-label"
-                            style={{ color: "#111827", fontWeight: 700 }}
-                          >
+                          <label className="form-label product-detail-form-label">
                             {t.title || "Tiêu đề"}
                           </label>
+
                           <input
-                            className="form-control"
-                            placeholder={t.reviewTitlePlaceholder || "Nhập tiêu đề đánh giá"}
+                            className="form-control product-detail-input"
+                            placeholder={
+                              t.reviewTitlePlaceholder ||
+                              "Nhập tiêu đề đánh giá"
+                            }
                             value={rv.title}
                             onChange={(e) =>
-                              setRv({ ...rv, title: e.target.value })
+                              setRv({
+                                ...rv,
+                                title: e.target.value,
+                              })
                             }
-                            style={inputStyle}
                           />
                         </div>
 
                         <div>
-                          <label
-                            className="form-label"
-                            style={{ color: "#111827", fontWeight: 700 }}
-                          >
+                          <label className="form-label product-detail-form-label">
                             {t.content || "Nội dung"}
                           </label>
+
                           <textarea
-                            className="form-control"
+                            className="form-control product-detail-textarea"
                             rows={5}
                             placeholder={
                               t.reviewContentPlaceholder ||
@@ -1045,32 +763,23 @@ export default function DetailProductPage() {
                             }
                             value={rv.content}
                             onChange={(e) =>
-                              setRv({ ...rv, content: e.target.value })
+                              setRv({
+                                ...rv,
+                                content: e.target.value,
+                              })
                             }
-                            style={{
-                              borderRadius: 10,
-                              color: "#111827",
-                              border: "1px solid #e5e7eb",
-                              boxShadow: "none",
-                            }}
                           />
                         </div>
 
                         <button
+                          type="button"
                           onClick={submitReview}
                           disabled={submittingReview}
-                          style={{
-                            height: 48,
-                            borderRadius: 10,
-                            border: "none",
-                            background: "#ee4d2d",
-                            color: "#fff",
-                            fontWeight: 800,
-                          }}
+                          className="product-detail-submit-review"
                         >
                           {submittingReview
-                            ? (t.submitting || "Đang gửi...")
-                            : (t.submitReview || "Gửi đánh giá")}
+                            ? t.submitting || "Đang gửi..."
+                            : t.submitReview || "Gửi đánh giá"}
                         </button>
                       </div>
                     )}

@@ -1,23 +1,26 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { adminReviewsService } from "../../services/admin/adminReviewsService";
 
 const PAGE_SIZE = 5;
 
 const getErrorMessage = (ex, fallback) => {
   const data = ex?.response?.data;
+
   if (typeof data === "string") return data;
   if (data?.message) return data.message;
   if (data?.title) return data.title;
+
   if (data?.errors) {
     const firstError = Object.values(data.errors)?.flat?.()[0];
     if (firstError) return firstError;
   }
+
   return fallback;
 };
 
 const renderStars = (rating) => {
-  const safeRating = Number(rating || 0);
-  return "★".repeat(safeRating) + "☆".repeat(Math.max(0, 5 - safeRating));
+  const safeRating = Math.max(0, Math.min(5, Number(rating || 0)));
+  return "★".repeat(safeRating) + "☆".repeat(5 - safeRating);
 };
 
 export default function AdminReviewsPage() {
@@ -33,7 +36,7 @@ export default function AdminReviewsPage() {
   const [replyContent, setReplyContent] = useState("");
   const [sendingReply, setSendingReply] = useState(false);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     setErr("");
 
@@ -45,11 +48,11 @@ export default function AdminReviewsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -60,9 +63,9 @@ export default function AdminReviewsPage() {
 
     if (!keyword) return list;
 
-    return list.filter((r) =>
-      String(r.productId ?? "").toLowerCase().includes(keyword)
-    );
+    return list.filter((review) => {
+      return String(review.productId ?? "").toLowerCase().includes(keyword);
+    });
   }, [list, productKeyword]);
 
   const totalPages = Math.max(1, Math.ceil(filteredReviews.length / PAGE_SIZE));
@@ -96,12 +99,15 @@ export default function AdminReviewsPage() {
 
     try {
       setSendingReply(true);
+
       await adminReviewsService.reply(selectedReview.id, {
         content: replyContent.trim(),
       });
 
-      setMsg("Đã phản hồi đánh giá #" + selectedReview.id);
+      setMsg(`Đã phản hồi đánh giá #${selectedReview.id}`);
+
       closeReplyModal();
+
       await load();
     } catch (ex) {
       setErr(getErrorMessage(ex, "Phản hồi đánh giá thất bại"));
@@ -112,69 +118,53 @@ export default function AdminReviewsPage() {
 
   const goToPage = (page) => {
     if (page < 1 || page > totalPages) return;
+
     setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   };
 
   return (
-    <div>
-      <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div className="admin-reviews-page">
+      <div className="admin-reviews-header">
         <div>
-          <h2
-            style={{
-              marginBottom: 6,
-              color: "#0f172a",
-              fontWeight: 700,
-            }}
-          >
-            Quản lý đánh giá
-          </h2>
-          <p style={{ marginBottom: 0, color: "#64748b" }}>
-            Xem danh sách đánh giá, tìm theo mã sản phẩm và phản hồi trực tiếp cho
-            người dùng.
+          <h2 className="admin-reviews-title">Quản lý đánh giá</h2>
+
+          <p className="admin-reviews-desc">
+            Xem danh sách đánh giá, tìm theo mã sản phẩm và phản hồi trực tiếp
+            cho người dùng.
           </p>
         </div>
 
         <button
+          type="button"
           onClick={load}
-          className="btn btn-outline-primary"
-          style={{ borderRadius: 12, height: 42 }}
+          className="btn btn-outline-primary admin-reviews-reload-btn"
         >
           Tải lại
         </button>
       </div>
 
-      <div
-        className="mb-4"
-        style={{
-          background: "#fff",
-          borderRadius: 18,
-          padding: 18,
-          boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
-        }}
-      >
+      <div className="admin-reviews-filter-card">
         <div className="row g-3 align-items-end">
           <div className="col-md-6 col-lg-5">
-            <label
-              className="form-label"
-              style={{ color: "#111827", fontWeight: 600 }}
-            >
+            <label className="form-label admin-reviews-label">
               Tìm theo mã sản phẩm
             </label>
+
             <input
-              className="form-control"
+              className="form-control admin-reviews-input"
               placeholder="Nhập mã sản phẩm..."
               value={productKeyword}
               onChange={(e) => setProductKeyword(e.target.value)}
-              style={{ height: 44, borderRadius: 12, color: "#111827" }}
             />
           </div>
 
           <div className="col-md-6 col-lg-7">
-            <div
-              className="d-flex flex-wrap gap-3"
-              style={{ color: "#64748b", fontWeight: 500 }}
-            >
+            <div className="admin-reviews-stats">
               <span>Tổng đánh giá: {list.length}</span>
               <span>Kết quả tìm được: {filteredReviews.length}</span>
               <span>
@@ -198,61 +188,45 @@ export default function AdminReviewsPage() {
       )}
 
       {loading ? (
-        <div className="text-center py-5">
+        <div className="admin-reviews-loading">
           <div className="spinner-border text-info" role="status"></div>
-          <p className="mt-3 mb-0">Đang tải danh sách đánh giá...</p>
+
+          <p className="admin-reviews-loading-text">
+            Đang tải danh sách đánh giá...
+          </p>
         </div>
       ) : filteredReviews.length === 0 ? (
-        <div
-          style={{
-            background: "#fff",
-            borderRadius: 20,
-            padding: 28,
-            boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
-            color: "#475569",
-          }}
-        >
+        <div className="admin-reviews-empty">
           Không tìm thấy đánh giá nào phù hợp.
         </div>
       ) : (
         <>
-          <div className="d-grid gap-3">
-            {pagedReviews.map((r) => (
+          <div className="admin-reviews-list">
+            {pagedReviews.map((review) => (
               <div
-                key={r.id}
-                style={{
-                  background: "#fff",
-                  borderRadius: 20,
-                  padding: 22,
-                  boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
-                  cursor: "pointer",
-                  transition: "all 0.2s ease",
-                }}
-                onClick={() => openReplyModal(r)}
+                key={review.id}
+                className="admin-reviews-card"
+                onClick={() => openReplyModal(review)}
               >
-                <div className="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
+                <div className="admin-reviews-card-head">
                   <div>
-                    <h5
-                      style={{
-                        marginBottom: 8,
-                        color: "#0f172a",
-                        fontWeight: 700,
-                      }}
-                    >
-                      Đánh giá #{r.id}
+                    <h5 className="admin-reviews-card-title">
+                      Đánh giá #{review.id}
                     </h5>
 
-                    <div style={{ color: "#475569", lineHeight: 1.8 }}>
+                    <div className="admin-reviews-meta">
                       <div>
-                        <strong>Mã sản phẩm:</strong> {r.productId}
+                        <strong>Mã sản phẩm:</strong> {review.productId}
                       </div>
+
                       <div>
-                        <strong>Mã người dùng:</strong> {r.userId}
+                        <strong>Mã người dùng:</strong> {review.userId}
                       </div>
+
                       <div>
-                        <strong>Số sao:</strong> {r.rating}{" "}
-                        <span style={{ color: "#f59e0b", marginLeft: 6 }}>
-                          {renderStars(r.rating)}
+                        <strong>Số sao:</strong> {review.rating}
+                        <span className="admin-reviews-stars">
+                          {renderStars(review.rating)}
                         </span>
                       </div>
                     </div>
@@ -260,116 +234,79 @@ export default function AdminReviewsPage() {
 
                   <div className="text-end">
                     <span
-                      style={{
-                        display: "inline-block",
-                        background: r.replyContent ? "#dcfce7" : "#e0f2fe",
-                        color: r.replyContent ? "#166534" : "#075985",
-                        padding: "6px 12px",
-                        borderRadius: 999,
-                        fontSize: 13,
-                        fontWeight: 600,
-                      }}
+                      className={`admin-reviews-reply-badge ${
+                        review.replyContent ? "replied" : "not-replied"
+                      }`}
                     >
-                      {r.replyContent ? "Đã phản hồi" : "Chưa phản hồi"}
+                      {review.replyContent ? "Đã phản hồi" : "Chưa phản hồi"}
                     </span>
                   </div>
                 </div>
 
-                <div
-                  style={{
-                    background: "#f8fafc",
-                    borderRadius: 16,
-                    padding: 16,
-                    marginBottom: 14,
-                  }}
-                >
-                  <div
-                    style={{
-                      color: "#0f172a",
-                      fontWeight: 700,
-                      marginBottom: 8,
-                    }}
-                  >
-                    {r.title || "Không có tiêu đề"}
+                <div className="admin-reviews-content-box">
+                  <div className="admin-reviews-content-title">
+                    {review.title || "Không có tiêu đề"}
                   </div>
 
-                  <div style={{ color: "#475569", lineHeight: 1.7 }}>
-                    {r.content || "Không có nội dung"}
+                  <div className="admin-reviews-content-text">
+                    {review.content || "Không có nội dung"}
                   </div>
                 </div>
 
-                {r.replyContent && (
-                  <div
-                    style={{
-                      background: "#eef6ff",
-                      borderRadius: 16,
-                      padding: 16,
-                      border: "1px solid #dbeafe",
-                      marginBottom: 14,
-                    }}
-                  >
-                    <div
-                      style={{
-                        color: "#1d4ed8",
-                        fontWeight: 700,
-                        marginBottom: 8,
-                      }}
-                    >
+                {review.replyContent && (
+                  <div className="admin-reviews-current-reply">
+                    <div className="admin-reviews-current-reply-title">
                       Phản hồi hiện tại
                     </div>
-                    <div style={{ color: "#334155", lineHeight: 1.7 }}>
-                      {r.replyContent}
+
+                    <div className="admin-reviews-current-reply-text">
+                      {review.replyContent}
                     </div>
                   </div>
                 )}
 
-                <div className="d-flex justify-content-end">
+                <div className="admin-reviews-card-actions">
                   <button
                     type="button"
-                    className="btn btn-primary"
-                    style={{ borderRadius: 12, fontWeight: 600 }}
+                    className="btn btn-primary admin-reviews-reply-btn"
                     onClick={(e) => {
                       e.stopPropagation();
-                      openReplyModal(r);
+                      openReplyModal(review);
                     }}
                   >
-                    {r.replyContent ? "Sửa phản hồi" : "Phản hồi"}
+                    {review.replyContent ? "Sửa phản hồi" : "Phản hồi"}
                   </button>
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mt-4">
-            <div style={{ color: "#64748b", fontWeight: 500 }}>
+          <div className="admin-reviews-pagination-wrap">
+            <div className="admin-reviews-limit-text">
               Hiển thị tối đa {PAGE_SIZE} đánh giá mỗi trang
             </div>
 
-            <div className="d-flex align-items-center gap-2 flex-wrap">
+            <div className="admin-reviews-pagination">
               <button
-                className="btn btn-outline-secondary btn-sm"
+                type="button"
+                className="btn btn-outline-secondary btn-sm admin-reviews-page-btn"
                 onClick={() => goToPage(safeCurrentPage - 1)}
                 disabled={safeCurrentPage === 1}
-                style={{ borderRadius: 10, fontWeight: 600 }}
               >
                 Trang trước
               </button>
 
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+              {Array.from({ length: totalPages }, (_, index) => index + 1).map(
                 (page) => (
                   <button
                     key={page}
-                    className={`btn btn-sm ${
+                    type="button"
+                    onClick={() => goToPage(page)}
+                    className={`btn btn-sm admin-reviews-page-btn ${
                       safeCurrentPage === page
-                        ? "btn-primary"
+                        ? "active"
                         : "btn-outline-primary"
                     }`}
-                    onClick={() => goToPage(page)}
-                    style={{
-                      minWidth: 40,
-                      borderRadius: 10,
-                      fontWeight: 600,
-                    }}
                   >
                     {page}
                   </button>
@@ -377,10 +314,10 @@ export default function AdminReviewsPage() {
               )}
 
               <button
-                className="btn btn-outline-secondary btn-sm"
+                type="button"
+                className="btn btn-outline-secondary btn-sm admin-reviews-page-btn"
                 onClick={() => goToPage(safeCurrentPage + 1)}
                 disabled={safeCurrentPage === totalPages}
-                style={{ borderRadius: 10, fontWeight: 600 }}
               >
                 Trang sau
               </button>
@@ -390,51 +327,18 @@ export default function AdminReviewsPage() {
       )}
 
       {selectedReview && (
-        <div
-          onClick={closeReplyModal}
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(15, 23, 42, 0.45)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 16,
-            zIndex: 2000,
-          }}
-        >
+        <div className="admin-reviews-modal-overlay" onClick={closeReplyModal}>
           <div
+            className="admin-reviews-modal"
             onClick={(e) => e.stopPropagation()}
-            style={{
-              width: "100%",
-              maxWidth: 720,
-              background: "#fff",
-              borderRadius: 24,
-              boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
-              overflow: "hidden",
-            }}
           >
-            <div
-              style={{
-                padding: "20px 24px",
-                borderBottom: "1px solid #e5e7eb",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                gap: 12,
-              }}
-            >
+            <div className="admin-reviews-modal-head">
               <div>
-                <h4
-                  style={{
-                    margin: 0,
-                    color: "#0f172a",
-                    fontWeight: 700,
-                  }}
-                >
+                <h4 className="admin-reviews-modal-title">
                   Phản hồi đánh giá #{selectedReview.id}
                 </h4>
-                <p style={{ margin: "6px 0 0", color: "#64748b" }}>
+
+                <p className="admin-reviews-modal-subtitle">
                   Người dùng #{selectedReview.userId} · Sản phẩm #
                   {selectedReview.productId}
                 </p>
@@ -443,75 +347,47 @@ export default function AdminReviewsPage() {
               <button
                 type="button"
                 onClick={closeReplyModal}
-                className="btn btn-light"
-                style={{ borderRadius: 12, fontWeight: 700 }}
+                className="btn btn-light admin-reviews-modal-close"
               >
                 Đóng
               </button>
             </div>
 
-            <div style={{ padding: 24 }}>
-              <div
-                style={{
-                  background: "#f8fafc",
-                  borderRadius: 16,
-                  padding: 16,
-                  marginBottom: 18,
-                }}
-              >
-                <div
-                  style={{
-                    color: "#0f172a",
-                    fontWeight: 700,
-                    marginBottom: 8,
-                  }}
-                >
+            <div className="admin-reviews-modal-body">
+              <div className="admin-reviews-modal-review-box">
+                <div className="admin-reviews-modal-review-title">
                   {selectedReview.title || "Không có tiêu đề"}
                 </div>
 
-                <div
-                  style={{
-                    color: "#475569",
-                    lineHeight: 1.7,
-                    marginBottom: 10,
-                  }}
-                >
+                <div className="admin-reviews-modal-review-content">
                   {selectedReview.content || "Không có nội dung"}
                 </div>
 
-                <div style={{ color: "#f59e0b", fontWeight: 700 }}>
-                  {renderStars(selectedReview.rating)} ({selectedReview.rating}/5)
+                <div className="admin-reviews-modal-stars">
+                  {renderStars(selectedReview.rating)} ({selectedReview.rating}
+                  /5)
                 </div>
               </div>
 
               <div>
-                <label
-                  className="form-label"
-                  style={{ color: "#111827", fontWeight: 600 }}
-                >
+                <label className="form-label admin-reviews-label">
                   Nội dung phản hồi
                 </label>
 
                 <textarea
-                  className="form-control"
+                  className="form-control admin-reviews-textarea"
                   rows={6}
                   placeholder="Nhập nội dung phản hồi cho người dùng..."
                   value={replyContent}
                   onChange={(e) => setReplyContent(e.target.value)}
-                  style={{
-                    borderRadius: 14,
-                    color: "#111827",
-                    marginBottom: 16,
-                  }}
                 />
               </div>
 
-              <div className="d-flex justify-content-end gap-2">
+              <div className="admin-reviews-modal-actions">
                 <button
                   type="button"
                   onClick={closeReplyModal}
-                  className="btn btn-outline-secondary"
-                  style={{ borderRadius: 12, fontWeight: 600 }}
+                  className="btn btn-outline-secondary admin-reviews-modal-btn"
                 >
                   Hủy
                 </button>
@@ -520,8 +396,7 @@ export default function AdminReviewsPage() {
                   type="button"
                   onClick={submitReply}
                   disabled={sendingReply}
-                  className="btn btn-primary"
-                  style={{ borderRadius: 12, fontWeight: 600 }}
+                  className="btn btn-primary admin-reviews-modal-btn"
                 >
                   {sendingReply ? "Đang gửi..." : "Gửi phản hồi"}
                 </button>

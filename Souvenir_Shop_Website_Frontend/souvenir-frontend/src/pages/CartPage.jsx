@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import { cartService } from "../services/cartService";
@@ -19,7 +19,7 @@ const getImageSrc = (url) => {
 
 const formatPrice = (value) => {
   if (value === null || value === undefined) return "0 ₫";
-  return Number(value).toLocaleString("vi-VN") + " ₫";
+  return `${Number(value).toLocaleString("vi-VN")} ₫`;
 };
 
 const normalizeDisplayText = (value = "") => {
@@ -38,35 +38,17 @@ const getProductTitle = (item) => {
 
 const getErrorMessage = (ex, fallback) => {
   const data = ex?.response?.data;
+
   if (typeof data === "string") return data;
   if (data?.message) return data.message;
   if (data?.title) return data.title;
+
   if (data?.errors) {
     const firstError = Object.values(data.errors)?.flat?.()[0];
     if (firstError) return firstError;
   }
+
   return fallback;
-};
-
-const pageCard = {
-  background: "#ffffff",
-  borderRadius: 20,
-  boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
-};
-
-const inputStyle = {
-  height: 44,
-  borderRadius: 10,
-  color: "#111827",
-  border: "1px solid #e5e7eb",
-  boxShadow: "none",
-};
-
-const sectionTitle = {
-  color: "#111827",
-  fontWeight: 800,
-  marginBottom: 16,
-  fontSize: 20,
 };
 
 export default function CartPage() {
@@ -74,7 +56,12 @@ export default function CartPage() {
   const { language, currentLanguageName, isVietnamese } = useLanguage();
   const t = commonTranslations?.[language] || commonTranslations?.vi || {};
 
-  const [cart, setCart] = useState({ items: [], subtotal: 0, cartId: 0 });
+  const [cart, setCart] = useState({
+    items: [],
+    subtotal: 0,
+    cartId: 0,
+  });
+
   const [addresses, setAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState("");
 
@@ -91,18 +78,21 @@ export default function CartPage() {
   const [translatedItems, setTranslatedItems] = useState({});
   const [translatingCart, setTranslatingCart] = useState(false);
 
-  const translateText = async (text) => {
-    if (!text || isVietnamese) return text;
+  const translateText = useCallback(
+    async (text) => {
+      if (!text || isVietnamese) return text;
 
-    try {
-      const res = await aiService.translate(text, currentLanguageName);
-      return res?.data?.translatedText?.trim() || text;
-    } catch {
-      return text;
-    }
-  };
+      try {
+        const res = await aiService.translate(text, currentLanguageName);
+        return res?.data?.translatedText?.trim() || text;
+      } catch {
+        return text;
+      }
+    },
+    [currentLanguageName, isVietnamese]
+  );
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     setErr("");
 
@@ -112,13 +102,19 @@ export default function CartPage() {
         accountService.getAddresses(),
       ]);
 
-      const cartData = cartRes.data || { items: [], subtotal: 0, cartId: 0 };
+      const cartData = cartRes.data || {
+        items: [],
+        subtotal: 0,
+        cartId: 0,
+      };
+
       const addressData = addressRes.data || [];
 
       setCart(cartData);
       setAddresses(addressData);
 
-      const defaultAddress = addressData.find((a) => a.isDefault);
+      const defaultAddress = addressData.find((address) => address.isDefault);
+
       if (defaultAddress) {
         setSelectedAddressId(String(defaultAddress.id));
       } else if (addressData.length > 0) {
@@ -127,15 +123,17 @@ export default function CartPage() {
         setSelectedAddressId("");
       }
     } catch (ex) {
-      setErr(getErrorMessage(ex, t.cartLoadFailed || "Không thể tải giỏ hàng"));
+      setErr(
+        getErrorMessage(ex, t.cartLoadFailed || "Không thể tải giỏ hàng")
+      );
     } finally {
       setLoading(false);
     }
-  };
+  }, [t.cartLoadFailed]);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   useEffect(() => {
     let cancelled = false;
@@ -148,12 +146,17 @@ export default function CartPage() {
 
       if (isVietnamese) {
         const mapped = {};
-        (cart.items || []).forEach((it) => {
-          mapped[it.id] = {
-            productTitle: getProductTitle(it),
-            variantTitle: normalizeDisplayText(it.variantName) || (t.defaultVariant || "Mặc định"),
+
+        (cart.items || []).forEach((item) => {
+          mapped[item.id] = {
+            productTitle: getProductTitle(item),
+            variantTitle:
+              normalizeDisplayText(item.variantName) ||
+              t.defaultVariant ||
+              "Mặc định",
           };
         });
+
         setTranslatedItems(mapped);
         return;
       }
@@ -162,16 +165,23 @@ export default function CartPage() {
         setTranslatingCart(true);
 
         const entries = await Promise.all(
-          (cart.items || []).map(async (it) => {
-            const originalProductTitle = getProductTitle(it);
+          (cart.items || []).map(async (item) => {
+            const originalProductTitle = getProductTitle(item);
             const originalVariantTitle =
-              normalizeDisplayText(it.variantName) || (t.defaultVariant || "Mặc định");
+              normalizeDisplayText(item.variantName) ||
+              t.defaultVariant ||
+              "Mặc định";
 
-            const translatedProductTitle = await translateText(originalProductTitle);
-            const translatedVariantTitle = await translateText(originalVariantTitle);
+            const translatedProductTitle = await translateText(
+              originalProductTitle
+            );
+
+            const translatedVariantTitle = await translateText(
+              originalVariantTitle
+            );
 
             return [
-              it.id,
+              item.id,
               {
                 productTitle: translatedProductTitle || originalProductTitle,
                 variantTitle: translatedVariantTitle || originalVariantTitle,
@@ -184,7 +194,9 @@ export default function CartPage() {
           setTranslatedItems(Object.fromEntries(entries));
         }
       } finally {
-        if (!cancelled) setTranslatingCart(false);
+        if (!cancelled) {
+          setTranslatingCart(false);
+        }
       }
     };
 
@@ -193,7 +205,7 @@ export default function CartPage() {
     return () => {
       cancelled = true;
     };
-  }, [cart.items, language]);
+  }, [cart.items, isVietnamese, t.defaultVariant, translateText]);
 
   const discountAmount = couponInfo?.isValid
     ? Number(couponInfo.discountAmount || 0)
@@ -214,7 +226,12 @@ export default function CartPage() {
       await load();
       setMsg(t.cartQtyUpdated || "Đã cập nhật số lượng sản phẩm");
     } catch (ex) {
-      setErr(getErrorMessage(ex, t.cartQtyUpdateFailed || "Cập nhật số lượng thất bại"));
+      setErr(
+        getErrorMessage(
+          ex,
+          t.cartQtyUpdateFailed || "Cập nhật số lượng thất bại"
+        )
+      );
     }
   };
 
@@ -227,7 +244,9 @@ export default function CartPage() {
       await load();
       setMsg(t.cartItemRemoved || "Đã xóa sản phẩm khỏi giỏ hàng");
     } catch (ex) {
-      setErr(getErrorMessage(ex, t.cartRemoveFailed || "Xóa sản phẩm thất bại"));
+      setErr(
+        getErrorMessage(ex, t.cartRemoveFailed || "Xóa sản phẩm thất bại")
+      );
     }
   };
 
@@ -243,19 +262,28 @@ export default function CartPage() {
 
     try {
       setCheckingCoupon(true);
+
       const res = await couponService.validate({
         code: couponCode.trim(),
         subtotal: cart.subtotal,
       });
+
       setCouponInfo(res.data);
 
       if (res.data?.isValid) {
         setMsg(t.cartCouponValid || "Mã giảm giá hợp lệ");
       } else {
-        setErr(res.data?.message || (t.cartCouponInvalid || "Mã giảm giá không hợp lệ"));
+        setErr(
+          res.data?.message || t.cartCouponInvalid || "Mã giảm giá không hợp lệ"
+        );
       }
     } catch (ex) {
-      setErr(getErrorMessage(ex, t.cartCouponCheckFailed || "Kiểm tra mã giảm giá thất bại"));
+      setErr(
+        getErrorMessage(
+          ex,
+          t.cartCouponCheckFailed || "Kiểm tra mã giảm giá thất bại"
+        )
+      );
     } finally {
       setCheckingCoupon(false);
     }
@@ -289,9 +317,12 @@ export default function CartPage() {
 
       const res = await orderService.create(payload);
       const orderCode = res.data.orderCode;
+
       nav(`/payment/${orderCode}`);
     } catch (ex) {
-      setErr(getErrorMessage(ex, t.cartCheckoutFailed || "Tạo đơn hàng thất bại"));
+      setErr(
+        getErrorMessage(ex, t.cartCheckoutFailed || "Tạo đơn hàng thất bại")
+      );
     } finally {
       setCheckingOut(false);
     }
@@ -299,154 +330,59 @@ export default function CartPage() {
 
   return (
     <MainLayout>
-      <section
-        className="section"
-        style={{
-          background: "#f5f5f5",
-          minHeight: "100vh",
-          paddingTop: 32,
-          paddingBottom: 48,
-        }}
-      >
+      <section className="section cart-page-section">
         <div className="container">
-          <div
-            style={{
-              ...pageCard,
-              padding: 24,
-              marginBottom: 20,
-              borderLeft: "5px solid #ee4d2d",
-            }}
-          >
-            <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
+          <div className="cart-card cart-header-card">
+            <div className="cart-header-top">
               <div>
-                <div
-                  style={{
-                    fontSize: 14,
-                    color: "#6b7280",
-                    marginBottom: 8,
-                    fontWeight: 600,
-                  }}
-                >
+                <div className="cart-kicker">
                   {t.cartHeaderSmall || "Giỏ hàng SouVN"}
                 </div>
 
-                <h2
-                  style={{
-                    margin: 0,
-                    fontWeight: 800,
-                    color: "#111827",
-                    fontSize: "clamp(24px, 4vw, 34px)",
-                    textTransform: "none",
-                    letterSpacing: 0,
-                  }}
-                >
+                <h2 className="cart-title">
                   {t.cartHeaderTitle || "Giỏ hàng của bạn"}
                 </h2>
               </div>
 
-              <div
-                style={{
-                  fontSize: 14,
-                  color: "#6b7280",
-                  fontWeight: 600,
-                }}
-              >
+              <div className="cart-count">
                 {t.cartItemCount || "Số sản phẩm:"}{" "}
-                <span style={{ color: "#ee4d2d" }}>{cart.items?.length || 0}</span>
+                <span>{cart.items?.length || 0}</span>
               </div>
             </div>
           </div>
 
           {translatingCart && !loading && (
-            <div
-              className="alert mb-4"
-              style={{
-                background: "#eff6ff",
-                color: "#1d4ed8",
-                border: "1px solid #bfdbfe",
-                borderRadius: 12,
-              }}
-            >
+            <div className="cart-alert cart-alert-info">
               {t.translating || "Đang dịch nội dung sang ngôn ngữ đã chọn..."}
             </div>
           )}
 
-          {err && (
-            <div
-              className="alert mb-4"
-              style={{
-                background: "#fef2f2",
-                color: "#b91c1c",
-                border: "1px solid #fecaca",
-                borderRadius: 12,
-              }}
-            >
-              {err}
-            </div>
-          )}
+          {err && <div className="cart-alert cart-alert-error">{err}</div>}
 
-          {msg && (
-            <div
-              className="alert mb-4"
-              style={{
-                background: "#ecfdf5",
-                color: "#047857",
-                border: "1px solid #a7f3d0",
-                borderRadius: 12,
-              }}
-            >
-              {msg}
-            </div>
-          )}
+          {msg && <div className="cart-alert cart-alert-success">{msg}</div>}
 
           {loading ? (
-            <div style={{ ...pageCard, padding: 40 }} className="text-center">
+            <div className="cart-card cart-loading-card">
               <div className="spinner-border text-danger" role="status"></div>
-              <p className="mt-3 mb-0" style={{ color: "#6b7280" }}>
+              <p className="cart-loading-text">
                 {t.cartLoading || "Đang tải giỏ hàng..."}
               </p>
             </div>
           ) : (cart.items || []).length === 0 ? (
-            <div
-              style={{
-                ...pageCard,
-                padding: 40,
-                textAlign: "center",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 54,
-                  color: "#d1d5db",
-                  marginBottom: 12,
-                }}
-              >
+            <div className="cart-card cart-empty-card">
+              <div className="cart-empty-icon">
                 <i className="bi bi-cart-x"></i>
               </div>
 
-              <h4 style={{ color: "#111827", fontWeight: 700 }}>
+              <h4 className="cart-empty-title">
                 {t.cartEmptyTitle || "Giỏ hàng đang trống"}
               </h4>
-              <p style={{ color: "#6b7280", marginBottom: 20 }}>
+
+              <p className="cart-empty-desc">
                 {t.cartEmptyDesc || "Bạn chưa thêm sản phẩm nào vào giỏ hàng."}
               </p>
 
-              <Link
-                to="/products"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
-                  padding: "12px 18px",
-                  borderRadius: 10,
-                  border: "none",
-                  background: "#ee4d2d",
-                  color: "#fff",
-                  fontWeight: 700,
-                  textDecoration: "none",
-                }}
-              >
+              <Link to="/products" className="cart-main-button">
                 <i className="bi bi-bag"></i>
                 {t.continueShopping || "Tiếp tục mua sắm"}
               </Link>
@@ -454,63 +390,32 @@ export default function CartPage() {
           ) : (
             <div className="row g-4 align-items-start">
               <div className="col-lg-8">
-                <div
-                  style={{
-                    ...pageCard,
-                    padding: 0,
-                    overflow: "hidden",
-                  }}
-                >
-                  <div
-                    style={{
-                      padding: "16px 20px",
-                      borderBottom: "1px solid #f1f5f9",
-                      background: "#fff7ed",
-                      color: "#9a3412",
-                      fontWeight: 800,
-                    }}
-                  >
+                <div className="cart-card cart-products-card">
+                  <div className="cart-products-header">
                     {t.cartSelectedProducts || "Sản phẩm đã chọn"}
                   </div>
 
-                  <div className="d-grid">
-                    {(cart.items || []).map((it, index) => {
+                  <div className="cart-items-list">
+                    {(cart.items || []).map((item) => {
                       const productTitle =
-                        translatedItems[it.id]?.productTitle || getProductTitle(it);
+                        translatedItems[item.id]?.productTitle ||
+                        getProductTitle(item);
+
                       const variantTitle =
-                        translatedItems[it.id]?.variantTitle ||
-                        normalizeDisplayText(it.variantName) ||
-                        (t.defaultVariant || "Mặc định");
+                        translatedItems[item.id]?.variantTitle ||
+                        normalizeDisplayText(item.variantName) ||
+                        t.defaultVariant ||
+                        "Mặc định";
 
                       return (
-                        <div
-                          key={it.id}
-                          style={{
-                            padding: 20,
-                            borderBottom:
-                              index !== cart.items.length - 1
-                                ? "1px solid #f1f5f9"
-                                : "none",
-                          }}
-                        >
+                        <div key={item.id} className="cart-item">
                           <div className="row g-3 align-items-center">
                             <div className="col-md-3 col-lg-2">
-                              <div
-                                style={{
-                                  background: "#f9fafb",
-                                  borderRadius: 14,
-                                  overflow: "hidden",
-                                  border: "1px solid #e5e7eb",
-                                }}
-                              >
+                              <div className="cart-image-box">
                                 <img
-                                  src={getImageSrc(it.imageUrl)}
+                                  src={getImageSrc(item.imageUrl)}
                                   alt={productTitle}
-                                  style={{
-                                    width: "100%",
-                                    height: 130,
-                                    objectFit: "cover",
-                                  }}
+                                  className="cart-item-image"
                                   onError={(e) => {
                                     e.currentTarget.src = "/no-image.png";
                                   }}
@@ -519,42 +424,18 @@ export default function CartPage() {
                             </div>
 
                             <div className="col-md-9 col-lg-4">
-                              <h5
-                                style={{
-                                  color: "#111827",
-                                  fontWeight: 700,
-                                  marginBottom: 8,
-                                  fontSize: 18,
-                                  lineHeight: 1.4,
-                                  textTransform: "none",
-                                  letterSpacing: 0,
-                                  wordBreak: "break-word",
-                                }}
-                              >
+                              <h5 className="cart-product-title">
                                 {productTitle}
                               </h5>
 
-                              <div
-                                style={{
-                                  color: "#6b7280",
-                                  fontSize: 14,
-                                  marginBottom: 8,
-                                  textTransform: "none",
-                                }}
-                              >
+                              <div className="cart-variant-text">
                                 {t.variantType || "Phân loại:"} {variantTitle}
                               </div>
 
                               <button
-                                onClick={() => removeItem(it.id)}
+                                onClick={() => removeItem(item.id)}
                                 type="button"
-                                style={{
-                                  border: "none",
-                                  background: "transparent",
-                                  color: "#ef4444",
-                                  padding: 0,
-                                  fontWeight: 600,
-                                }}
+                                className="cart-remove-button"
                               >
                                 <i className="bi bi-trash3 me-1"></i>
                                 {t.delete || "Xóa"}
@@ -562,42 +443,23 @@ export default function CartPage() {
                             </div>
 
                             <div className="col-4 col-lg-2">
-                              <div
-                                style={{
-                                  color: "#111827",
-                                  fontWeight: 700,
-                                  fontSize: 16,
-                                  whiteSpace: "nowrap",
-                                  textAlign: "right",
-                                }}
-                              >
-                                {formatPrice(it.price)}
+                              <div className="cart-price">
+                                {formatPrice(item.price)}
                               </div>
                             </div>
 
                             <div className="col-4 col-lg-2 d-flex justify-content-center">
-                              <div
-                                style={{
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  border: "1px solid #e5e7eb",
-                                  borderRadius: 10,
-                                  overflow: "hidden",
-                                  background: "#fff",
-                                }}
-                              >
+                              <div className="cart-qty-box">
                                 <button
                                   type="button"
-                                  onClick={() => updateQty(it.id, Number(it.quantity) - 1)}
-                                  disabled={Number(it.quantity) <= 1}
-                                  style={{
-                                    width: 34,
-                                    height: 34,
-                                    border: "none",
-                                    background: "#fff",
-                                    color: "#374151",
-                                    fontWeight: 700,
-                                  }}
+                                  onClick={() =>
+                                    updateQty(
+                                      item.id,
+                                      Number(item.quantity) - 1
+                                    )
+                                  }
+                                  disabled={Number(item.quantity) <= 1}
+                                  className="cart-qty-button"
                                 >
                                   -
                                 </button>
@@ -605,31 +467,25 @@ export default function CartPage() {
                                 <input
                                   type="number"
                                   min={1}
-                                  value={it.quantity}
-                                  onChange={(e) => updateQty(it.id, Number(e.target.value || 1))}
-                                  style={{
-                                    width: 52,
-                                    height: 34,
-                                    border: "none",
-                                    borderLeft: "1px solid #e5e7eb",
-                                    borderRight: "1px solid #e5e7eb",
-                                    textAlign: "center",
-                                    outline: "none",
-                                    color: "#111827",
-                                  }}
+                                  value={item.quantity}
+                                  onChange={(e) =>
+                                    updateQty(
+                                      item.id,
+                                      Number(e.target.value || 1)
+                                    )
+                                  }
+                                  className="cart-qty-input"
                                 />
 
                                 <button
                                   type="button"
-                                  onClick={() => updateQty(it.id, Number(it.quantity) + 1)}
-                                  style={{
-                                    width: 34,
-                                    height: 34,
-                                    border: "none",
-                                    background: "#fff",
-                                    color: "#374151",
-                                    fontWeight: 700,
-                                  }}
+                                  onClick={() =>
+                                    updateQty(
+                                      item.id,
+                                      Number(item.quantity) + 1
+                                    )
+                                  }
+                                  className="cart-qty-button"
                                 >
                                   +
                                 </button>
@@ -637,16 +493,8 @@ export default function CartPage() {
                             </div>
 
                             <div className="col-4 col-lg-2">
-                              <div
-                                style={{
-                                  color: "#ee4d2d",
-                                  fontWeight: 800,
-                                  fontSize: 18,
-                                  textAlign: "right",
-                                  whiteSpace: "nowrap",
-                                }}
-                              >
-                                {formatPrice(it.lineTotal)}
+                              <div className="cart-line-total">
+                                {formatPrice(item.lineTotal)}
                               </div>
                             </div>
                           </div>
@@ -658,53 +506,41 @@ export default function CartPage() {
               </div>
 
               <div className="col-lg-4">
-                <div style={{ ...pageCard, padding: 20, marginBottom: 16 }}>
-                  <h4 style={sectionTitle}>{t.couponTitle || "Mã giảm giá"}</h4>
+                <div className="cart-card cart-side-card">
+                  <h4 className="cart-section-title">
+                    {t.couponTitle || "Mã giảm giá"}
+                  </h4>
 
                   <div className="d-flex gap-2">
                     <input
-                      className="form-control"
+                      className="form-control cart-input"
                       placeholder={t.couponPlaceholder || "Nhập mã giảm giá"}
                       value={couponCode}
                       onChange={(e) => setCouponCode(e.target.value)}
-                      style={inputStyle}
                     />
 
                     <button
                       onClick={validateCoupon}
                       disabled={checkingCoupon}
-                      style={{
-                        minWidth: 110,
-                        borderRadius: 10,
-                        border: "1px solid #ee4d2d",
-                        background: "#fff",
-                        color: "#ee4d2d",
-                        fontWeight: 700,
-                      }}
+                      className="cart-apply-button"
                     >
                       {checkingCoupon
-                        ? (t.checking || "Đang kiểm tra...")
-                        : (t.apply || "Áp dụng")}
+                        ? t.checking || "Đang kiểm tra..."
+                        : t.apply || "Áp dụng"}
                     </button>
                   </div>
 
                   {couponInfo && (
                     <div
-                      className="mt-3"
-                      style={{
-                        background: couponInfo.isValid ? "#ecfdf5" : "#fef2f2",
-                        border: `1px solid ${
-                          couponInfo.isValid ? "#a7f3d0" : "#fecaca"
-                        }`,
-                        borderRadius: 12,
-                        padding: 14,
-                        color: couponInfo.isValid ? "#047857" : "#b91c1c",
-                        fontSize: 14,
-                      }}
+                      className={`cart-coupon-message ${
+                        couponInfo.isValid ? "valid" : "invalid"
+                      }`}
                     >
                       <div>
-                        <strong>{t.notice || "Thông báo:"}</strong> {couponInfo.message}
+                        <strong>{t.notice || "Thông báo:"}</strong>{" "}
+                        {couponInfo.message}
                       </div>
+
                       <div>
                         <strong>{t.discount || "Giảm giá:"}</strong>{" "}
                         {formatPrice(couponInfo.discountAmount)}
@@ -713,117 +549,82 @@ export default function CartPage() {
                   )}
                 </div>
 
-                <div style={{ ...pageCard, padding: 20, marginBottom: 16 }}>
-                  <h4 style={sectionTitle}>{t.shippingAddress || "Địa chỉ giao hàng"}</h4>
+                <div className="cart-card cart-side-card">
+                  <h4 className="cart-section-title">
+                    {t.shippingAddress || "Địa chỉ giao hàng"}
+                  </h4>
 
                   {addresses.length === 0 ? (
-                    <div
-                      style={{
-                        background: "#fff7ed",
-                        borderRadius: 12,
-                        padding: 14,
-                        color: "#9a3412",
-                        border: "1px solid #fed7aa",
-                      }}
-                    >
+                    <div className="cart-no-address">
                       {t.noShippingAddress || "Bạn chưa có địa chỉ giao hàng."}{" "}
-                      <Link
-                        to="/account"
-                        style={{
-                          fontWeight: 700,
-                          color: "#ee4d2d",
-                          textDecoration: "none",
-                        }}
-                      >
+                      <Link to="/account">
                         {t.addAddressNow || "Thêm địa chỉ ngay"}
                       </Link>
                     </div>
                   ) : (
                     <select
-                      className="form-select"
+                      className="form-select cart-input"
                       value={selectedAddressId}
                       onChange={(e) => setSelectedAddressId(e.target.value)}
-                      style={inputStyle}
                     >
                       <option value="">
                         {t.chooseShippingAddress || "Chọn địa chỉ giao hàng"}
                       </option>
-                      {addresses.map((addr) => (
-                        <option key={addr.id} value={addr.id}>
-                          {addr.recipientName} - {addr.recipientPhone} -{" "}
-                          {[addr.addressLine1, addr.district, addr.province]
+
+                      {addresses.map((address) => (
+                        <option key={address.id} value={address.id}>
+                          {address.recipientName} - {address.recipientPhone} -{" "}
+                          {[
+                            address.addressLine1,
+                            address.district,
+                            address.province,
+                          ]
                             .filter(Boolean)
                             .join(", ")}
-                          {addr.isDefault ? ` (${t.defaultAddress || "Mặc định"})` : ""}
+                          {address.isDefault
+                            ? ` (${t.defaultAddress || "Mặc định"})`
+                            : ""}
                         </option>
                       ))}
                     </select>
                   )}
                 </div>
 
-                <div style={{ ...pageCard, padding: 20 }}>
-                  <h4 style={sectionTitle}>{t.orderSummary || "Tóm tắt đơn hàng"}</h4>
+                <div className="cart-card cart-side-card">
+                  <h4 className="cart-section-title">
+                    {t.orderSummary || "Tóm tắt đơn hàng"}
+                  </h4>
 
-                  <div className="d-grid gap-2" style={{ color: "#374151" }}>
-                    <div className="d-flex justify-content-between">
+                  <div className="cart-summary-list">
+                    <div className="cart-summary-row">
                       <span>{t.subtotal || "Tạm tính"}</span>
                       <strong>{formatPrice(cart.subtotal)}</strong>
                     </div>
 
-                    <div className="d-flex justify-content-between">
+                    <div className="cart-summary-row">
                       <span>{t.discount || "Giảm giá"}</span>
                       <strong>- {formatPrice(discountAmount)}</strong>
                     </div>
 
-                    <hr style={{ margin: "10px 0", borderColor: "#e5e7eb" }} />
+                    <hr className="cart-summary-divider" />
 
-                    <div
-                      className="d-flex justify-content-between"
-                      style={{ fontSize: 22, color: "#111827" }}
-                    >
+                    <div className="cart-summary-row cart-summary-total">
                       <span>{t.total || "Tổng cộng"}</span>
-                      <strong style={{ color: "#ee4d2d" }}>
-                        {formatPrice(finalTotal)}
-                      </strong>
+                      <strong>{formatPrice(finalTotal)}</strong>
                     </div>
                   </div>
 
                   <button
                     onClick={checkout}
                     disabled={checkingOut || (cart.items || []).length === 0}
-                    style={{
-                      width: "100%",
-                      height: 48,
-                      borderRadius: 10,
-                      border: "none",
-                      background: "#ee4d2d",
-                      color: "#fff",
-                      fontWeight: 700,
-                      marginTop: 18,
-                    }}
+                    className="cart-checkout-button"
                   >
                     {checkingOut
-                      ? (t.creatingOrder || "Đang tạo đơn...")
-                      : (t.buyNowCart || "Mua hàng")}
+                      ? t.creatingOrder || "Đang tạo đơn..."
+                      : t.buyNowCart || "Mua hàng"}
                   </button>
 
-                  <Link
-                    to="/products"
-                    style={{
-                      width: "100%",
-                      height: 48,
-                      borderRadius: 10,
-                      border: "1px solid #d1d5db",
-                      background: "#fff",
-                      color: "#374151",
-                      fontWeight: 700,
-                      marginTop: 12,
-                      display: "inline-flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      textDecoration: "none",
-                    }}
-                  >
+                  <Link to="/products" className="cart-outline-button">
                     {t.continueShopping || "Tiếp tục mua sắm"}
                   </Link>
                 </div>
