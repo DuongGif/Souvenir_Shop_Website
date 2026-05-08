@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import MainLayout from "../layouts/MainLayout";
-import heroImg from "../assets/img/profile/profile-square-11.webp";
+import heroImg from "../assets/img/profile/VN.jpg";
 import { productService } from "../services/productService";
 import ProductCard from "../components/ProductCard";
 import { useLanguage } from "../contexts/LanguageContext.jsx";
@@ -153,13 +153,13 @@ export default function HomePage() {
                 <div className="col-lg-6">
                   <div className="home-hero-content">
                     <div className="section-subtitle">
-                      {t.homeWelcome || "Chào mừng đến với SouVN Shop"}
+                      {t.homeWelcome || "Chào mừng đến với "}
                     </div>
 
                     <h1 className="home-hero-title">
-                      {t.homeHeroPrefix || "Website bán"}{" "}
-                      <span>{t.homeHeroHighlight || "đồ lưu niệm"}</span>{" "}
-                      {t.homeHeroSuffix || "cho khách tham quan"}
+                     
+                      <span>{t.homeHeroHighlight || "SouVN Shop"}</span>{" "}
+                      
                     </h1>
 
                     <p className="home-hero-desc">

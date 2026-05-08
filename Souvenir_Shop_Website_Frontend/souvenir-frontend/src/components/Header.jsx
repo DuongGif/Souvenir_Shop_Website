@@ -5,11 +5,11 @@ import { useLanguage } from "../contexts/LanguageContext.jsx";
 import { commonTranslations } from "../i18n/common";
 
 const languageOptions = [
-  { value: "vi", label: "VI - Tiếng Việt" },
-  { value: "en", label: "EN - English" },
-  { value: "ja", label: "JA - 日本語" },
-  { value: "ko", label: "KO - 한국어" },
-  { value: "zh", label: "ZH - 中文" },
+  { value: "vi", label: "VI" },
+  { value: "en", label: "EN" },
+  { value: "ja", label: "JA" },
+  { value: "ko", label: "KO" },
+  { value: "zh", label: "ZH" },
 ];
 
 const socialLinks = [
@@ -22,10 +22,18 @@ const socialLinks = [
 export default function Header() {
   const navigate = useNavigate();
   const { language, setLanguage } = useLanguage();
-  const t = commonTranslations?.[language] || commonTranslations?.vi || {};
+
+  const t =
+    commonTranslations?.[language] ||
+    commonTranslations?.vi ||
+    {};
 
   const token = localStorage.getItem("token");
-  const isLoggedIn = useMemo(() => !!token, [token]);
+
+  const isLoggedIn = useMemo(
+    () => !!token,
+    [token]
+  );
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -33,96 +41,117 @@ export default function Header() {
     window.location.reload();
   };
 
-  const preventDefault = (e) => {
-    e.preventDefault();
-  };
-
-  const handleChangeLanguage = (e) => {
-    setLanguage(e.target.value);
-  };
-
-  const navLinkClass = ({ isActive }) => {
-    return `souvn-nav-link ${isActive ? "active" : ""}`;
-  };
+  const navLinkClass = ({ isActive }) =>
+    `souvn-nav-link ${isActive ? "active" : ""}`;
 
   return (
     <>
-      <header id="header" className="souvn-header">
+      <header className="souvn-header">
+        {/* TOPBAR */}
         <div className="souvn-header-top">
           <div className="container souvn-header-top-inner">
             <div className="souvn-header-top-text">
               {t.headerTopText ||
-                "SouVN Shop - Website bán đồ lưu niệm cho khách tham quan"}
+                "SouVN Shop - Website bán đồ lưu niệm"}
             </div>
 
             <div className="souvn-header-socials">
               {socialLinks.map((item) => (
                 <a
                   key={item.name}
-                  href="#"
-                  onClick={preventDefault}
+                  href="/"
+                  onClick={(e) => e.preventDefault()}
                   className="souvn-header-social-link"
-                  aria-label={item.name}
                 >
-                  <i className={`bi ${item.icon}`}></i>
+                  <i className={`bi ${item.icon}`} />
                 </a>
               ))}
             </div>
           </div>
         </div>
 
+        {/* MAIN */}
         <div className="souvn-header-main">
           <div className="container souvn-header-main-inner">
-            <Link to="/" className="souvn-header-logo">
+            {/* LOGO */}
+            <Link
+              to="/"
+              className="souvn-header-logo"
+            >
               <img
                 src={logo}
-                alt="SouVN Logo"
+                alt="SouVN"
                 className="souvn-header-logo-img"
               />
 
-              <div>
-                <div className="souvn-header-brand-name">SouVN</div>
+              <div className="souvn-header-brand">
+                <div className="souvn-header-brand-name">
+                  SouVN
+                </div>
 
                 <div className="souvn-header-brand-sub">
-                  {t.headerBrandSub || "Souvenir Shop"}
+                  Souvenir Shop
                 </div>
               </div>
             </Link>
 
+            {/* NAV */}
             <nav className="souvn-nav">
-              <NavLink to="/" end className={navLinkClass}>
+              <NavLink
+                to="/"
+                end
+                className={navLinkClass}
+              >
                 {t.navHome || "Trang chủ"}
               </NavLink>
 
-              <NavLink to="/products" className={navLinkClass}>
+              <NavLink
+                to="/products"
+                className={navLinkClass}
+              >
                 {t.navProducts || "Sản phẩm"}
               </NavLink>
 
               {isLoggedIn && (
-                <NavLink to="/cart" className={navLinkClass}>
+                <NavLink
+                  to="/cart"
+                  className={navLinkClass}
+                >
                   {t.navCart || "Giỏ hàng"}
                 </NavLink>
               )}
 
               {isLoggedIn && (
-                <NavLink to="/orders" className={navLinkClass}>
+                <NavLink
+                  to="/orders"
+                  className={navLinkClass}
+                >
                   {t.navOrders || "Đơn hàng"}
                 </NavLink>
               )}
 
-              <NavLink to="/contact" className={navLinkClass}>
+              <NavLink
+                to="/contact"
+                className={navLinkClass}
+              >
                 {t.contact || "Liên hệ"}
               </NavLink>
             </nav>
 
+            {/* ACTIONS */}
             <div className="souvn-header-actions">
               <select
                 value={language}
-                onChange={handleChangeLanguage}
+                onChange={(e) =>
+                  setLanguage(e.target.value)
+                }
                 className="souvn-language-select"
               >
                 {languageOptions.map((item) => (
-                  <option key={item.value} value={item.value}>
+                  <option
+                    key={item.value}
+                    value={item.value}
+                  >
                     {item.label}
                   </option>
                 ))}
@@ -134,14 +163,17 @@ export default function Header() {
                     to="/account"
                     className="souvn-header-btn souvn-header-btn-account"
                   >
-                    <i className="bi bi-person-circle me-2"></i>
-                    {t.navAccount || "Tài khoản"}
+                    <i className="bi bi-person-circle"></i>
+
+                    <span>
+                      {t.navAccount || "Tài khoản"}
+                    </span>
                   </Link>
 
                   <button
                     type="button"
                     onClick={handleLogout}
-                    className="souvn-header-btn souvn-header-logout"
+                    className="souvn-header-btn souvn-header-btn-logout"
                   >
                     {t.navLogout || "Đăng xuất"}
                   </button>

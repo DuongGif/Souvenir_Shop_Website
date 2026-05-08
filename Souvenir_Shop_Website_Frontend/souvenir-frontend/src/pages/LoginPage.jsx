@@ -41,21 +41,41 @@ export default function LoginPage() {
     [t]
   );
 
-  const submit = async (e) => {
-    e.preventDefault();
+const submit = async (e) => {
+  e.preventDefault();
 
-    setErr("");
-    setLoading(true);
+  setErr("");
+  setLoading(true);
 
-    try {
-      await login(email, password);
-      nav("/products");
-    } catch (ex) {
-      setErr(getErrorMessage(ex, t.loginFailed || "Đăng nhập thất bại"));
-    } finally {
-      setLoading(false);
+  try {
+    const result = await login(email, password);
+
+    // lấy role từ response hoặc localStorage
+    const role =
+      result?.role ||
+      localStorage.getItem("role");
+
+    // admin -> admin page
+    if (role === "admin") {
+      nav("/admin");
     }
-  };
+    // user -> homepage
+    else {
+      nav("/");
+    }
+
+    window.location.reload();
+  } catch (ex) {
+    setErr(
+      getErrorMessage(
+        ex,
+        t.loginFailed || "Đăng nhập thất bại"
+      )
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <MainLayout>

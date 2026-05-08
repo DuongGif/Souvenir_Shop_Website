@@ -355,6 +355,7 @@ footer.dark-background {
 }
 
 /* Header của từng block sản phẩm */
+
 .home-section-header {
   margin-bottom: 20px;
 }
@@ -8001,7 +8002,7 @@ footer,
   font-weight: 900;
   line-height: 1.35;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  /* -webkit-line-clamp: 2; */
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -8026,7 +8027,7 @@ footer,
   font-size: 12px;
   line-height: 1.35;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  /* -webkit-line-clamp: 2; */
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

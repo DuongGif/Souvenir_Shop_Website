@@ -186,10 +186,8 @@ export const commonTranslations = {
     productNotFound: "Không tìm thấy sản phẩm.",
     translating: "Đang dịch nội dung sang ngôn ngữ đã chọn...",
 
-    homeWelcome: "Chào mừng đến với SouVN Shop",
-    homeHeroPrefix: "Website bán",
-    homeHeroHighlight: "đồ lưu niệm",
-    homeHeroSuffix: "cho khách tham quan",
+    homeWelcome: "Chào mừng đến với",
+    homeHeroHighlight: "SouVN Shop",
     homeHeroDesc:
       "Khám phá hàng ngàn sản phẩm lưu niệm độc đáo dành cho khách du lịch và khách tham quan. Tìm kiếm, chọn mua và đặt hàng nhanh chóng trên SouVN với giao diện hiện đại, dễ sử dụng.",
     buyNow: "Mua ngay",
@@ -664,10 +662,10 @@ export const commonTranslations = {
     productNotFound: "Product not found.",
     translating: "Translating content into the selected language...",
 
-    homeWelcome: "Welcome to SouVN Shop",
-    homeHeroPrefix: "A website selling",
-    homeHeroHighlight: "souvenirs",
-    homeHeroSuffix: "for visitors",
+    homeWelcome: "Welcome to ",
+    
+    homeHeroHighlight: "SouVN Shop",
+   
     homeHeroDesc:
       "Explore thousands of unique souvenir products for tourists and visitors. Search, choose, and order quickly on SouVN with a modern and easy-to-use interface.",
     buyNow: "Buy now",
@@ -1142,10 +1140,10 @@ export const commonTranslations = {
     productNotFound: "商品が見つかりません。",
     translating: "選択した言語に翻訳中...",
 
-    homeWelcome: "SouVN Shopへようこそ",
-    homeHeroPrefix: "訪問者向けの",
-    homeHeroHighlight: "お土産",
-    homeHeroSuffix: "販売サイト",
+    homeWelcome: "へようこそ",
+    
+    homeHeroHighlight: "SouVN Shop",
+    
     homeHeroDesc:
       "観光客や訪問者向けのユニークなお土産を数多くご覧いただけます。SouVNでは、モダンで使いやすい画面で、検索・選択・注文をすばやく行えます。",
     buyNow: "今すぐ購入",
@@ -1621,10 +1619,10 @@ export const commonTranslations = {
     productNotFound: "상품을 찾을 수 없습니다.",
     translating: "선택한 언어로 번역 중...",
 
-    homeWelcome: "SouVN Shop에 오신 것을 환영합니다",
-    homeHeroPrefix: "방문객을 위한",
-    homeHeroHighlight: "기념품",
-    homeHeroSuffix: "판매 웹사이트",
+    homeWelcome: "에 오신 것을 환영합니다",
+    
+    homeHeroHighlight: "SouVN Shop",
+    
     homeHeroDesc:
       "관광객과 방문객을 위한 수많은 독특한 기념품을 만나보세요. SouVN에서는 현대적이고 사용하기 쉬운 화면으로 빠르게 검색하고, 선택하고, 주문할 수 있습니다.",
     buyNow: "지금 구매",
@@ -2099,10 +2097,10 @@ export const commonTranslations = {
     productNotFound: "未找到商品。",
     translating: "正在翻译为所选语言...",
 
-    homeWelcome: "欢迎来到 SouVN Shop",
-    homeHeroPrefix: "面向游客的",
-    homeHeroHighlight: "纪念品",
-    homeHeroSuffix: "销售网站",
+    homeWelcome: "欢迎来到 ",
+   
+    homeHeroHighlight: "SouVN Shop",
+  
     homeHeroDesc:
       "探索数千种面向游客和访客的独特纪念品。在 SouVN，您可以通过现代且易用的界面快速搜索、挑选并下单。",
     buyNow: "立即购买",
