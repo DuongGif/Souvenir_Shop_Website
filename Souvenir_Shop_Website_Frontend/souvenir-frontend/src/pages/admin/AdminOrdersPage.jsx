@@ -68,72 +68,88 @@ const getStatusBadge = (status) => {
   const value = normalizeStatus(status);
 
   if (value === "pending") {
-    return {
-      text: "Chờ xử lý",
-      className: "pending",
-    };
+    return { text: "Chờ xử lý", className: "pending" };
   }
-
   if (value === "confirmed") {
-    return {
-      text: "Đã xác nhận",
-      className: "confirmed",
-    };
+    return { text: "Đã xác nhận", className: "confirmed" };
   }
-
   if (value === "paid") {
-    return {
-      text: "Đã thanh toán",
-      className: "paid",
-    };
+    return { text: "Đã thanh toán", className: "paid" };
   }
-
   if (value === "shipping") {
-    return {
-      text: "Đang giao hàng",
-      className: "shipping",
-    };
+    return { text: "Đang giao hàng", className: "shipping" };
   }
-
   if (value === "completed") {
-    return {
-      text: "Hoàn thành",
-      className: "completed",
-    };
+    return { text: "Hoàn thành", className: "completed" };
   }
-
   if (value === "cancel_requested") {
-    return {
-      text: "Chờ duyệt hủy",
-      className: "cancel-requested",
-    };
+    return { text: "Chờ duyệt hủy", className: "cancel-requested" };
   }
-
   if (value === "return_requested") {
-    return {
-      text: "Yêu cầu hoàn hàng",
-      className: "return-requested",
-    };
+    return { text: "Yêu cầu hoàn hàng", className: "return-requested" };
   }
-
   if (value === "returned") {
-    return {
-      text: "Đã hoàn hàng",
-      className: "returned",
-    };
+    return { text: "Đã hoàn hàng", className: "returned" };
   }
-
   if (value === "cancelled") {
-    return {
-      text: "Đã hủy",
-      className: "cancelled",
-    };
+    return { text: "Đã hủy", className: "cancelled" };
   }
 
   return {
     text: getStatusLabel(status),
     className: "unknown",
   };
+};
+
+// Giới hạn các trạng thái có thể chuyển dựa trên trạng thái hiện tại
+const getAvailableStatuses = (currentStatus) => {
+  const status = normalizeStatus(currentStatus);
+
+  switch (status) {
+    case "pending":
+      return STATUS_OPTIONS.filter((s) =>
+        ["pending", "confirmed", "cancelled"].includes(s.value)
+      );
+
+    case "confirmed":
+      return STATUS_OPTIONS.filter((s) =>
+        ["confirmed", "paid", "cancelled"].includes(s.value)
+      );
+
+    case "paid":
+      return STATUS_OPTIONS.filter((s) =>
+        ["paid", "shipping", "cancelled"].includes(s.value)
+      );
+
+    case "shipping":
+      return STATUS_OPTIONS.filter((s) =>
+        ["shipping", "completed", "cancelled"].includes(s.value)
+      );
+
+    case "completed":
+      // Chỉ cho phép yêu cầu hoàn hàng sau khi hoàn thành
+      return STATUS_OPTIONS.filter((s) =>
+        ["completed", "return_requested"].includes(s.value)
+      );
+
+    case "cancel_requested":
+      return STATUS_OPTIONS.filter((s) =>
+        ["cancel_requested", "cancelled"].includes(s.value)
+      );
+
+    case "return_requested":
+      return STATUS_OPTIONS.filter((s) =>
+        ["return_requested", "returned"].includes(s.value)
+      );
+
+    // Trạng thái cuối — không cho thay đổi
+    case "returned":
+    case "cancelled":
+      return STATUS_OPTIONS.filter((s) => s.value === status);
+
+    default:
+      return STATUS_OPTIONS;
+  }
 };
 
 export default function AdminOrdersPage() {
@@ -330,6 +346,10 @@ export default function AdminOrdersPage() {
                 <tbody>
                   {pagedOrders.map((order) => {
                     const badge = getStatusBadge(order.status);
+                    const availableStatuses = getAvailableStatuses(order.status);
+                    const isTerminal =
+                      normalizeStatus(order.status) === "returned" ||
+                      normalizeStatus(order.status) === "cancelled";
 
                     return (
                       <tr key={order.id}>
@@ -374,8 +394,9 @@ export default function AdminOrdersPage() {
                                   [order.id]: e.target.value,
                                 }))
                               }
+                              disabled={isTerminal}
                             >
-                              {STATUS_OPTIONS.map((item) => (
+                              {availableStatuses.map((item) => (
                                 <option key={item.value} value={item.value}>
                                   {item.label}
                                 </option>
@@ -386,7 +407,7 @@ export default function AdminOrdersPage() {
                               type="button"
                               onClick={() => updateStatus(order.id)}
                               className="btn btn-outline-primary btn-sm admin-orders-save-btn"
-                              disabled={savingId === order.id}
+                              disabled={savingId === order.id || isTerminal}
                             >
                               {savingId === order.id ? "Đang lưu..." : "Lưu"}
                             </button>

@@ -126,7 +126,7 @@ export default function ProductCard({ p }) {
 
             <small className="product-card-review-text">
               {rating > 0
-                ? `${Number(rating).toFixed(1)} (${reviewCount})`
+                ? `${Number(rating).toFixed(1)} ★ · ${reviewCount} đánh giá`
                 : t.noReviewsShort || "Chưa có đánh giá"}
             </small>
           </div>

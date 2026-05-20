@@ -17,7 +17,23 @@ const emptyAddress = {
   postalCode: "",
   isDefault: false,
 };
+// Thêm 2 hàm này trước component
 
+const getRoleLabel = (role) => {
+  const map = {
+    customer: "Khách hàng",
+    admin: "Quản trị viên",
+  };
+  return map[String(role || "").toLowerCase()] || role || "-";
+};
+
+const getStatusLabel = (status) => {
+  const map = {
+    active: "Đang hoạt động",
+    banned: "Đã khóa",
+  };
+  return map[String(status || "").toLowerCase()] || status || "-";
+};
 const getErrorMessage = (ex, fallback) => {
   const data = ex?.response?.data;
 
@@ -342,12 +358,12 @@ export default function AccountDetailPage() {
 
                     <div>
                       <strong>{t.accountRoleLabel || "Vai trò:"}</strong>{" "}
-                      {profile?.role || "-"}
+                      {getRoleLabel(profile?.role)}
                     </div>
 
                     <div>
                       <strong>{t.accountStatusLabel || "Trạng thái:"}</strong>{" "}
-                      {profile?.status || "-"}
+                      {getStatusLabel(profile?.status)}
                     </div>
                   </div>
 

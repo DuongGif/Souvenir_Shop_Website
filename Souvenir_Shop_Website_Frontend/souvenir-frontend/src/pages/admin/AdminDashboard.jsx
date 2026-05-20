@@ -124,7 +124,7 @@ export default function AdminDashboard() {
       <div className="admin-dashboard-header">
         <div className="admin-dashboard-badge">Tổng quan quản trị</div>
 
-        <h2 className="admin-dashboard-title">Admin Dashboard</h2>
+        <h2 className="admin-dashboard-title">Bảng điều khiển quản trị</h2>
 
         <p className="admin-dashboard-desc">
           Quản lý người dùng, sản phẩm, đơn hàng, khuyến mãi, đánh giá, chat và

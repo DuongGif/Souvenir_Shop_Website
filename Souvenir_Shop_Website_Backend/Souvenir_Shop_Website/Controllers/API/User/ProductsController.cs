@@ -66,8 +66,9 @@ public class ProductsController : ControllerBase
 					.Where(i => i.ProductId == p.Id)
 					.Select(i => i.ImageUrl)
 					.FirstOrDefault(),
-				AvgRating = 0,      // tạm
-				ReviewCount = 0,    // tạm
+				// Thay AvgRating = 0 và ReviewCount = 0 bằng:
+				AvgRating = _db.Reviews.Where(r => r.ProductId == p.Id && r.Status == "approved").Average(r => (decimal?)r.Rating) ?? 0,
+				ReviewCount = _db.Reviews.Count(r => r.ProductId == p.Id && r.Status == "approved"),   // tạm
 				InStock = true      // tạm
 			})
 			.ToListAsync();
@@ -83,6 +84,7 @@ public class ProductsController : ControllerBase
 		[FromQuery] string? categoryIds,     // "1,2,3"
 		[FromQuery] decimal? minPrice,
 		[FromQuery] decimal? maxPrice,
+		[FromQuery] double? minRating,
 		[FromQuery] string? sort = "newest",
 		[FromQuery] int page = 1,
 		[FromQuery] int pageSize = 12
@@ -133,19 +135,39 @@ public class ProductsController : ControllerBase
 					t.ProductId == p.Id && (t.Name ?? "").ToLower().Contains(kw))
 			);
 		}
-
+		if (minRating.HasValue && minRating.Value > 0)
+		{
+			query = query.Where(p =>
+				_db.Reviews
+					.Where(r => r.ProductId == p.Id && r.Status == "approved")
+					.Any()
+				&&
+				_db.Reviews
+					.Where(r => r.ProductId == p.Id && r.Status == "approved")
+					.Average(r => (double)r.Rating) >= minRating.Value
+			);
+		}
 		// sort
 		sort = (sort ?? "newest").Trim().ToLowerInvariant();
-		query = sort switch
+
+		// Sort theo rating cần join sau khi lấy dữ liệu vì AvgRating là subquery
+		var baseQuery = sort switch
 		{
 			"price_asc" => query.OrderBy(p => p.BasePrice ?? 0),
 			"price_desc" => query.OrderByDescending(p => p.BasePrice ?? 0),
+			"rating_desc" => query.OrderByDescending(p =>
+								  _db.Reviews
+									 .Where(r => r.ProductId == p.Id && r.Status == "approved")
+									 .Average(r => (double?)r.Rating) ?? 0),
+			"rating_asc" => query.OrderBy(p =>
+								  _db.Reviews
+									 .Where(r => r.ProductId == p.Id && r.Status == "approved")
+									 .Average(r => (double?)r.Rating) ?? 0),
 			_ => query.OrderByDescending(p => p.CreatedAt ?? DateTime.MinValue)
 		};
+		var totalItems = await baseQuery.CountAsync();
 
-		var totalItems = await query.CountAsync();
-
-		var items = await query
+		var items = await baseQuery
 			.Skip((page - 1) * pageSize)
 			.Take(pageSize)
 			.Select(p => new ProductSearchDto
@@ -157,12 +179,11 @@ public class ProductsController : ControllerBase
 					.Where(i => i.ProductId == p.Id)
 					.Select(i => i.ImageUrl)
 					.FirstOrDefault(),
-				AvgRating = 0,      // ✅ tạm bỏ rating
-				ReviewCount = 0,    // ✅ tạm bỏ reviewCount
+				AvgRating = _db.Reviews.Where(r => r.ProductId == p.Id && r.Status == "approved").Average(r => (decimal?)r.Rating) ?? 0,
+				ReviewCount = _db.Reviews.Count(r => r.ProductId == p.Id && r.Status == "approved"),   // tạm
 				InStock = true      // ✅ tạm bỏ stock (hoặc false)
 			})
 			.ToListAsync();
-
 		return Ok(new PagedResultDto<ProductSearchDto>
 		{
 			Page = page,

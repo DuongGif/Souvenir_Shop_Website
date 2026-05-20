@@ -350,9 +350,16 @@ export default function ProductsPage() {
                       step="0.1"
                       placeholder={t.minRatingExample || "Ví dụ: 4"}
                       value={q.minRating}
-                      onChange={(e) =>
-                        updateFilter({ minRating: e.target.value })
-                      }
+                      onChange={(e) => {
+                        const raw = parseFloat(e.target.value);
+                        if (e.target.value === "") {
+                          updateFilter({ minRating: "" });
+                          return;
+                        }
+                        if (isNaN(raw)) return;
+                        const clamped = Math.min(5, Math.max(0, raw));
+                        updateFilter({ minRating: String(clamped) });
+                      }}
                     />
                   </div>
 

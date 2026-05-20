@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Souvenir_Shop_Website")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b15cb2529e75a51311a74fdd7c6089aeae8487ff")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e02a5f5d33198111375fa814f0a9cf4425c9c103")]
 [assembly: System.Reflection.AssemblyProductAttribute("Souvenir_Shop_Website")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Souvenir_Shop_Website")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
