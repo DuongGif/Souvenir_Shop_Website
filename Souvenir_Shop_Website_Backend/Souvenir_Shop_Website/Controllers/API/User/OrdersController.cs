@@ -143,8 +143,51 @@ public class OrdersController : ControllerBase
 			if (subtotalError != null)
 				return BadRequest(subtotalError);
 
-			var shippingFee = 0m;
+			//var shippingFee = 0m;
+			decimal shippingFee = 40000m;
 
+			if (req.FulfillmentType == "delivery")
+			{
+				var address = await _db.Addresses
+					.FirstOrDefaultAsync(a =>
+						a.Id == req.ShippingAddressId &&
+						a.UserId == userId);
+
+				if (address == null)
+					return BadRequest("Không tìm thấy địa chỉ giao hàng.");
+
+				var province = (address.Province ?? "").Trim();
+				var district = (address.District ?? "").Trim();
+
+				switch (province)
+				{
+					case "Hà Nội":
+
+						if (district == "Quận Cầu Giấy" ||
+							district == "Quận Hoàn Kiếm")
+						{
+							shippingFee = 15000m;
+						}
+						else
+						{
+							shippingFee = 25000m;
+						}
+
+						break;
+
+					case "Hồ Chí Minh":
+						shippingFee = 50000m;
+						break;
+
+					case "Đà Nẵng":
+						shippingFee = 25000m;
+						break;
+
+					default:
+						shippingFee = 40000m;
+						break;
+				}
+			}
 			var shippingFeeError = ValidateMoney(shippingFee, "Phí vận chuyển");
 			if (shippingFeeError != null)
 				return BadRequest(shippingFeeError);
@@ -241,7 +284,7 @@ public class OrdersController : ControllerBase
 				Currency = "VND",
 				Subtotal = subtotal,
 				DiscountAmount = discountAmount,
-				ShippingFee = shippingFee,
+				ShippingFee = shippingFee - shippingDiscount,
 				TotalAmount = total,
 				FulfillmentType = req.FulfillmentType,
 				ShippingAddressId = req.ShippingAddressId,
@@ -291,7 +334,7 @@ public class OrdersController : ControllerBase
 				OrderCode = order.OrderCode,
 				Status = order.Status,
 				Subtotal = order.Subtotal,
-				ShippingFee = order.ShippingFee,
+				ShippingFee = shippingFee - shippingDiscount,
 				TotalAmount = order.TotalAmount,
 				Items = cartItems.Select(x => new OrderItemDto
 				{

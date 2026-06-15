@@ -6,9 +6,9 @@ const menuItems = [
   { to: "/admin/coupons", label: "Mã giảm giá", icon: "bi-ticket-perforated" },
   { to: "/admin/reviews", label: "Đánh giá", icon: "bi-chat-square-text" },
   { to: "/admin/orders", label: "Đơn hàng", icon: "bi-receipt" },
+  { to: "/admin/categories", label: "Loại sản phẩm", icon: "bi-tags" },
   { to: "/admin/products", label: "Sản phẩm", icon: "bi-box-seam" },
   { to: "/admin/chats", label: "Chat", icon: "bi-chat-dots" },
-  
 ];
 
 export default function AdminPage() {

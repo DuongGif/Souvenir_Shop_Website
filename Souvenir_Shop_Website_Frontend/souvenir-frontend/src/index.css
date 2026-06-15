@@ -8039,3 +8039,197 @@ footer,
   font-weight: 900;
 }
 
+/* =========================
+   ADMIN CATEGORIES PAGE
+========================= */
+
+.admin-categories-page {
+  color: #111827;
+}
+
+/* Header */
+
+.admin-categories-header {
+  margin-bottom: 24px;
+}
+
+.admin-categories-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 8px;
+}
+
+.admin-categories-desc {
+  color: #6b7280;
+  margin-bottom: 0;
+}
+
+/* Card */
+
+.admin-categories-card {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 24px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+}
+
+/* Form */
+
+.admin-categories-card h4 {
+  color: #111827;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.admin-categories-page .form-label {
+  color: #111827;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.admin-categories-page .form-control,
+.admin-categories-page textarea,
+.admin-categories-page select {
+  color: #111827 !important;
+  background: #fff !important;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+}
+
+.admin-categories-page .form-control:focus,
+.admin-categories-page textarea:focus,
+.admin-categories-page select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.15);
+}
+
+.admin-categories-page .form-control::placeholder,
+.admin-categories-page textarea::placeholder {
+  color: #9ca3af;
+}
+
+.admin-categories-page .form-check-label {
+  color: #111827;
+  font-weight: 500;
+}
+
+/* Button */
+
+.admin-categories-submit {
+  width: 100%;
+  border-radius: 10px;
+  padding: 12px;
+  font-weight: 600;
+}
+
+/* Table */
+
+.admin-categories-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-categories-table thead tr {
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.admin-categories-table th {
+  color: #111827;
+  font-weight: 700;
+  padding: 14px;
+  text-align: left;
+}
+
+.admin-categories-table td {
+  color: #111827;
+  padding: 14px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.admin-categories-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+/* Status */
+
+.admin-category-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.admin-category-status.active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.admin-category-status.inactive {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Delete button */
+
+.admin-category-delete {
+  border-radius: 8px;
+}
+
+/* Pagination */
+
+.admin-categories-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.admin-categories-pagination {
+  display: flex;
+  gap: 8px;
+}
+
+.admin-categories-pagination button {
+  min-width: 42px;
+  border-radius: 8px;
+}
+
+/* Loading */
+
+.admin-categories-loading {
+  padding: 60px 0;
+  text-align: center;
+}
+
+.admin-categories-loading p {
+  margin-top: 12px;
+  color: #6b7280;
+}
+
+/* Empty */
+
+.admin-categories-empty {
+  text-align: center;
+  padding: 50px 20px;
+  color: #6b7280;
+  font-size: 15px;
+}
+
+/* Responsive */
+
+@media (max-width: 991px) {
+  .admin-categories-card {
+    padding: 18px;
+  }
+
+  .admin-categories-title {
+    font-size: 26px;
+  }
+
+  .admin-categories-table {
+    min-width: 650px;
+  }
+}

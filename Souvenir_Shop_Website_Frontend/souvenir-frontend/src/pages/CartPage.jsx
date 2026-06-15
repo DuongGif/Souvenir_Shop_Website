@@ -8,6 +8,7 @@ import { accountService } from "../services/accountService";
 import { aiService } from "../services/aiService";
 import { useLanguage } from "../contexts/LanguageContext.jsx";
 import { commonTranslations } from "../i18n/common";
+import { shippingService } from "../services/shippingService";
 
 const API_ORIGIN = "https://localhost:7020";
 
@@ -67,7 +68,7 @@ export default function CartPage() {
 
   const [couponCode, setCouponCode] = useState("");
   const [couponInfo, setCouponInfo] = useState(null);
-
+  const [shippingFee, setShippingFee] = useState(0);
   const [loading, setLoading] = useState(true);
   const [checkingCoupon, setCheckingCoupon] = useState(false);
   const [checkingOut, setCheckingOut] = useState(false);
@@ -114,7 +115,7 @@ export default function CartPage() {
       setAddresses(addressData);
 
       const defaultAddress = addressData.find((address) => address.isDefault);
-
+      
       if (defaultAddress) {
         setSelectedAddressId(String(defaultAddress.id));
       } else if (addressData.length > 0) {
@@ -135,6 +136,60 @@ export default function CartPage() {
     load();
   }, [load]);
 
+//   useEffect(() => {
+//   const calculateShipping = async () => {
+//     if (!selectedAddressId) {
+//       setShippingFee(0);
+//       return;
+//     }
+
+//     try {
+//       const res = await shippingService.calculate(
+//         Number(selectedAddressId)
+//       );
+
+//       setShippingFee(Number(res.data?.shippingFee || 0));
+//     } catch {
+//       setShippingFee(0);
+//     }
+//   };
+
+//   calculateShipping();
+// }, [selectedAddressId]);
+
+useEffect(() => {
+  const calculateShipping = async () => {
+    if (!selectedAddressId) {
+      setShippingFee(0);
+      return;
+    }
+
+    try {
+      const address = addresses.find(
+        (x) => String(x.id) === String(selectedAddressId)
+      );
+
+      if (!address) {
+        setShippingFee(0);
+        return;
+      }
+
+      const res = await shippingService.getFee(
+        address.province,
+        address.district
+      );
+
+      setShippingFee(
+        Number(res.data?.shippingFee || 0)
+      );
+    } catch (err) {
+      console.error(err);
+      setShippingFee(0);
+    }
+  };
+
+  calculateShipping();
+}, [selectedAddressId, addresses]);
   useEffect(() => {
     let cancelled = false;
 
@@ -211,9 +266,14 @@ export default function CartPage() {
     ? Number(couponInfo.discountAmount || 0)
     : 0;
 
-  const finalTotal = useMemo(() => {
-    return Math.max(0, Number(cart.subtotal || 0) - discountAmount);
-  }, [cart.subtotal, discountAmount]);
+const finalTotal = useMemo(() => {
+  return Math.max(
+    0,
+    Number(cart.subtotal || 0) -
+      discountAmount +
+      Number(shippingFee || 0)
+  );
+}, [cart.subtotal, discountAmount, shippingFee]);
 
   const updateQty = async (itemId, quantity) => {
     setErr("");
@@ -251,43 +311,48 @@ export default function CartPage() {
   };
 
   const validateCoupon = async () => {
-    setErr("");
-    setMsg("");
-    setCouponInfo(null);
+  setErr("");
+  setMsg("");
+  setCouponInfo(null);
 
-    if (!couponCode.trim()) {
-      setErr(t.cartCouponRequired || "Vui lòng nhập mã giảm giá");
-      return;
-    }
+  if (!couponCode.trim()) {
+    setErr(t.cartCouponRequired || "Vui lòng nhập mã giảm giá");
+    return;
+  }
 
-    try {
-      setCheckingCoupon(true);
+  try {
+    setCheckingCoupon(true);
 
-      const res = await couponService.validate({
-        code: couponCode.trim(),
-        subtotal: cart.subtotal,
-      });
+    const res = await couponService.validate({
+      code: couponCode.trim(),
+      subtotal: cart.subtotal,
+    });
 
-      setCouponInfo(res.data);
+    setCouponInfo(res.data);
 
-      if (res.data?.isValid) {
-        setMsg(t.cartCouponValid || "Mã giảm giá hợp lệ");
-      } else {
-        setErr(
-          res.data?.message || t.cartCouponInvalid || "Mã giảm giá không hợp lệ"
-        );
-      }
-    } catch (ex) {
+   if (res.data?.isValid) {
+  setMsg(t.cartCouponValid || "Mã giảm giá hợp lệ");
+
+  // Nếu shippingDiscount > 0 thì là mã free ship → set phí ship về 0
+  if (res.data?.shippingDiscount > 0) {
+    setShippingFee(0);
+  }
+    } else {
       setErr(
-        getErrorMessage(
-          ex,
-          t.cartCouponCheckFailed || "Kiểm tra mã giảm giá thất bại"
-        )
+        res.data?.message || t.cartCouponInvalid || "Mã giảm giá không hợp lệ"
       );
-    } finally {
-      setCheckingCoupon(false);
     }
-  };
+  } catch (ex) {
+    setErr(
+      getErrorMessage(
+        ex,
+        t.cartCouponCheckFailed || "Kiểm tra mã giảm giá thất bại"
+      )
+    );
+  } finally {
+    setCheckingCoupon(false);
+  }
+};
 
   const checkout = async () => {
     setErr("");
@@ -309,6 +374,7 @@ export default function CartPage() {
       const payload = {
         shippingAddressId: Number(selectedAddressId),
         fulfillmentType: "delivery",
+        shippingFee: shippingFee,
       };
 
       if (couponCode.trim()) {
@@ -512,12 +578,28 @@ export default function CartPage() {
                   </h4>
 
                   <div className="d-flex gap-2">
-                    <input
-                      className="form-control cart-input"
-                      placeholder={t.couponPlaceholder || "Nhập mã giảm giá"}
-                      value={couponCode}
-                      onChange={(e) => setCouponCode(e.target.value)}
-                    />
+                  <input
+                    className="form-control cart-input"
+                    placeholder={t.couponPlaceholder || "Nhập mã giảm giá"}
+                    value={couponCode}
+                    onChange={(e) => {
+                      setCouponCode(e.target.value);
+                      setCouponInfo(null);
+
+                      // Khi xóa mã thì tính lại phí ship theo địa chỉ
+                      if (!e.target.value.trim()) {
+                        const address = addresses.find(
+                          (x) => String(x.id) === String(selectedAddressId)
+                        );
+                        if (address) {
+                          shippingService
+                            .getFee(address.province, address.district)
+                            .then((res) => setShippingFee(Number(res.data?.shippingFee || 0)))
+                            .catch(() => setShippingFee(0));
+                        }
+                      }
+                    }}
+                  />
 
                     <button
                       onClick={validateCoupon}
@@ -605,7 +687,10 @@ export default function CartPage() {
                       <span>{t.discount || "Giảm giá"}</span>
                       <strong>- {formatPrice(discountAmount)}</strong>
                     </div>
-
+                    <div className="cart-summary-row">
+                      <span>Phí vận chuyển</span>
+                      <strong>{formatPrice(shippingFee)}</strong>
+                    </div>
                     <hr className="cart-summary-divider" />
 
                     <div className="cart-summary-row cart-summary-total">

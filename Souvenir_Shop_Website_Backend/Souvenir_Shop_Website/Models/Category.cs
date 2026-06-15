@@ -14,4 +14,12 @@ public partial class Category
     public bool IsVisible { get; set; }
 
     public DateTime? CreatedAt { get; set; }
+
+    public virtual Category? Parent { get; set; }
+
+    public virtual ICollection<Category> Children { get; set; }
+        = new List<Category>();
+
+    public virtual ICollection<CategoryTranslation> CategoryTranslations { get; set; }
+        = new List<CategoryTranslation>();
 }

@@ -5,4 +5,5 @@ public class CreateOrderRequest
 	public long ShippingAddressId { get; set; }
 	public string FulfillmentType { get; set; } = "delivery";
 	public string? CouponCode { get; set; }
+	public decimal ShippingFee { get; set; }
 }

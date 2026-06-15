@@ -29,6 +29,7 @@ import AdminCouponsPage from "./pages/admin/AdminCouponsPage";
 import AdminReviewsPage from "./pages/admin/AdminReviewsPage";
 import AdminProductVariantsPage from "./pages/admin/AdminProductVariantsPage";
 import AdminChatsPage from "./pages/admin/AdminChatsPage";
+import AdminCategories from "./pages/admin/AdminCategories.jsx";
 import AdminFinancePage from "./pages/admin/AdminFinancePage";
 
 import { getRoleFromToken } from "./utils";
@@ -140,6 +141,7 @@ export default function App() {
           <Route path="coupons" element={<AdminCouponsPage />} />
           <Route path="reviews" element={<AdminReviewsPage />} />
           <Route path="chats" element={<AdminChatsPage />} />
+          <Route path="categories" element={<AdminCategories />} />
           <Route path="finance" element={<AdminFinancePage />} />
           <Route
             path="products/:productId/variants"

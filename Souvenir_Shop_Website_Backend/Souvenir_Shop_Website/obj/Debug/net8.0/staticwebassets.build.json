@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "sNvAE8zNXI12hnEThn5soOhADn1DJjrheQDpkUtDDMA=",
+  "Hash": "DqNkkVSKjytBwXNqq43COd23lWZkOMisKR8Yu5p89/s=",
   "Source": "Souvenir_Shop_Website",
   "BasePath": "_content/Souvenir_Shop_Website",
   "Mode": "Default",
@@ -169,6 +169,25 @@
       "OriginalItemSpec": "wwwroot\\images\\products\\18c8869ce87246ee8d3094ff99bccf46.jpg"
     },
     {
+      "Identity": "D:\\Nam4\\ki2\\Đồ án\\Git\\Souvenir_Shop_Website\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\wwwroot\\images\\products\\2cb89bd9eb9444c6a5029aebaf108905.jpg",
+      "SourceId": "Souvenir_Shop_Website",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\Nam4\\ki2\\Đồ án\\Git\\Souvenir_Shop_Website\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\wwwroot\\",
+      "BasePath": "_content/Souvenir_Shop_Website",
+      "RelativePath": "images/products/2cb89bd9eb9444c6a5029aebaf108905.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\images\\products\\2cb89bd9eb9444c6a5029aebaf108905.jpg"
+    },
+    {
       "Identity": "D:\\Nam4\\ki2\\Đồ án\\Git\\Souvenir_Shop_Website\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\wwwroot\\images\\products\\5ad151de35104be0a34df673f1ac7e5e.jpg",
       "SourceId": "Souvenir_Shop_Website",
       "SourceType": "Discovered",
@@ -205,6 +224,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\images\\products\\65786cdd5e5946f899c74050b4c1e007.jpg"
+    },
+    {
+      "Identity": "D:\\Nam4\\ki2\\Đồ án\\Git\\Souvenir_Shop_Website\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\wwwroot\\images\\products\\70966c0326f847df859825d2590f9ec1.jpg",
+      "SourceId": "Souvenir_Shop_Website",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\Nam4\\ki2\\Đồ án\\Git\\Souvenir_Shop_Website\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\wwwroot\\",
+      "BasePath": "_content/Souvenir_Shop_Website",
+      "RelativePath": "images/products/70966c0326f847df859825d2590f9ec1.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\images\\products\\70966c0326f847df859825d2590f9ec1.jpg"
     },
     {
       "Identity": "D:\\Nam4\\ki2\\Đồ án\\Git\\Souvenir_Shop_Website\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\wwwroot\\images\\products\\875b71753d36416cb8ce99fb838e89ae.jpg",
@@ -490,6 +528,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\images\\products\\e6e6d0df0c9948a79b4189d35c15b227.jpg"
+    },
+    {
+      "Identity": "D:\\Nam4\\ki2\\Đồ án\\Git\\Souvenir_Shop_Website\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\wwwroot\\images\\products\\e95299c51ea24799a949e89853d4176c.jpg",
+      "SourceId": "Souvenir_Shop_Website",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\Nam4\\ki2\\Đồ án\\Git\\Souvenir_Shop_Website\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\wwwroot\\",
+      "BasePath": "_content/Souvenir_Shop_Website",
+      "RelativePath": "images/products/e95299c51ea24799a949e89853d4176c.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\images\\products\\e95299c51ea24799a949e89853d4176c.jpg"
     },
     {
       "Identity": "D:\\Nam4\\ki2\\Đồ án\\Git\\Souvenir_Shop_Website\\Souvenir_Shop_Website_Backend\\Souvenir_Shop_Website\\wwwroot\\js\\site.js",
